@@ -1,4 +1,4 @@
-# Molaris-tools
+# molaris-tools
 
 A library of Python scripts to facilitate working with the Molaris program.
 
