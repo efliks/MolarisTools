@@ -6,6 +6,21 @@
 #-------------------------------------------------------------------------------
 import exceptions, collections, math
 
+_DefaultRAMInput = \
+"""! wham input file
+%f        ! dz
+%f %f     ! zmin zmax
+0.001     ! tolw
+100       ! testfrq
+.false.   ! pmfmon
+0         ! nskip
+.false.   ! periodic
+.false.   ! Use degree/kcal/mol/rad^2, NOT Angstrom,kcal/mol/A^2
+.false.   ! Symmetrize biased density?
+.false.   ! don't wrap angles?
+-1
+""" 
+
 
 Protein   =  collections.namedtuple ("Protein"  ,  " ebond    ethet     ephi    eitor    evdw     emumu     ehb_pp  ")
 Water     =  collections.namedtuple ("Water"    ,  " ebond    ethet                      evdw     emumu     ehb_ww  ")
@@ -19,6 +34,7 @@ Langevin  =  collections.namedtuple ("Langevin" ,  " elgvn    evdw_lgv  eborn   
 Classic   =  collections.namedtuple ("Classic"  ,  " classic  quantum           ")
 System    =  collections.namedtuple ("System"   ,  " epot     ekin      etot    ")
 
+#-------------------------------------------------------------------------------
 class MDStep (object):
     """A class to hold energies of an MD step."""
 
@@ -28,6 +44,7 @@ class MDStep (object):
             setattr (self, att, None)
 
 
+#-------------------------------------------------------------------------------
 class MolarisOutputFile (object):
     """A class for reading output files from Molaris."""
 
@@ -216,7 +233,13 @@ class WHAMData (object):
                         equil.append ([forceConst, equilDist])
             except StopIteration:
                 pass
-        self.equil = equil
+        self.equil     = equil
+        foo, distFirst = equil[ 0]
+        foo, distLast  = equil[-1]
+        binsize      = (distLast - distFirst) / self.nwindows
+        self.binsize = binsize
+        self.zmin    = distFirst - binsize / 2.
+        self.zmax    = distLast  + binsize / 2.
 
 
     def _ReadPotentialEnergies (self):
@@ -261,29 +284,44 @@ class WHAMData (object):
             print ("Time-series file %s done." % filename)
 
 
-    def WriteRAM (self):
-        """Generate a series of files in the RAM format."""
-        for iwindow, (window, (forceConst, equilDist)) in enumerate (zip (self.windows, self.equil), 1):
+    def WriteTimeSeriesRAM (self, reverse=False):
+        direction = 1 if not reverse else -1
+
+        for iwindow, (window, (forceConst, equilDist)) in enumerate (zip (self.windows[::direction], self.equil[::direction]), 1):
             filename  = "pmf_%d_1.dat" % iwindow
             output    = open (filename, "w")
-            output.write ("# DROFF = %15.8f K = %15.8f\n" % (equilDist, forceConst * 2.))
+            output.write ("# DROFF = %14.8f K = %14.8f\n" % (equilDist, forceConst * 2.))
 
             for distance in window:
                 output.write ("%.3f\n" % distance)
             output.close ()
             print ("Wrote file %s." % filename)
-
 #   # DROFF =     1.50000000 K =   200.00000000 
 #   1.488
 #   1.487
 
+
+    def WriteInputRAM (self, filename="wham.inp", reverse=False):
+        if reverse:
+            binsize    = -self.binsize
+            zmin, zmax =  self.zmax, self.zmin
+        else:
+            binsize    =  self.binsize
+            zmin, zmax =  self.zmin, self.zmax
+        output  = open (filename, "w")
+        output.write (_DefaultRAMInput % (binsize, zmin, zmax))
+        output.close ()
+
+
 #===============================================================================
 # . Main program
 #===============================================================================
-wham = WHAMData ()
+wham = WHAMData (nwindows=31)
 
+# . Write files in the original format of WHAM
 wham.WriteMetaData   ()
 wham.WriteTimeSeries ()
 
 # . Write files in Ram's format
-wham.WriteRAM ()
+wham.WriteInputRAM      (reverse=True)
+wham.WriteTimeSeriesRAM (reverse=True)

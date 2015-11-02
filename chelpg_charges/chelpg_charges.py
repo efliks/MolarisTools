@@ -4,7 +4,7 @@
 # . Copyright : USC, Mikolaj J. Feliks (2015)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-"""Extract and modify CHELPG charges from Gaussian log file."""
+"""Extract and modify CHELPG charges from a Gaussian or ORCA log file."""
 
 import os
 import sys
@@ -26,14 +26,32 @@ class Atom (object):
 
 
 class Charges (object):
-    """CHELPG charges."""
+    """A class for reading CHELPG charges from output files."""
 
     def __init__ (self, logFile):
         """Constructor."""
-        lines      = open (logFile).readlines ()
-        reading    = False
-        self.title = os.path.basename (logFile)
+        self.title   = os.path.basename (logFile)
+        self.logFile = logFile
+        if self._DetectFormat () == "ORCA":
+            self._ParseORCA ()
+        else:
+            self._ParseGaussian ()
 
+
+    def _DetectFormat (self):
+        lines = open (self.logFile).readlines ()
+        frm   = "Gaussian"
+        for line in lines:
+            if line.count ("O   R   C   A"):
+                frm = "ORCA"
+                break
+        return frm
+
+
+    def _ParseGaussian (self):
+        """A parser of Gaussian files."""
+        lines      = open (self.logFile).readlines ()
+        reading    = False
         # . Read in the charges
         for line in lines:
             if not reading:
@@ -50,7 +68,6 @@ class Charges (object):
                         serial, symbol, charge = tokens
                         charge = float (charge)
                         atoms.append ([serial, symbol, charge])
-
         # . Read in the geometry
         reading = False
         for line in lines:
@@ -69,7 +86,48 @@ class Charges (object):
                         serial, atomicNumber, atomicType, x, y, z = tokens
                         x, y, z = map (float, [x, y, z])
                         geom.append ([atomicNumber, x, y, z])
+        # . Merge arrays
+        self.atoms  = []
+        for (serial, symbol, charge), (number, x, y, z) in zip (atoms, geom):
+            atom = Atom (symbol=symbol, atomicNumber=number, x=x, y=y, z=z, charge=charge, chargeOrig=charge)
+            self.atoms.append (atom)
 
+
+    def _ParseORCA (self):
+        """A parser of ORCA files."""
+        lines      = open (self.logFile).readlines ()
+        reading    = False
+        itr        = iter (lines)
+        try:
+            while True:
+                line = itr.next ()
+                # . Read in the charges
+                if line.startswith ("CHELPG Charges"):
+                    atoms = []
+                    itr.next ()
+                    while True:
+                        line   = itr.next ()
+                        if line.startswith ("---"):
+                            break
+                        tokens = line.split ()
+                        index, symbol, foo, charge = tokens
+                        index  = int (index)
+                        charge = float (charge)
+                        atoms.append ([index + 1, symbol, charge])
+                # . Read in the geometry
+                elif line.startswith ("CARTESIAN COORDINATES (ANGSTROEM)"):
+                    geom = []
+                    itr.next ()
+                    while True:
+                        line   = itr.next ()
+                        tokens = line.split ()
+                        if len (tokens) < 2:
+                            break
+                        symbol, x, y, z = tokens
+                        x, y, z = map (float, [x, y, z])
+                        geom.append ([-1, x, y, z])
+        except StopIteration:
+            pass
         # . Merge arrays
         self.atoms  = []
         for (serial, symbol, charge), (number, x, y, z) in zip (atoms, geom):
@@ -115,14 +173,12 @@ class Charges (object):
         for serial in serials:
             atom   = self.atoms[serial - 1]
             total += atom.charge
-
         # . Update the charges of the group atoms
         delta        = groupCharge - total
         deltaPerAtom = delta / nserials
         for serial in serials:
             atom         = self.atoms[serial - 1]
             atom.charge += deltaPerAtom
-
         # . Update the charges of other atoms so that the total charge of the molecule remains the same
         natoms       = len (self.atoms) - nserials
         deltaPerAtom = -delta / natoms
@@ -130,7 +186,6 @@ class Charges (object):
             if serial not in serials:
                 atom         = self.atoms[serial - 1]
                 atom.charge += deltaPerAtom
-
         # . Remember the group
         self.group = serials
 
@@ -146,12 +201,10 @@ class Charges (object):
             self.fixed.append (serial)
         else:
             self.fixed = [serial]
-
         # . Set the new charge
         atom         = self.atoms[serial - 1]
         oldCharge    = atom.charge
         atom.charge  = charge
-
         # . Update charges of the other atoms
         delta        = charge - oldCharge
         deltaPerAtom = -delta / (len (self.atoms) - len (self.fixed))
@@ -197,7 +250,7 @@ extraCol   =  False
 extraLine  =  False
 
 if len (argv) < 2:
-    print ("Usage: %s gaussian.out [--average 1,2,3] [--merge 4,5] [--group 6,7,8,9,-1] [--fix 1,-0.5] [--column] [--line]" % os.path.basename (argv[0]))
+    print ("Usage: %s gaussian_or_orca.out [--average 1,2,3] [--merge 4,5] [--group 6,7,8,9,-1] [--fix 1,-0.5] [--column] [--line]" % os.path.basename (argv[0]))
     sys.exit ()
 
 
@@ -229,17 +282,14 @@ if len (argv) > 2:
             if   prev in ("--average", "-a"):
                 # . Average charges
                 charges.AverageCharges (items)
-    
             elif prev in ("--merge", "-m"):
                 # . Merge charges
                 charges.MergeCharges (items)
-    
             elif prev in ("--group", "-g"):
                 # . Create a group of charges (currently, only one group is possible)
                 atoms = items[:-1]
                 charges.GroupCharges (atoms, items[-1], groups)
                 groups.extend (atoms)
-    
             elif prev in ("--fix", "-f"):
                 # . Fix charges of selected atoms to predefined values
                 charges.FixCharge (items[0], items[1])
