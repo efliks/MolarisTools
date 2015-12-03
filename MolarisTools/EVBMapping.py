@@ -1,7 +1,7 @@
-#!/usr/bin/python
 #-------------------------------------------------------------------------------
-# . File      : check_mapping.py
-# . Copyright : USC, Mikolaj J. Feliks (2015)
+# . File      : EVBMapping.py
+# . Program   : MolarisTools
+# . Copyright : USC, Mikolaj Feliks (2015)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 """EVBMapping is a class that finds the extrema (RS, transition state, PS) on a free energy profile."""
@@ -18,6 +18,7 @@ DEFAULT_REF     =  1
 DEFAULT_X       =  79
 DEFAULT_Y       =  30
 IMAG_TOL        =  0.0001
+
 
 class EVBMapping (object):
     """A class for the mapping of EVB."""
@@ -37,7 +38,6 @@ class EVBMapping (object):
             gap, G = map (float, tokens)
             Gs.append   (G)
             gaps.append (gap)
-
         # . Save relevant variables
         self.Gs            =  Gs
         self.gaps          =  gaps
@@ -51,26 +51,20 @@ class EVBMapping (object):
         if self.isLoaded:
             # . Fit a polynomial function to the data
             coeff = numpy.polyfit (numpy.array (self.gaps), numpy.array (self.Gs), polynomialDegree)
-
             # . Find a derivative function of the polynomial
             deriv = numpy.polyder (coeff)
-
             # . Find the roots of the polynomial function
             roots = numpy.roots (deriv)
-
             # . Select the roots between RS and PS
             start, end   = min (self.gaps), max (self.gaps)
             rootsOK      = filter (lambda r: r >= start and r <= end, roots)
             rootsOK.sort ()
-
             # . Calculate the values of G at the found extrema
             extrema = []
             for root in rootsOK:
                 extrema.append (numpy.polyval (coeff, root))
-
             # . Select a reference extremum
             Gmin = extrema[reference - 1]
-
             # . Save relevant variables
             self.coeff        = coeff
             self.deriv        = deriv
@@ -122,53 +116,15 @@ class EVBMapping (object):
         """Execute all tasks."""
         # . Calculate the extrema
         self.CalculateExtrema (polynomialDegree=polynomialDegree, reference=reference)
-
         # . Write a file for Gnuplot
         self.WriteGnuplotData (filename=filename)
-
         # . Print a plot
         self.Plot (sizex=sizex, sizey=sizey)
-
         # . Print a summary
         self.Summary ()
-
-
-#    def PrintablePolynomial (self, derivative=False, f="f"):
-#        """Generate a printable form of the calculated polynomial or its derivative."""
-#        if derivative:
-#            polynomial = self.deriv
-#        else:
-#            polynomial = self.coeff
-#        maxn   = len (polynomial)
-#        output = "%s(x) = " % f
-#        for i, c in enumerate (polynomial):
-#            n = maxn - i - 1
-#            if n > 1:
-#                entry = "%g*x**%d" % (c, n)
-#            elif n > 0:
-#                entry = "%g*x" % c
-#            else:
-#                entry = "%g" % c
-#            if c > 0.:
-#                output = "%s +%s" % (output, entry)
-#            else:
-#                output = "%s %s" % (output, entry)
-#        return output
 
 
 #===============================================================================
 # . Main program
 #===============================================================================
-reference = 1
-if len (sys.argv) >= 2:
-    prev = ""
-    for arg in sys.argv[1:]:
-        if arg in ("-r", "--reference"):
-            prev = arg
-        else:
-            if not prev:
-                raise exceptions.StandardError ("Unrecognized option: %s" % arg)
-            reference = int (arg)
-
-mapping = EVBMapping ()
-mapping.DoAll (reference=reference)
+if __name__ == "__main__": pass

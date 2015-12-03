@@ -1,10 +1,10 @@
-#!/usr/bin/python
 #-------------------------------------------------------------------------------
-# . File      : chelpg_charges.py
-# . Copyright : USC, Mikolaj J. Feliks (2015)
+# . File      : CHELPGCharges.py
+# . Program   : MolarisTools
+# . Copyright : USC, Mikolaj Feliks (2015)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-"""Extract and modify CHELPG charges from a Gaussian or ORCA log file."""
+"""Extract and manipulate CHELPG charges from a Gaussian or ORCA log file."""
 
 import os
 import sys
@@ -25,7 +25,7 @@ class Atom (object):
             setattr (self, name, kw[name])
 
 
-class Charges (object):
+class CHELPGCharges (object):
     """A class for reading CHELPG charges from output files."""
 
     def __init__ (self, logFile):
@@ -239,60 +239,3 @@ class Charges (object):
             for atom in self.atoms:
                 line = "%s %6.2f" % (line, atom.charge)
             print line
-
-
-#===============================================================================
-# . Main program
-#===============================================================================
-argv       =  sys.argv
-groups     =  []
-extraCol   =  False
-extraLine  =  False
-
-if len (argv) < 2:
-    print ("Usage: %s gaussian_or_orca.out [--average 1,2,3] [--merge 4,5] [--group 6,7,8,9,-1] [--fix 1,-0.5] [--column] [--line]" % os.path.basename (argv[0]))
-    sys.exit ()
-
-
-# . Load the log file
-charges = Charges (argv[1])
-
-if len (argv) > 2:
-    prev = ""
-    for arg in argv[2:]:
-        if   arg in ("-c", "--column"):
-            extraCol    = True
-        elif arg in ("-l", "--line"):
-            extraLine   = True
-        elif arg in ("--average", "-a", "--merge", "-m", "--group", "-g", "--fix", "-f"):
-            prev = arg
-        else:
-            if not prev:
-                raise exceptions.StandardError ("Unrecognized option: %s" % arg)
-            tokens = arg.split (",")
-            # . Convert tokens
-            items = map (lambda token: int (token) if token.isdigit () else float (token), tokens)
-            # items  = []
-            # for token in tokens:
-            #     if token.isdigit ():
-            #         items.append (int (token))
-            #     else:
-            #         items.append (float (token))
-
-            if   prev in ("--average", "-a"):
-                # . Average charges
-                charges.AverageCharges (items)
-            elif prev in ("--merge", "-m"):
-                # . Merge charges
-                charges.MergeCharges (items)
-            elif prev in ("--group", "-g"):
-                # . Create a group of charges (currently, only one group is possible)
-                atoms = items[:-1]
-                charges.GroupCharges (atoms, items[-1], groups)
-                groups.extend (atoms)
-            elif prev in ("--fix", "-f"):
-                # . Fix charges of selected atoms to predefined values
-                charges.FixCharge (items[0], items[1])
-
-# . Write out the final table
-charges.WriteGeometryCharges (extraCol=extraCol, extraLine=extraLine, line="# %12s" % os.path.basename (sys.argv[1]))
