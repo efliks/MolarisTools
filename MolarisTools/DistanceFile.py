@@ -17,7 +17,8 @@ class DistanceFile (object):
 
     @property
     def npairs (self):
-        return len (self.pairs)
+        # . Do not include swapped pairs
+        return len (self.pairs) / 2
 
     @property
     def nsteps (self):
@@ -70,6 +71,11 @@ class DistanceFile (object):
         except StopIteration:
             pass
         data.close ()
+        # . Also create swapped pairs
+        for key in pairs.keys ():
+            keya, keyb = key
+            swap = (keyb, keya)
+            pairs[swap] = pairs[key]
         self.pairs = pairs
 
 
