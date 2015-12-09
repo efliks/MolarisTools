@@ -10,7 +10,7 @@ import collections, exceptions
 
 Atom     = collections.namedtuple ("Atom"     , "symbol x y z charge")
 Force    = collections.namedtuple ("Force"    , "x y z")
-ScanStep = collections.namedtuple ("ScanStep" , "Efinal atoms forces mcharges charges")
+ScanStep = collections.namedtuple ("ScanStep" , "Efinal atoms forces charges espcharges")
 
 
 class GaussianOutputFile (object):
@@ -59,20 +59,20 @@ class GaussianOutputFile (object):
                 elif line.count ("Charges from ESP fit"):
                     next (lines)
                     next (lines)
+                    self.espcharges = []
+                    for i in range (natoms):
+                        tokens = TokenizeLine (next (lines), converters=[int, None, float])
+                        charge = tokens[2]
+                        self.espcharges.append (charge)
+
+                # . Get Mulliken charges
+                elif line.count ("Mulliken atomic charges:"):
+                    next (lines)
                     self.charges = []
                     for i in range (natoms):
                         tokens = TokenizeLine (next (lines), converters=[int, None, float])
                         charge = tokens[2]
                         self.charges.append (charge)
-
-                # . Get Mulliken charges
-                elif line.count ("Mulliken atomic charges:"):
-                    next (lines)
-                    self.mcharges = []
-                    for i in range (natoms):
-                        tokens = TokenizeLine (next (lines), converters=[int, None, float])
-                        charge = tokens[2]
-                        self.mcharges.append (charge)
 
                 # . Get forces
                 # . http://www.gaussian.com/g_tech/g_ur/k_force.htm
@@ -90,7 +90,7 @@ class GaussianOutputFile (object):
 
                 # . Determine if we have reached the end of an IRC step
                 elif line.count ("-- Optimized point #"):
-                    newStep = ScanStep (Efinal=self.Efinal, atoms=self.atoms[:], forces=self.forces[:], mcharges=self.mcharges[:], charges=[])  # <--FIX ME
+                    newStep = ScanStep (Efinal=self.Efinal, atoms=self.atoms[:], forces=self.forces[:], charges=self.charges[:], espcharges=[])  # <--FIX ME
                     scan.append (newStep)
         except StopIteration:
             pass
@@ -138,13 +138,17 @@ class GaussianOutputFile (object):
         WriteData (data, filename, append=append)
 
 
-    def WriteMolarisForces (self, filename="forces.out", Eref=0.):
+    def WriteMolarisForces (self, filename="forces.out", Eref=0., useESPCharges=False):
         """Write a file in the Molaris-suitable format."""
         data = []
         data.append ("%f\n" % (self.Efinal - Eref))
         for force in self.forces:
             data.append ("%14.6f  %14.6f  %14.6f\n" % (force.x, force.y, force.z))
-        for charge in self.charges:
+        # . Do not use CHELPG charges with semi-empirical methods?
+        charges = self.charges
+        if useESPCharges:
+            charges = self.espcharges
+        for charge in charges:
             data.append ("%14.6f\n" % charge)
         # . Write the file
         WriteData (data, filename)

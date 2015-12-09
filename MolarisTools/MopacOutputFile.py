@@ -84,13 +84,17 @@ class MopacOutputFile (object):
             pass
 
 
-    def WriteMolarisForces (self, filename="forces.out", Eref=0.):
+    def WriteMolarisForces (self, filename="forces.out", Eref=0., useESPCharges=False):
         """Write a file in the Molaris-suitable format."""
         data = []
         data.append ("%f\n" % (self.Efinal - Eref))
         for force in self.forces:
             data.append ("%14.6f  %14.6f  %14.6f\n" % (force.x, force.y, force.z))
-        for charge in self.charges:
+        # . Do not use CHELPG charges with semi-empirical methods?
+        charges = self.charges
+        if useESPCharges:
+            charges = self.espcharges
+        for charge in charges:
             data.append ("%14.6f\n" % charge)
         # . Write the file
         WriteData (data, filename)
