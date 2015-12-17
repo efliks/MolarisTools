@@ -77,7 +77,7 @@ class MolarisResidue (object):
         for atomName, atomData in self.atoms.iteritems ():
             isEVBAtom = evbAtoms.has_key (atomName)
             if isEVBAtom:
-                chargeTypes = nameToChargeType[atomName]
+                chargeTypes = evbAtoms[atomName]
                 pdbCharge, pdbType, atomNumber, connectNames, connectNumbers = atomData
 
                 # . Determine if the atom changes its type between resonance forms

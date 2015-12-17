@@ -17,22 +17,27 @@ class QMCaller (object):
     """A class to provide communication between Molaris and a QM program (Mopac or Gaussian)."""
 
     defaultAttributes = {
+        # . Options specific to Mopac
         "cosmo"                :   True           ,
+        # . If qmmm is True, fileAtoms should be set to "mol.in"
+        "qmmm"                 :   False          ,
+        "fileMopacError"       :   "run.err"      ,
+        "fileMopacInput"       :   "run.mop"      ,
+        "fileMopacOutput"      :   "run.out"      ,
+        "pathMopac"            :   os.path.join (os.environ["HOME"], "local", "bin", "MOPAC2009.exe") ,
+        # . Options specific to Gaussian
+        "fileGaussianError"    :   "job.err"      ,
+        "fileGaussianInput"    :   "job.inp"      ,
+        "fileGaussianOutput"   :   "job.log"      ,
+        "pathGaussian"         :   os.path.join (os.environ["HOME"], "local", "opt", "g03", "g03")    ,
+        # . General options
         "charge"               :   0              ,
         "method"               :   "PM3"          ,
         "program"              :   "mopac"        ,
         "fileAtoms"            :   "atoms.inp"    ,
         "fileForces"           :   "forces.out"   ,
         "fileTrajectory"       :   "qm.xyz"       ,
-        "fileMopacError"       :   "run.err"      ,
-        "fileMopacInput"       :   "run.mop"      ,
-        "fileMopacOutput"      :   "run.out"      ,
-        "fileGaussianError"    :   "job.err"      ,
-        "fileGaussianInput"    :   "job.inp"      ,
-        "fileGaussianOutput"   :   "job.log"      ,
-        "pathMopac"            :   os.path.join (os.environ["HOME"], "local", "bin", "MOPAC2009.exe") ,
-        "pathGaussian"         :   os.path.join (os.environ["HOME"], "local", "opt", "g03", "g03")    ,
-    }
+            }
 
     def __init__ (self, *arguments, **keywordArguments):
         """Constructor."""

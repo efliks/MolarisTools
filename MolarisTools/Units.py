@@ -10,4 +10,4 @@ HARTREE_TO_KCAL_MOL               = 627.509469
 GRADIENT_TO_FORCE                 =  -1.
 EV_TO_KCAL_MOL                    =  23.0609
 
-atomicNumberToSymbol = {1 : "H", 6 : "C", 7 : "N", 8 : "O", 17 : "CL"}
+atomicNumberToSymbol = {1 : "H", 6 : "C", 7 : "N", 8 : "O", 17 : "CL", 15 : "P", 12 : "MG"}
