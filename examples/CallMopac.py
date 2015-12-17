@@ -3,8 +3,8 @@
 import sys, os, subprocess
 sys.path.append (os.path.join (os.environ["HOME"], "devel", "MolarisTools"))
 
-from MolarisTools import QMCaller
+from MolarisTools import QMCallerMopac
 
 
-caller = QMCaller (charge=-1, method="PM3", program="mopac")
+caller = QMCallerMopac (charge=-1, method="PM3")
 caller.Run ()
