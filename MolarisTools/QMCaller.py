@@ -10,7 +10,7 @@ from GaussianOutputFile  import GaussianOutputFile
 # . Molaris file
 from MolarisAtomsFile    import MolarisAtomsFile
 
-import subprocess, os.path
+import subprocess, os.path, exceptions
 
 
 class QMCaller (object):
@@ -48,7 +48,7 @@ class QMCallerMopac (QMCaller):
 
     # . Options specific to Mopac
     defaultAttributes = {
-        "cosmo"                :   True           ,
+        "cosmo"                :   False          ,
         # . If qmmm is True, fileAtoms should be set to "mol.in"
         "qmmm"                 :   False          ,
         "fileMopacError"       :   "run.err"      ,
@@ -61,10 +61,16 @@ class QMCallerMopac (QMCaller):
     def __init__ (self, **keywordArguments):
         super (QMCallerMopac, self).__init__ (**keywordArguments)
 
+        if self.cosmo and self.qmmm:
+            raise exceptions.StandardError ("Both cosmo and qmmm options cannot be enabled.")
+        if self.qmmm:
+            if self.fileAtoms != "mol.in":
+                raise exceptions.StandardError ("With qmmm option on, fileAtoms can only be mol.in.")
+
 
     def Run (self):
         # . Prepare a MOPAC calculation
-        self.molaris.WriteMopacInput (filename=self.fileMopacInput, method=self.method, charge=self.charge, cosmo=self.cosmo)
+        self.molaris.WriteMopacInput (filename=self.fileMopacInput, method=self.method, charge=self.charge, cosmo=self.cosmo, qmmm=self.qmmm)
 
         # . Run the calculation
         fileError  = open (self.fileMopacError, "w")
@@ -105,3 +111,9 @@ class QMCallerGaussian (QMCaller):
         # . Convert the output file from Gaussian to forces.out
         gaussian = GaussianOutputFile (filename=self.fileGaussianOutput)
         gaussian.WriteMolarisForces (filename=self.fileForces)
+
+
+#===============================================================================
+# . Main program
+#===============================================================================
+if __name__ == "__main__": pass

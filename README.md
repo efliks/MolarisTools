@@ -1,3 +1,3 @@
 # MolarisTools
 
-A Python library and a set of scripts to facilitate working with the Molaris program.
+A Python library and a set of example scripts to facilitate working with the Molaris program.

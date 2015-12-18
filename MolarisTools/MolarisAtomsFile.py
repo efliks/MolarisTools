@@ -95,10 +95,10 @@ class MolarisAtomsFile (object):
         WriteData (data, filename, append=append)
 
 
-    def WriteMopacInput (self, filename="run.mop", method="PM3", charge=0, cosmo=False, eps=78.4):
+    def WriteMopacInput (self, filename="run.mop", method="PM3", charge=0, eps=78.4, cosmo=False, qmmm=False):
         """Write an input file for MOPAC."""
         data   = []
-        data.append ("%s  1SCF  CHARGE=%-2d  GRAD  XYZ  MULLIK  %s\n" % (method, charge, (("EPS=%.2f" % eps) if cosmo else "")))
+        data.append ("%s  1SCF  CHARGE=%-2d  GRAD  XYZ  MULLIK  %s  %s\n" % (method, charge, (("EPS=%.2f" % eps) if cosmo else ""), "DEBUG MOL_QMMM" if qmmm else ""))
         data.append ("Comment line\n")
         data.append ("\n")
         for atom in self.qatoms + self.latoms:
