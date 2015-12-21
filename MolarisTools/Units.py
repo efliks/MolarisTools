@@ -13,4 +13,10 @@ EV_TO_KCAL_MOL                    =  23.0609
 atomicNumberToSymbol = {1 : "H", 6 : "C", 7 : "N", 8 : "O", 17 : "CL", 15 : "P", 12 : "MG"}
 
 # . Invert dictionary
-symbolToAtomicNumber = {symbol:number for number, symbol in atomicNumberToSymbol.iteritems ()}
+# . Dictionary comprehension is new in Python 2.7
+# symbolToAtomicNumber = {symbol:number for number, symbol in atomicNumberToSymbol.iteritems ()}
+
+# . Code for Python 2.6
+symbolToAtomicNumber = {}
+for number, symbol in atomicNumberToSymbol.iteritems ():
+    symbolToAtomicNumber[symbol] = number

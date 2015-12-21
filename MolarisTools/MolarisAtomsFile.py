@@ -4,9 +4,10 @@
 # . Copyright : USC, Mikolaj Feliks (2015)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-from   Units     import *
-from   Utilities import TokenizeLine, WriteData
-import exceptions, collections
+from   Units             import *
+from   Utilities         import TokenizeLine, WriteData
+from   GaussianInputFile import GaussianInputFile
+import collections
 
 Atom  = collections.namedtuple ("Atom"  , "symbol x y z charge")
 Force = collections.namedtuple ("Force" , "x y z")
@@ -95,34 +96,31 @@ class MolarisAtomsFile (object):
         WriteData (data, filename, append=append)
 
 
-    def WriteMopacInput (self, filename="run.mop", method="PM3", charge=0, eps=78.4, cosmo=False, qmmm=False):
+    def WriteMopacInput (self, filename="run.mop", method="PM3", charge=0, multiplicity=1, eps=78.4, cosmo=False, qmmm=False):
         """Write an input file for MOPAC."""
+        multp = {1  :   ""        ,
+                 2  :   "DOUBLET" ,
+                 3  :   "TRIPLET" }
         data   = []
-        data.append ("%s  1SCF  CHARGE=%-2d  GRAD  XYZ  MULLIK  %s  %s\n" % (method, charge, (("EPS=%.2f" % eps) if cosmo else ""), "DEBUG MOL_QMMM" if qmmm else ""))
+        data.append ("%s  1SCF  CHARGE=%-2d  %s  %s  GRAD  XYZ  MULLIK  %s  %s\n" % (method, charge, multp[multiplicity], (("EPS=%.2f" % eps) if cosmo else ""), "DEBUG MOL_QMMM" if qmmm else ""))
         data.append ("Comment line\n")
         data.append ("\n")
-        for atom in self.qatoms + self.latoms:
+        for atom in (self.qatoms + self.latoms):
             data.append ("%2s    %9.4f  1    %9.4f  1    %9.4f  1\n" % (atom.symbol, atom.x, atom.y, atom.z))
         WriteData (data, filename)
 
 
-    def WriteGaussianInput  (self, filename="run_gauss.inp", methodBasis="PM3", charge=0, multiplicity=1):
+    def WriteGaussianInput  (self, filename="run.inp", methodBasis="PM3", charge=0, multiplicity=1, qmmm=False):
         """Write an input file for Gaussian."""
-        # . Determine if a semiempirical potential is used
-        isSemiempirical = methodBasis[:3] in ("AM1", "PM3", )
-        data = []
-        data.append ("# %s POP=CHELPG FORCE %s\n\n" % ((methodBasis, "" if isSemiempirical else "CHARGE=ANGSTROMS NOSYMM")))
-        data.append ("Comment line\n\n")
-        data.append ("%d %d\n" % (charge, multiplicity))
-        for atom in self.qatoms + self.latoms:
-            data.append ("%2s    %9.4f    %9.4f    %9.4f\n" % (atom.symbol, atom.x, atom.y, atom.z))
-        data.append ("\n")
-        # . Write point charges
-        if not isSemiempirical:
-            for atom in (self.patoms + self.watoms):
-                data.append ("%9.4f    %9.4f    %9.4f    %9.4f\n" % (atom.x, atom.y, atom.z, atom.charge))
-            data.append ("\n")
-        WriteData (data, filename)
+        gaussian = GaussianInputFile (
+            qmmm           = qmmm          ,
+            method         = methodBasis   ,
+            charge         = charge        ,
+            multiplicity   = multiplicity  ,
+            fileInput      = filename      ,)
+        atoms        = (self.qatoms + self.latoms)
+        pointCharges = (self.patoms + self.watoms)
+        gaussian.Write (atoms, pointCharges)
 
 
 #===============================================================================

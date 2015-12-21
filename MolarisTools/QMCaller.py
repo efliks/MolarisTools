@@ -5,8 +5,9 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 # . QM files
-from MopacOutputFile     import MopacOutputFile
+from GaussianInputFile   import GaussianInputFile
 from GaussianOutputFile  import GaussianOutputFile
+from MopacOutputFile     import MopacOutputFile
 # . Molaris file
 from MolarisAtomsFile    import MolarisAtomsFile
 
@@ -19,6 +20,7 @@ class QMCaller (object):
     # . General options
     defaultAttributes = {
         "charge"               :   0              ,
+        "multiplicity"         :   1              ,
         "method"               :   "PM3"          ,
         "fileAtoms"            :   "atoms.inp"    ,
         "fileForces"           :   "forces.out"   ,
@@ -49,7 +51,8 @@ class QMCallerMopac (QMCaller):
     # . Options specific to Mopac
     defaultAttributes = {
         "cosmo"                :   False          ,
-        # . If qmmm is True, fileAtoms should be set to "mol.in"
+        # . If qmmm is True, Mopac will use point charges to polarize the wavefunction
+        # . fileAtoms should be set to "mol.in"
         "qmmm"                 :   False          ,
         "fileMopacError"       :   "run.err"      ,
         "fileMopacInput"       :   "run.mop"      ,
@@ -88,29 +91,59 @@ class QMCallerGaussian (QMCaller):
 
     # . Options specific to Gaussian
     defaultAttributes = {
-        "fileGaussianError"    :   "job.err"      ,
-        "fileGaussianInput"    :   "job.inp"      ,
-        "fileGaussianOutput"   :   "job.log"      ,
-        "pathGaussian"         :   os.path.join (os.environ["HOME"], "local", "opt", "g03", "g03") ,
+        # . env may define variables such as GAUSS_EXEDIR and GAUSS_SCRDIR
+        "env"                     :   None         ,
+        "ncpu"                    :   1            ,
+        "memory"                  :   1            ,
+        # . If qmmm is True, Gaussian will use point charges to polarize the wavefunction
+        "qmmm"                    :   False        ,
+        # . restart takes the wavefunction from the previous calculation
+        "restart"                 :   False        ,
+        "fileGaussianError"       :   "job.err"    ,
+        "fileGaussianInput"       :   "job.inp"    ,
+        "fileGaussianOutput"      :   "job.log"    ,
+        "fileGaussianCheckpoint"  :   "job.chk"    ,
+        "pathGaussian"            :   os.path.join (os.environ["HOME"], "local", "opt", "g03", "g03") ,
             }
     defaultAttributes.update (QMCaller.defaultAttributes)
 
     def __init__ (self, **keywordArguments):
         super (QMCallerGaussian, self).__init__ (**keywordArguments)
 
+        # . Determine if a semiempirical potential is used
+        method = self.method[:3]
+        if method in ("AM1", "PM3", ) and self.qmmm:
+            raise exceptions.StandardError ("Point charges cannot be used with semiempirical methods.")
+
 
     def Run (self):
         # . Prepare a Gaussian calculation
-        self.molaris.WriteGaussianInput (filename=self.fileGaussianInput, methodBasis=self.method, charge=self.charge)
+        gaussian = GaussianInputFile (
+            qmmm           =  self.qmmm                    ,
+            ncpu           =  self.ncpu                    ,
+            memory         =  self.memory                  ,
+            method         =  self.method                  ,
+            charge         =  self.charge                  ,
+            multiplicity   =  self.multiplicity            ,
+            fileInput      =  self.fileGaussianInput       ,
+            fileCheckpoint =  self.fileGaussianCheckpoint  ,
+            restart        =  os.path.exists (self.fileGaussianCheckpoint) and self.restart ,
+                )
+        atoms        = (self.molaris.qatoms + self.molaris.latoms)
+        pointCharges = (self.molaris.patoms + self.molaris.watoms)
+        gaussian.Write (atoms, pointCharges)
 
         # . Run the calculation
         fileError  = open (self.fileGaussianError, "w")
-        subprocess.check_call ([self.pathGaussian, self.fileGaussianInput], stdout=fileError, stderr=fileError)
+        if self.env:
+            subprocess.check_call ([self.pathGaussian, self.fileGaussianInput], stdout=fileError, stderr=fileError, env=self.env)
+        else:
+            subprocess.check_call ([self.pathGaussian, self.fileGaussianInput], stdout=fileError, stderr=fileError)
         fileError.close ()
 
         # . Convert the output file from Gaussian to forces.out
-        gaussian = GaussianOutputFile (filename=self.fileGaussianOutput)
-        gaussian.WriteMolarisForces (filename=self.fileForces)
+        output = GaussianOutputFile (filename=self.fileGaussianOutput)
+        output.WriteMolarisForces (filename=self.fileForces)
 
 
 #===============================================================================

@@ -17,5 +17,6 @@ from MolarisInputFile    import MolarisInputFile
 from MolarisOutputFile   import MolarisOutputFile, MolarisOutputFile2
 
 # . Handling of other files
-from MopacOutputFile     import MopacOutputFile
+from GaussianInputFile   import GaussianInputFile
 from GaussianOutputFile  import GaussianOutputFile
+from MopacOutputFile     import MopacOutputFile
