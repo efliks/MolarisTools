@@ -16,19 +16,23 @@ Force = collections.namedtuple ("Force" , "x y z")
 class MolarisAtomsFile (object):
     """A class representing atoms for the QC/MM calculation."""
 
-    def __init__ (self, filename="atoms.inp"):
+    def __init__ (self, filename="atoms.inp", filterSymbols=["MG", ]):
         """Constructor."""
-        self.inputfile = filename
+        self.inputfile     = filename
+        self.filterSymbols = filterSymbols
         self._Parse ()
 
 
     def _LineToAtom (self, line, includeCharge=False):
-        if includeCharge:
-            tokens = TokenizeLine (line, converters=[None, float, float, float, float])
-            atom   = Atom (symbol=tokens[0], x=tokens[1], y=tokens[2], z=tokens[3], charge=tokens[4])
-        else:
-            tokens = TokenizeLine (line, converters=[None, float, float, float])
-            atom   = Atom (symbol=tokens[0], x=tokens[1], y=tokens[2], z=tokens[3], charge=None)
+        tokens = TokenizeLine (line, converters=[None, float, float, float, float])
+        symbol = tokens[0]
+        # . Truncate all symbols to one character, except the filtered ones
+        atom   = Atom (
+            symbol = (symbol[:1] if symbol not in self.filterSymbols else symbol) ,
+            charge = (tokens[4] if includeCharge else None) ,
+            x      =  tokens[1]  ,
+            y      =  tokens[2]  ,
+            z      =  tokens[3]  ,)
         return atom
 
 

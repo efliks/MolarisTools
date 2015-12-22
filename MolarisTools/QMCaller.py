@@ -25,6 +25,7 @@ class QMCaller (object):
         "fileAtoms"            :   "atoms.inp"    ,
         "fileForces"           :   "forces.out"   ,
         "fileTrajectory"       :   "qm.xyz"       ,
+        "filterSymbols"        :   ["MG", ]       ,
             }
 
     def __init__ (self, **keywordArguments):
@@ -37,7 +38,7 @@ class QMCaller (object):
 
     def _Prepare (self):
         # . Read atoms.inp from Molaris
-        self.molaris = MolarisAtomsFile (filename=self.fileAtoms)
+        self.molaris = MolarisAtomsFile (filename=self.fileAtoms, filterSymbols=self.filterSymbols)
 
         # . Write geometries for the purpose of viewing
         if self.fileTrajectory:
@@ -131,7 +132,7 @@ class QMCallerGaussian (QMCaller):
                 )
         atoms        = (self.molaris.qatoms + self.molaris.latoms)
         pointCharges = (self.molaris.patoms + self.molaris.watoms)
-        gaussian.Write (atoms, pointCharges)
+        gaussian.Write (atoms, pointCharges=pointCharges)
 
         # . Run the calculation
         fileError  = open (self.fileGaussianError, "w")

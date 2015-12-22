@@ -36,7 +36,7 @@ class GaussianInputFile (object):
         for (key, value) in keywordArguments.iteritems ():                 setattr (self, key, value)
 
 
-    def Write (self, atoms, pointCharges):
+    def Write (self, atoms, pointCharges=None):
         """Write a Gaussian input file from a Molaris atoms file."""
         data = []
         # . Write job control
@@ -61,10 +61,11 @@ class GaussianInputFile (object):
         data.append ("\n")
 
         # . Write point charges
-        if self.qmmm:
-            for atom in pointCharges:
-                data.append ("%9.4f    %9.4f    %9.4f    %9.4f\n" % (atom.x, atom.y, atom.z, atom.charge))
-            data.append ("\n")
+        if pointCharges:
+            if self.qmmm:
+                for atom in pointCharges:
+                    data.append ("%9.4f    %9.4f    %9.4f    %9.4f\n" % (atom.x, atom.y, atom.z, atom.charge))
+                data.append ("\n")
 
         # . Finish up
         WriteData (data, self.fileInput)

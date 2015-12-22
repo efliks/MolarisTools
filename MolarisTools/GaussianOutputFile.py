@@ -88,6 +88,14 @@ class GaussianOutputFile (object):
                         force  = Force (x=tokens[2] * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM, y=tokens[3] * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM, z=tokens[4] * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM)
                         self.forces.append (force)
 
+                # . Get timing information
+                elif line.count ("Job cpu time"):
+                    tokens = TokenizeLine (line, converters=[None, None, None, int, None, int, None, int, None, float, None])
+                    days, hours, minutes, seconds = tokens[3], tokens[5], tokens[7], tokens[9]
+                    self.timings = {"days" : days, "hours" : hours, "minutes" : minutes, "seconds" : seconds}
+                    # . Quit here, since composite jobs are not supported (?)
+                    # break
+
                 # . Determine if we have reached the end of an IRC step
                 elif line.count ("-- Optimized point #"):
                     newStep = ScanStep (Efinal=self.Efinal, atoms=self.atoms[:], forces=self.forces[:], charges=self.charges[:], espcharges=[])  # <--FIX ME
