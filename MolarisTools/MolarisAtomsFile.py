@@ -102,7 +102,7 @@ class MolarisAtomsFile (object):
                  2  :   "DOUBLET" ,
                  3  :   "TRIPLET" }
         data   = []
-        data.append ("%s  1SCF  CHARGE=%-2d  %s  %s  GRAD  XYZ  MULLIK  %s  %s\n" % (method, charge, multp[multiplicity], (("EPS=%.2f" % eps) if cosmo else ""), "DEBUG MOL_QMMM" if qmmm else ""))
+        data.append ("%s  1SCF  CHARGE=%-2d  %s  %s  GRAD  XYZ  MULLIK  %s\n" % (method, charge, multp[multiplicity], (("EPS=%.2f" % eps) if cosmo else ""), "DEBUG MOL_QMMM" if qmmm else ""))
         data.append ("Comment line\n")
         data.append ("\n")
         for atom in (self.qatoms + self.latoms):
