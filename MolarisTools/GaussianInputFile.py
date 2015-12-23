@@ -13,18 +13,20 @@ Atom  = collections.namedtuple ("Atom"  , "symbol x y z charge")
 class GaussianInputFile (object):
     """A class for writing Gaussian input files."""
 
+    # . Notes:
+    # . Memory is in GB
+    # . method includes also a basis, for example B3LYP/6-31G*
+    # . restart indicates if the wavefunction should be taken from the previous calculation
+    # . By default, skip the calculation of CHELPG charges
     defaultAttributes = {
         "ncpu"            :   1          ,
-        # . memory in GB
         "memory"          :   1          ,
         "charge"          :   0          ,
         "multiplicity"    :   1          ,
         "qmmm"            :   False      ,
-        # . method includes also a basis, for example B3LYP/6-31G*
+        "cosmo"           :   False      ,
         "method"          :   "PM3"      ,
-        # . restart indicates if the wavefunction should be taken from the previous calculation
         "restart"         :   False      ,
-        # . By default, skip the calculation of CHELPG charges
         "chelpg"          :   False      ,
         "fileInput"       :   "job.inp"  ,
         "fileCheckpoint"  :   None       ,
@@ -48,10 +50,11 @@ class GaussianInputFile (object):
             data.append ("%%chk=%s\n" % self.fileCheckpoint)
 
         # . Write header
-        charges = "CHARGE=ANGSTROMS" if self.qmmm    else ""
-        restart = "GUESS=READ"       if self.restart else ""
-        chelpg  = "POP=CHELPG"       if self.chelpg  else ""
-        data.append ("# %s %s FORCE %s %s NOSYMM\n\n" % (self.method, chelpg, charges, restart))
+        qmmm    = "CHARGE=ANGSTROMS"     if self.qmmm    else ""
+        cosmo   = "SCRF=(Solvent=Water)" if self.cosmo   else ""
+        chelpg  = "POP=CHELPG"           if self.chelpg  else ""
+        restart = "GUESS=READ"           if self.restart else ""
+        data.append ("# %s %s %s %s %s FORCE NOSYMM\n\n" % (self.method, chelpg, charges, cosmo, restart))
         data.append ("Comment line\n\n")
         data.append ("%d %d\n" % (self.charge, self.multiplicity))
 

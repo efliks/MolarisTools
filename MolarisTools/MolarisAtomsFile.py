@@ -122,9 +122,7 @@ class MolarisAtomsFile (object):
             charge         = charge        ,
             multiplicity   = multiplicity  ,
             fileInput      = filename      ,)
-        atoms        = (self.qatoms + self.latoms)
-        pointCharges = (self.patoms + self.watoms)
-        gaussian.Write (atoms, pointCharges)
+        gaussian.Write (self.qatoms + self.latoms, pointCharges=(self.patoms + self.watoms))
 
 
 #===============================================================================

@@ -18,11 +18,14 @@ class QMCaller (object):
     """Base class to provide communication between Molaris and QM programs."""
 
     # . General options
+    # . If qmmm is True, point charges will be used to polarize the wavefunction
     defaultAttributes = {
         "charge"               :   0              ,
         "multiplicity"         :   1              ,
         "method"               :   "PM3"          ,
-        "fileAtoms"            :   "atoms.inp"    ,
+        "cosmo"                :   False          ,
+        "qmmm"                 :   False          ,
+        "fileAtoms"            :   "mol.in"       ,
         "fileForces"           :   "forces.out"   ,
         "fileTrajectory"       :   "qm.xyz"       ,
         "filterSymbols"        :   ["MG", ]       ,
@@ -50,11 +53,8 @@ class QMCallerMopac (QMCaller):
     """A class to provide communication between Molaris and Mopac."""
 
     # . Options specific to Mopac
+    # . fileAtoms should be set to "mol.in" if qmmm=True
     defaultAttributes = {
-        "cosmo"                :   False          ,
-        # . If qmmm is True, Mopac will use point charges to polarize the wavefunction
-        # . fileAtoms should be set to "mol.in"
-        "qmmm"                 :   False          ,
         "fileMopacError"       :   "run.err"      ,
         "fileMopacInput"       :   "run.mop"      ,
         "fileMopacOutput"      :   "run.out"      ,
@@ -91,14 +91,12 @@ class QMCallerGaussian (QMCaller):
     """A class to provide communication between Molaris and Gaussian."""
 
     # . Options specific to Gaussian
+    # . env may define variables such as GAUSS_EXEDIR and GAUSS_SCRDIR
+    # . restart means to reuse the wavefunction from the checkpoint file
     defaultAttributes = {
-        # . env may define variables such as GAUSS_EXEDIR and GAUSS_SCRDIR
         "env"                     :   None         ,
         "ncpu"                    :   1            ,
         "memory"                  :   1            ,
-        # . If qmmm is True, Gaussian will use point charges to polarize the wavefunction
-        "qmmm"                    :   False        ,
-        # . restart takes the wavefunction from the previous calculation
         "restart"                 :   False        ,
         "fileGaussianError"       :   "job.err"    ,
         "fileGaussianInput"       :   "job.inp"    ,
@@ -120,9 +118,10 @@ class QMCallerGaussian (QMCaller):
     def Run (self):
         # . Prepare a Gaussian calculation
         gaussian = GaussianInputFile (
-            qmmm           =  self.qmmm                    ,
             ncpu           =  self.ncpu                    ,
             memory         =  self.memory                  ,
+            qmmm           =  self.qmmm                    ,
+            cosmo          =  self.cosmo                   ,
             method         =  self.method                  ,
             charge         =  self.charge                  ,
             multiplicity   =  self.multiplicity            ,
@@ -130,9 +129,7 @@ class QMCallerGaussian (QMCaller):
             fileCheckpoint =  self.fileGaussianCheckpoint  ,
             restart        =  os.path.exists (self.fileGaussianCheckpoint) and self.restart ,
                 )
-        atoms        = (self.molaris.qatoms + self.molaris.latoms)
-        pointCharges = (self.molaris.patoms + self.molaris.watoms)
-        gaussian.Write (atoms, pointCharges=pointCharges)
+        gaussian.Write (self.molaris.qatoms + self.molaris.latoms, pointCharges=(self.molaris.patoms + self.molaris.watoms))
 
         # . Run the calculation
         fileError  = open (self.fileGaussianError, "w")

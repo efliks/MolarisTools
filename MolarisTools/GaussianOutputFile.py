@@ -96,6 +96,10 @@ class GaussianOutputFile (object):
                     # . Quit here, since composite jobs are not supported (?)
                     # break
 
+                # . Check for a failed job
+                elif line.count ("Error termination"):
+                    raise exceptions.StandardError ("Error termination in Gaussian output file %s." % self.inputfile)
+
                 # . Determine if we have reached the end of an IRC step
                 elif line.count ("-- Optimized point #"):
                     newStep = ScanStep (Efinal=self.Efinal, atoms=self.atoms[:], forces=self.forces[:], charges=self.charges[:], espcharges=[])  # <--FIX ME
