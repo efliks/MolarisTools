@@ -4,9 +4,8 @@
 # . Copyright : USC, Mikolaj Feliks (2015)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-from   Units             import *
-from   Utilities         import TokenizeLine, WriteData
-from   GaussianInputFile import GaussianInputFile
+from   Units       import *
+from   Utilities   import TokenizeLine, WriteData
 import collections
 
 Atom  = collections.namedtuple ("Atom"  , "symbol x y z charge")
@@ -102,27 +101,12 @@ class MolarisAtomsFile (object):
 
     def WriteMopacInput (self, filename="run.mop", method="PM3", charge=0, multiplicity=1, eps=78.4, cosmo=False, qmmm=False):
         """Write an input file for MOPAC."""
-        multp = {1  :   ""        ,
-                 2  :   "DOUBLET" ,
-                 3  :   "TRIPLET" }
-        data   = []
-        data.append ("%s  1SCF  CHARGE=%-2d  %s  %s  GRAD  XYZ  MULLIK  %s\n" % (method, charge, multp[multiplicity], (("EPS=%.2f" % eps) if cosmo else ""), "DEBUG MOL_QMMM" if qmmm else ""))
-        data.append ("Comment line\n")
-        data.append ("\n")
-        for atom in (self.qatoms + self.latoms):
-            data.append ("%2s    %9.4f  1    %9.4f  1    %9.4f  1\n" % (atom.symbol, atom.x, atom.y, atom.z))
-        WriteData (data, filename)
+        pass
 
 
     def WriteGaussianInput  (self, filename="run.inp", methodBasis="PM3", charge=0, multiplicity=1, qmmm=False):
         """Write an input file for Gaussian."""
-        gaussian = GaussianInputFile (
-            qmmm           = qmmm          ,
-            method         = methodBasis   ,
-            charge         = charge        ,
-            multiplicity   = multiplicity  ,
-            fileInput      = filename      ,)
-        gaussian.Write (self.qatoms + self.latoms, pointCharges=(self.patoms + self.watoms))
+        pass
 
 
 #===============================================================================
