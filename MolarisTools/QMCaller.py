@@ -16,16 +16,16 @@ class QMCaller (object):
     # . General options
     # . If qmmm is True, point charges will be used to polarize the wavefunction
     defaultAttributes = {
-        "method"               :   "PM3"          ,
-        "charge"               :   0              ,
-        "multiplicity"         :   1              ,
-        "qmmm"                 :   False          ,
-        "cosmo"                :   False          ,
-        "dielectric"           :   78.4           ,
-        "fileAtoms"            :   "mol.in"       ,
-        "fileForces"           :   "forces.out"   ,
-        "fileTrajectory"       :   "qm.xyz"       ,
-        "filterSymbols"        :   ["MG", ]       ,
+        "method"             :     "PM3"          ,
+        "charge"             :     0              ,
+        "multiplicity"       :     1              ,
+        "qmmm"               :     False          ,
+        "cosmo"              :     False          ,
+        "dielectric"         :     78.4           ,
+        "fileAtoms"          :     "mol.in"       ,
+        "fileForces"         :     "forces.out"   ,
+        "fileTrajectory"     :     "qm.xyz"       ,
+        "filterSymbols"      :     ["MG", "CL", "BR", "Mg", "Cl", "Br", ] ,
             }
 
     def __init__ (self, **keywordArguments):

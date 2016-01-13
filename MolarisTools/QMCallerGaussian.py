@@ -42,7 +42,10 @@ class QMCallerGaussian (QMCaller):
             raise exceptions.StandardError ("Point charges cannot be used with semiempirical methods.")
 
         # . Reuse the wavefunction if the checkpoint file exists
-        self.restart = os.path.exists (self.fileGaussianCheckpoint) and self.restart
+        if self.fileGaussianCheckpoint:
+            self.restart = os.path.exists (self.fileGaussianCheckpoint) and self.restart
+        else:
+            self.restart = False
 
         # . Prepare a Gaussian input file
         self._WriteInput ()
