@@ -7,7 +7,7 @@
 from Utilities           import WriteData
 from MolarisAtomsFile    import MolarisAtomsFile
 
-import subprocess, os.path, exceptions
+import subprocess, exceptions, os, glob, shutil
 
 
 class QMCaller (object):
@@ -26,6 +26,8 @@ class QMCaller (object):
         "fileForces"         :     "forces.out"   ,
         "fileTrajectory"     :     "qm.xyz"       ,
         "filterSymbols"      :     ["MG", "CL", "BR", "Mg", "Cl", "Br", ] ,
+        "archive"            :     False          ,
+        "directoryArchive"   :     "archive"      ,
             }
 
     def __init__ (self, **keywordArguments):
@@ -38,6 +40,11 @@ class QMCaller (object):
         # . Preparatory step
         self._Prepare ()
 
+        # . Create a directory for archiving
+        if self.archive:
+            if not os.path.exists (self.directoryArchive):
+                os.makedirs (self.directoryArchive)
+
 
     def _Prepare (self):
         # . Read atoms.inp from Molaris
@@ -46,6 +53,18 @@ class QMCaller (object):
         # . Write geometries for the purpose of viewing
         if self.fileTrajectory:
             self.molaris.WriteQM (filename=self.fileTrajectory, link=True, append=True)
+
+
+    def _Archive (self, filename):
+        """Archive the log file."""
+        if self.archive:
+            files = glob.glob (os.path.join (self.directoryArchive, "*.????????"))
+            if files:
+                lastFile = files[-1]
+                counter  = int (lastFile.split (".")[-1])
+            else:
+                counter  = 0
+            shutil.copy2 (filename, os.path.join (self.directoryArchive, "%s.%08d" % (filename, counter + 1)))
 
 
 #===============================================================================

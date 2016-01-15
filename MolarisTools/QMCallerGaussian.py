@@ -64,6 +64,9 @@ class QMCallerGaussian (QMCaller):
         output = GaussianOutputFile (filename=self.fileGaussianOutput)
         output.WriteMolarisForces (filename=self.fileForces)
 
+        # . Archive the log file
+        self._Archive (self.fileGaussianOutput)
+
 
     def _WriteInput (self):
         """Write a Gaussian input file."""

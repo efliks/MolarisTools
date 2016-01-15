@@ -64,6 +64,9 @@ class QMCallerMopac (QMCaller):
         mopac = MopacOutputFile (filename=self.fileMopacOutput)
         mopac.WriteMolarisForces (filename=self.fileForces)
 
+        # . Archive the log file
+        self._Archive (self.fileMopacOutput)
+
 
 #===============================================================================
 # . Main program
