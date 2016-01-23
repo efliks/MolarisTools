@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 # . File      : QMCallerGaussian.py
 # . Program   : MolarisTools
-# . Copyright : USC, Mikolaj Feliks (2015)
+# . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from QMCaller            import QMCaller
@@ -50,6 +50,9 @@ class QMCallerGaussian (QMCaller):
         # . Prepare a Gaussian input file
         self._WriteInput ()
 
+        # . Prepare archiving
+        self._logFile = self.fileMopacOutput
+
 
     def Run (self):
         # . Run the calculation
@@ -64,8 +67,11 @@ class QMCallerGaussian (QMCaller):
         output = GaussianOutputFile (filename=self.fileGaussianOutput)
         output.WriteMolarisForces (filename=self.fileForces)
 
+        # . Save some of the results
+        self.Efinal = output.Efinal
+
         # . Archive the log file
-        self._Archive (self.fileGaussianOutput)
+        self._Archive ()
 
 
     def _WriteInput (self):

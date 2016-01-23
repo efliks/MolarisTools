@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 # . File      : MolarisAtomsFile.py
 # . Program   : MolarisTools
-# . Copyright : USC, Mikolaj Feliks (2015)
+# . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from   Units       import *
@@ -75,9 +75,9 @@ class MolarisAtomsFile (object):
             pass
 
 
-    def WriteQM (self, filename="qm.xyz", link=False, append=False):
+    def WriteQM (self, filename="qm.xyz", link=False, append=False, caption=""):
         """Write QM atoms to an XYZ file."""
-        self._WriteSection (filename, (self.qatoms + self.latoms) if link else self.qatoms, includeCharge=False, append=append)
+        self._WriteSection (filename, (self.qatoms + self.latoms) if link else self.qatoms, includeCharge=False, append=append, caption=caption)
 
 
     def WriteProtein (self, filename="prot.xyz"):
@@ -90,10 +90,10 @@ class MolarisAtomsFile (object):
         self._WriteSection (filename, self.watoms, includeCharge=True)
 
 
-    def _WriteSection (self, filename, atoms, includeCharge=False, skipSymbol=False, append=False):
+    def _WriteSection (self, filename, atoms, includeCharge=False, skipSymbol=False, append=False, caption=""):
         """Write an XYZ file."""
         natoms = len (atoms)
-        data   = ["%d\n%s\n" % (natoms, filename)]
+        data   = ["%d\n%s\n" % (natoms, caption if caption else filename)]
         for atom in atoms:
             data.append ("%2s    %8.3f    %8.3f    %8.3f    %8s\n" % ("" if skipSymbol else atom.symbol, atom.x, atom.y, atom.z, ("%8.4f" % atom.charge) if includeCharge else ""))
         WriteData (data, filename, append=append)

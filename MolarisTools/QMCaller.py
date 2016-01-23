@@ -1,13 +1,13 @@
 #-------------------------------------------------------------------------------
 # . File      : QMCaller.py
 # . Program   : MolarisTools
-# . Copyright : USC, Mikolaj Feliks (2015)
+# . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from Utilities           import WriteData
 from MolarisAtomsFile    import MolarisAtomsFile
 
-import subprocess, exceptions, os, glob, shutil
+import exceptions
 
 
 class QMCaller (object):
@@ -27,7 +27,8 @@ class QMCaller (object):
         "fileTrajectory"     :     "qm.xyz"       ,
         "filterSymbols"      :     ["MG", "CL", "BR", "Mg", "Cl", "Br", ] ,
         "archive"            :     False          ,
-        "directoryArchive"   :     "archive"      ,
+        "_logFile"           :     None           ,
+        "fileArchive"        :     "archive.log"  ,
             }
 
     def __init__ (self, **keywordArguments):
@@ -40,11 +41,6 @@ class QMCaller (object):
         # . Preparatory step
         self._Prepare ()
 
-        # . Create a directory for archiving
-        if self.archive:
-            if not os.path.exists (self.directoryArchive):
-                os.makedirs (self.directoryArchive)
-
 
     def _Prepare (self):
         # . Read atoms.inp from Molaris
@@ -55,16 +51,27 @@ class QMCaller (object):
             self.molaris.WriteQM (filename=self.fileTrajectory, link=True, append=True)
 
 
-    def _Archive (self, filename):
+    def _Archive (self):
         """Archive the log file."""
         if self.archive:
-            files = glob.glob (os.path.join (self.directoryArchive, "*.????????"))
-            if files:
-                lastFile = files[-1]
-                counter  = int (lastFile.split (".")[-1])
-            else:
-                counter  = 0
-            shutil.copy2 (filename, os.path.join (self.directoryArchive, "%s.%08d" % (filename, counter + 1)))
+            logData    = open (self._logFile, "r")
+            output     = open (self.fileArchive, "a")
+            count      = 1
+            try:
+                while True:
+                    line = logData.next ()
+                    if line.count ("Logfile ends"):
+                        count += 1
+                    output.write (line)
+            except StopIteration:
+                pass
+            width      = 79
+            message    = "Logfile ends: %d" % count
+            decoration = (width - (len (message) + 2)) / 2
+            banner     = " %s %s %s\n\n" % ("@" * decoration, message, "@" * decoration)
+            output.write (banner)
+            output.close ()
+            logData.close ()
 
 
 #===============================================================================

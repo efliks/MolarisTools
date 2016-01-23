@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 # . File      : QMCallerMopac.py
 # . Program   : MolarisTools
-# . Copyright : USC, Mikolaj Feliks (2015)
+# . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from QMCaller            import QMCaller
@@ -35,6 +35,9 @@ class QMCallerMopac (QMCaller):
         # . Prepare a MOPAC input file
         self._WriteInput ()
 
+        # . Prepare archiving
+        self._logFile = self.fileMopacOutput
+
 
     def _WriteInput (self):
         """Write a Mopac input file."""
@@ -64,8 +67,11 @@ class QMCallerMopac (QMCaller):
         mopac = MopacOutputFile (filename=self.fileMopacOutput)
         mopac.WriteMolarisForces (filename=self.fileForces)
 
+        # . Save some of the results
+        self.Efinal = mopac.Efinal
+
         # . Archive the log file
-        self._Archive (self.fileMopacOutput)
+        self._Archive ()
 
 
 #===============================================================================
