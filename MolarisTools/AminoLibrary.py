@@ -8,9 +8,10 @@ from   Utilities import TokenizeLine
 import collections, exceptions
 
 Atom  = collections.namedtuple ("Atom"  , "atomNumber  atomLabel  atomType  atomCharge")
-Group = collections.namedtuple ("Group" , "natoms  centralAtom  radius  atoms")
+Group = collections.namedtuple ("Group" , "natoms  centralAtom  radius  atoms  symbol")
 
 DEFAULT_DIVIDER = "-" * 41
+GROUP_START     = "A"
 
 # TODO
 # 1. Checking if charges in a group sum up to integer values, write to stderr if they don't
@@ -76,8 +77,7 @@ class AminoComponent (object):
             if showGroups:
                 for igroup, group in enumerate (self.groups):
                     if atom.atomNumber in group.atoms:
-                        groupSymbol = chr (ord ("A") + igroup)
-                        markGroup   = "    %s ! %s" % (" " * igroup * 2, groupSymbol)
+                        markGroup   = "    %s ! %s" % (" " * igroup * 2, group.symbol)
                         break
             print ("%5d %-4s %4s %6.2f%s" % (atom.atomNumber, atom.atomLabel, atom.atomType, atom.atomCharge, markGroup))
 
@@ -100,10 +100,22 @@ class AminoComponent (object):
             line = "    "
             for atomSerial in group.atoms:
                 line = "%s%d  " % (line, atomSerial)
+            if showGroups:
+                line = "%s  ! %.4f" % (line, self.CalculateGroup (group))
             print line
         # . Finish up
         print ("%5d" % 0)
         print (DEFAULT_DIVIDER)
+
+
+    def CalculateGroup (self, group):
+        """Calculate the charge of a group."""
+        total   = 0.
+        serials = group.atoms
+        for atom in self.atoms:
+            if atom.atomNumber in serials:
+                total += atom.atomCharge
+        return total
 
 
 #===============================================================================
@@ -187,7 +199,8 @@ class AminoLibrary (object):
                         nat, central, radius = TokenizeLine (line, converters=[int, int, float])
                         line     = self._GetCleanLine (data)
                         elements = TokenizeLine (line, converters=[int] * nat)
-                        group    = Group (natoms=nat, centralAtom=central, radius=radius, atoms=elements)
+                        symbol   = chr (ord (GROUP_START) + i)
+                        group    = Group (natoms=nat, centralAtom=central, radius=radius, atoms=elements, symbol=symbol)
                         groups.append (group)
                     if logging:
                         print ("Found component: %d %s (%d atoms, %d bonds, %d groups)" % (serial, name, natoms, nbonds, ngroups))
@@ -203,17 +216,22 @@ class AminoLibrary (object):
         self.components = components
 
 
-    def WriteComponent (self, serial=None, name=None, title="", showGroups=False, showLabels=False):
-        """Write out a specific component from the library."""
+    def GetComponent (self, serial=None, name=None):
+        """Find and return a component from the library."""
         found = False
         for component in self.components:
             if component.serial == serial or component.name == name:
                 found = True
                 break
-        if found:
-            component.Write (title=title, showGroups=showGroups, showLabels=showLabels)
-        else:
+        if not found:
             raise exceptions.StandardError ("Component not found.")
+        return component
+
+
+    def WriteComponent (self, serial=None, name=None, title="", showGroups=False, showLabels=False):
+        """Write out a specific component from the library."""
+        component = self.GetComponent (serial=serial, name=name)
+        component.Write (title=title, showGroups=showGroups, showLabels=showLabels)
 
 
     def WriteAll (self, showGroups=False, showLabels=False):
