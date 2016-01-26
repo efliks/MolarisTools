@@ -25,6 +25,7 @@ class GaussianOutputFile (object):
     def _Parse (self):
         lines = open (self.inputfile)
         scan  = []
+        opt   = []
         try:
             while True:
                 line = next (lines)
@@ -104,17 +105,31 @@ class GaussianOutputFile (object):
                 elif line.count ("-- Optimized point #"):
                     newStep = ScanStep (Efinal=self.Efinal, atoms=self.atoms[:], forces=self.forces[:], charges=self.charges[:], espcharges=[])  # <--FIX ME
                     scan.append (newStep)
+
+                # . Determine if we have reached the end of a geometry optimization step
+                elif line.startswith (" Berny optimization."):
+                    if hasattr (self, "Efinal"):
+                        optStep = ScanStep (Efinal=self.Efinal, atoms=self.atoms[:], forces=self.forces[:], charges=self.charges[:], espcharges=[])  # <--FIX ME
+                        opt.append (optStep)
         except StopIteration:
             pass
         # . Does the job involve a scan (IRC or PES)?
-        if scan:
-            self.scan = scan
+        if scan: self.scan = scan
+        # . Does the job involve a geometry optimization?
+        if opt:  self.opt  = opt
 
 
     @property
     def nscan (self):
         if hasattr (self, "scan"):
             return len (self.scan)
+        else:
+            return 0
+
+    @property
+    def nopt (self):
+        if hasattr (self, "opt"):
+            return len (self.opt)
         else:
             return 0
 
@@ -126,14 +141,13 @@ class GaussianOutputFile (object):
             return 0
 
 
-    def WriteScanTrajectory (self, filename="traj.xyz", relative=True, reverse=False, append=False):
-        if not hasattr (self, "scan"):
-            raise exceptions.StandardError ("No trajectory found.")
+    # . Argument "trajectory" can be either a PES scan or a geometry optimization
+    def _WriteTrajectory (self, trajectory, filename, relative=True, reverse=False, append=False):
         if relative:
             if reverse:
-                Eref = self.scan[-1].Efinal
+                Eref = trajectory[-1].Efinal
             else:
-                Eref = self.scan[ 0].Efinal
+                Eref = trajectory[ 0].Efinal
         else:
             Eref = 0.
         if reverse:
@@ -141,13 +155,25 @@ class GaussianOutputFile (object):
         else:
             direction =  1
         data = []
-        for istep, step in enumerate (self.scan[::direction], 1):
+        for istep, step in enumerate (trajectory[::direction], 1):
             Erel = step.Efinal - Eref
             data.append ("%d\nStep %d: %f\n" % (self.natoms, istep, Erel))
             for atom in step.atoms:
                 data.append ("%2s  %14.6f  %14.6f  %14.6f\n" % (atom.symbol, atom.x, atom.y, atom.z))
         # . Write the file
         WriteData (data, filename, append=append)
+
+
+    def WriteScanTrajectory (self, filename="traj.xyz", relative=True, reverse=False, append=False):
+        if not hasattr (self, "scan"):
+            raise exceptions.StandardError ("No trajectory found.")
+        self._WriteTrajectory (self.scan, filename=filename, relative=relative, reverse=reverse, append=append)
+
+
+    def WriteOptTrajectory (self, filename="opt_traj.xyz", relative=True, reverse=False, append=False):
+        if not hasattr (self, "opt"):
+            raise exceptions.StandardError ("No optimization trajectory found.")
+        self._WriteTrajectory (self.opt, filename=filename, relative=relative, reverse=reverse, append=append)
 
 
     def WriteMolarisForces (self, filename="forces.out", Eref=0., useESPCharges=False):

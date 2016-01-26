@@ -43,12 +43,16 @@ class MolarisResidue (object):
                             self.atoms[atomName] = [atomCharge, atomType, atomNumber, connectNames, connectNumbers]
 
 
-    def WriteEVBAtoms (self, evbAtoms, forms, verbose=False, tab=0):
+    def WriteEVBAtoms (self, evbAtoms, forms, verbose=False, tab=0, collect=None):
         totalEVBCharges = [0.] * len (forms)
         pdbNumbers      = []
         for atomName, atomData in self.atoms.iteritems ():
             if not evbAtoms.has_key (atomName):
-                print ("# EVB atom %s not present" % atomName)
+                line = "# EVB atom %s not present" % atomName
+                if type (collect) is list:
+                    collect.append ("%s\n" % line) 
+                else:
+                    print (line)
                 continue
             chargeTypes = evbAtoms[atomName]
             pdbCharge, pdbType, pdbNumber, connectNames, connectNumbers = atomData
@@ -62,15 +66,27 @@ class MolarisResidue (object):
                 else:
                     entry = "%s%10.4f%6s" % (entry, evbCharge, evbType)
             entry = "%s      # %10.4f%4s    %-4s" % (entry, pdbCharge, pdbType, atomName)
-            print ("%sevb_atm%s" % ("    " * tab, entry))
+            line  = "%sevb_atm%s" % ("    " * tab, entry)
+            if type (collect) is list:
+                collect.append ("%s\n" % line) 
+            else:
+                print (line)
 
         if verbose:
             for form, charge in zip (forms, totalEVBCharges):
-                print ("# Form %d: Total charge of EVB atoms is %.4f" % (form, charge))
-            print ("# %s" % (" ".join (map (str, pdbNumbers))))
+                line = "# Form %d: Total charge of EVB atoms is %.4f" % (form, charge)
+                if type (collect) is list:
+                    collect.append ("%s\n" % line) 
+                else:
+                    print (line)
+            line = "# %s" % (" ".join (map (str, pdbNumbers)))
+            if type (collect) is list:
+                collect.append ("%s\n" % line) 
+            else:
+                print (line)
 
 
-    def WriteEVBBonds (self, evbAtoms, forms, tab=0):
+    def WriteEVBBonds (self, evbAtoms, forms, tab=0, collect=None):
         bonds       = []
         typeChanges = {}
 
@@ -109,7 +125,11 @@ class MolarisResidue (object):
                 bChanges = typeChanges[bName]
             else:
                 bChanges = False
-            print ("%sevb_bnd   0    %6d%6d   # %-6s  %-6s%s" % ("    " * tab, aNumber, bNumber, aName, bName, "  (*)" if any ((aChanges, bChanges)) else ""))
+            line = "%sevb_bnd   0    %6d%6d   # %-6s  %-6s%s" % ("    " * tab, aNumber, bNumber, aName, bName, "  (*)" if any ((aChanges, bChanges)) else "")
+            if type (collect) is list:
+                collect.append ("%s\n" % line) 
+            else:
+                print (line)
 
 
 #===============================================================================

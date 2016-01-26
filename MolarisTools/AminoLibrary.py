@@ -4,18 +4,14 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-from   Utilities import TokenizeLine
-import collections, exceptions
+from    Utilities import TokenizeLine
+import  collections, exceptions
 
-Atom  = collections.namedtuple ("Atom"  , "atomNumber  atomLabel  atomType  atomCharge")
-Group = collections.namedtuple ("Group" , "natoms  centralAtom  radius  atoms  symbol")
+AminoAtom  = collections.namedtuple ("Atom"  , "atomNumber  atomLabel  atomType  atomCharge")
+AminoGroup = collections.namedtuple ("Group" , "natoms  centralAtom  radius  atoms  symbol")
 
 DEFAULT_DIVIDER = "-" * 41
 GROUP_START     = "A"
-
-# TODO
-# 1. Checking if charges in a group sum up to integer values, write to stderr if they don't
-#
 
 
 class AminoComponent (object):
@@ -77,7 +73,7 @@ class AminoComponent (object):
             if showGroups:
                 for igroup, group in enumerate (self.groups):
                     if atom.atomNumber in group.atoms:
-                        markGroup   = "    %s ! %s" % (" " * igroup * 2, group.symbol)
+                        markGroup   = "  %s ! %s" % ("   " if (igroup % 2 == 1) else "", group.symbol)
                         break
             print ("%5d %-4s %4s %6.2f%s" % (atom.atomNumber, atom.atomLabel, atom.atomType, atom.atomCharge, markGroup))
 
@@ -101,7 +97,7 @@ class AminoComponent (object):
             for atomSerial in group.atoms:
                 line = "%s%d  " % (line, atomSerial)
             if showGroups:
-                line = "%s  ! %.4f" % (line, self.CalculateGroup (group))
+                line = "%s  ! Group %s: %.4f" % (line, group.symbol, self.CalculateGroup (group))
             print line
         # . Finish up
         print ("%5d" % 0)
@@ -168,7 +164,7 @@ class AminoLibrary (object):
                     for i in range (natoms):
                         line = self._GetCleanLine (data)
                         atomNumber, atomLabel, atomType, atomCharge = TokenizeLine (line, converters=[int, None, None, float])
-                        atom = Atom (atomNumber=atomNumber, atomLabel=atomLabel, atomType=atomType, atomCharge=atomCharge)
+                        atom = AminoAtom (atomNumber=atomNumber, atomLabel=atomLabel, atomType=atomType, atomCharge=atomCharge)
                         atoms.append (atom)
                     # . Get number of bonds
                     line   = self._GetCleanLine (data)
@@ -200,7 +196,7 @@ class AminoLibrary (object):
                         line     = self._GetCleanLine (data)
                         elements = TokenizeLine (line, converters=[int] * nat)
                         symbol   = chr (ord (GROUP_START) + i)
-                        group    = Group (natoms=nat, centralAtom=central, radius=radius, atoms=elements, symbol=symbol)
+                        group    = AminoGroup (natoms=nat, centralAtom=central, radius=radius, atoms=elements, symbol=symbol)
                         groups.append (group)
                     if logging:
                         print ("Found component: %d %s (%d atoms, %d bonds, %d groups)" % (serial, name, natoms, nbonds, ngroups))

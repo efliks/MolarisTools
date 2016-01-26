@@ -16,7 +16,7 @@ from MolarisAtomsFile    import MolarisAtomsFile
 from MolarisInputFile    import MolarisInputFile
 from MolarisOutputFile   import MolarisOutputFile, MolarisOutputFile2
 from DistanceFile        import DistanceFile
-from AminoLibrary        import AminoLibrary, AminoComponent
+from AminoLibrary        import AminoAtom, AminoGroup, AminoComponent, AminoLibrary
 
 # . Handling of other files
 from GaussianOutputFile  import GaussianOutputFile
