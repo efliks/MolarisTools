@@ -4,11 +4,23 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
+# . Atoms are not children of a group.
+# . The groups only contain serial numbers of atoms.
+#
+#               AminoLibrary
+#                 /       \
+#                /         \
+#   AminoComponent     AminoComponent
+#                      /      |     \
+#                     /       |      \
+#              AminoGroups  bonds  AminoAtoms
+
 from    Utilities import TokenizeLine
 import  collections, exceptions
 
+
 AminoAtom  = collections.namedtuple ("Atom"  , "atomNumber  atomLabel  atomType  atomCharge")
-AminoGroup = collections.namedtuple ("Group" , "natoms  centralAtom  radius  atoms  symbol")
+AminoGroup = collections.namedtuple ("Group" , "natoms  centralAtom  radius  serials  symbol")
 
 DEFAULT_DIVIDER = "-" * 41
 GROUP_START     = "A"
@@ -72,7 +84,7 @@ class AminoComponent (object):
             markGroup = ""
             if showGroups:
                 for igroup, group in enumerate (self.groups):
-                    if atom.atomNumber in group.atoms:
+                    if atom.atomNumber in group.serials:
                         markGroup   = "  %s ! %s" % ("   " if (igroup % 2 == 1) else "", group.symbol)
                         break
             print ("%5d %-4s %4s %6.2f%s" % (atom.atomNumber, atom.atomLabel, atom.atomType, atom.atomCharge, markGroup))
@@ -94,7 +106,7 @@ class AminoComponent (object):
         for group in self.groups:
             print ("%5d%5d%6.1f" % (group.natoms, group.centralAtom, group.radius))
             line = "    "
-            for atomSerial in group.atoms:
+            for atomSerial in group.serials:
                 line = "%s%d  " % (line, atomSerial)
             if showGroups:
                 line = "%s  ! Group %s: %.4f" % (line, group.symbol, self.CalculateGroup (group))
@@ -106,10 +118,9 @@ class AminoComponent (object):
 
     def CalculateGroup (self, group):
         """Calculate the charge of a group."""
-        total   = 0.
-        serials = group.atoms
+        total = 0.
         for atom in self.atoms:
-            if atom.atomNumber in serials:
+            if atom.atomNumber in group.serials:
                 total += atom.atomCharge
         return total
 
@@ -194,9 +205,9 @@ class AminoLibrary (object):
                         line     = self._GetCleanLine (data)
                         nat, central, radius = TokenizeLine (line, converters=[int, int, float])
                         line     = self._GetCleanLine (data)
-                        elements = TokenizeLine (line, converters=[int] * nat)
+                        serials  = TokenizeLine (line, converters=[int] * nat)
                         symbol   = chr (ord (GROUP_START) + i)
-                        group    = AminoGroup (natoms=nat, centralAtom=central, radius=radius, atoms=elements, symbol=symbol)
+                        group    = AminoGroup (natoms=nat, centralAtom=central, radius=radius, serials=serials, symbol=symbol)
                         groups.append (group)
                     if logging:
                         print ("Found component: %d %s (%d atoms, %d bonds, %d groups)" % (serial, name, natoms, nbonds, ngroups))

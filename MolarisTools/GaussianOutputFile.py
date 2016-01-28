@@ -176,6 +176,15 @@ class GaussianOutputFile (object):
         self._WriteTrajectory (self.opt, filename=filename, relative=relative, reverse=reverse, append=append)
 
 
+    def WriteLastGeometry (self, filename="last_opt.xyz"):
+        title = "%d\nLast step\n" % self.natoms
+        data  = [title]
+        for atom in self.atoms:
+            data.append ("%2s  %14.6f  %14.6f  %14.6f\n" % (atom.symbol, atom.x, atom.y, atom.z))
+        # . Write the file
+        WriteData (data, filename)
+
+
     def WriteMolarisForces (self, filename="forces.out", Eref=0., useESPCharges=False):
         """Write a file in the Molaris-suitable format."""
         data = []
