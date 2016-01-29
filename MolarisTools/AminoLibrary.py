@@ -22,16 +22,26 @@ import  collections, exceptions
 AminoAtom  = collections.namedtuple ("Atom"  , "atomNumber  atomLabel  atomType  atomCharge")
 AminoGroup = collections.namedtuple ("Group" , "natoms  centralAtom  radius  serials  symbol")
 
-DEFAULT_DIVIDER = "-" * 41
-GROUP_START     = "A"
+_DEFAULT_DIVIDER = "-" * 41
+_GROUP_START     = "A"
 
 
 class AminoComponent (object):
     """A class to represent a residue."""
 
-    def __init__ (self, **keywordArguments):
+    def __init__ (self, logging=True, **keywordArguments):
         """Constructor."""
-        for (key, value) in keywordArguments.iteritems (): setattr (self, key, value)
+        for (key, value) in keywordArguments.iteritems ():
+            if key != "logging":
+                setattr (self, key, value)
+        # . Print info
+        if logging: self.Info ()
+
+
+    def Info (self):
+        """Print info."""
+        print ("Component: %d %s (%d atoms, %d bonds, %d groups, %-5.2f charge)" % (self.serial, self.name, self.natoms, self.nbonds, self.ngroups, self.charge))
+
 
     @property
     def natoms (self):
@@ -74,6 +84,68 @@ class AminoComponent (object):
         return label
 
 
+    def CalculateGroup (self, group):
+        """Calculate the charge of a group."""
+        total = 0.
+        for atom in self.atoms:
+            if atom.atomNumber in group.serials:
+                total += atom.atomCharge
+        return total
+
+
+    _DEFAULT_MODIFY = {
+        "A" :   ("O3",  "O-"),
+        "B" :   ("O3",  "O-"),
+        "C" :   ("O3",  "O-"),
+        }
+    def WriteDict (self, groups=None, nstates=2, modify=_DEFAULT_MODIFY):
+        """Generate Python code to use in evb_assign.py type of script."""
+        # . If no symbols defined, take the whole component
+        groupSymbols = groups
+        if groupSymbols is None:
+            groupSymbols = []
+            for group in self.groups:
+                groupSymbols.append (group.symbol)
+        # . Start here
+        print ("names = {")
+        for symbol in groupSymbols:
+            # . Pick a group of atoms
+            found = False
+            for group in self.groups:
+                if group.symbol == symbol:
+                    found = True
+                    break
+            if not found:
+                raise exceptions.StandardError ("Group %s not found." % symbol)
+            # . Run for each atom in the group
+            for serial in group.serials:
+                atom    = self.atoms[serial - 1]
+                atype   = atom.atomType
+                # . Check if the atom type has to be modified
+                if modify.has_key (symbol):
+                    oldType, newType = modify[symbol]
+                    if oldType == atype:
+                        atype = newType
+                    else:
+                        atype = "%s0" % atype[0]
+                else:
+                    atype = "%s0" % atype[0]
+
+                acharge = atom.atomCharge
+                line    = "%-6s  :  (" % ("\"%s\"" % atom.atomLabel)
+                # . For each atom, generate entries for n states
+                for i in range (nstates):
+                    if i > 0:
+                        line = "%s  ,  (%5.2f , \"%2s\")" % (line, acharge, atype)
+                    else:
+                        line = "%s(%5.2f , \"%2s\")" % (line, acharge, atype)
+                print ("%s) ," % line)
+            # . Separate groups
+            print ("\\")
+        # . Finish up
+        print ("}")
+
+
     def Write (self, title="", showGroups=False, showLabels=False):
         # . Write header
         print ("%d%s%s" % (self.serial, self.name, ("  ! %s" % title) if title else ""))
@@ -113,26 +185,39 @@ class AminoComponent (object):
             print line
         # . Finish up
         print ("%5d" % 0)
-        print (DEFAULT_DIVIDER)
-
-
-    def CalculateGroup (self, group):
-        """Calculate the charge of a group."""
-        total = 0.
-        for atom in self.atoms:
-            if atom.atomNumber in group.serials:
-                total += atom.atomCharge
-        return total
+        print (_DEFAULT_DIVIDER)
 
 
 #===============================================================================
 class AminoLibrary (object):
     """A class to represent data from the Molaris amino98.lib file."""
 
-    def __init__ (self, filename="amino98_custom.lib", logging=True, reorder=True):
+    def __init__ (self, filename="amino98_custom.lib", logging=True, reorder=True, unique=False):
         """Constructor."""
         self.filename = filename
-        self._Parse (logging=logging, reorder=reorder)
+        self._Parse (logging=logging, reorder=reorder, unique=unique)
+
+
+    def __getitem__ (self, key):
+        """Find and return a component from the library."""
+        found = False
+        if isinstance (key, int):
+            # . Search by serial
+            for component in self.components:
+                if component.serial == key:
+                    found = True
+                    break
+        elif isinstance (key, str):
+            # . Search by name
+            for component in self.components:
+                if component.name == key:
+                    found = True
+                    break
+        else:
+            raise exceptions.StandardError ("Unknown type of key.")
+        if not found:
+            raise exceptions.StandardError ("Component not found.")
+        return component
 
 
     @property
@@ -149,7 +234,7 @@ class AminoLibrary (object):
         return lineClean
 
 
-    def _Parse (self, logging, reorder):
+    def _Parse (self, logging, reorder, unique):
         components = []
         data       = open (self.filename)
         try:
@@ -172,9 +257,16 @@ class AminoLibrary (object):
                     natoms = int (line)
                     # . Read atoms
                     atoms  = []
+                    labels = []
                     for i in range (natoms):
                         line = self._GetCleanLine (data)
                         atomNumber, atomLabel, atomType, atomCharge = TokenizeLine (line, converters=[int, None, None, float])
+                        if unique:
+                            # . Check if the atom label is unique
+                            if atomLabel in labels:
+                                raise exceptions.StandardError ("Component %s %d: Atom label %s is not unique." % (name, serial, atomLabel))
+                            labels.append (atomLabel)
+                        # . Create atom
                         atom = AminoAtom (atomNumber=atomNumber, atomLabel=atomLabel, atomType=atomType, atomCharge=atomCharge)
                         atoms.append (atom)
                     # . Get number of bonds
@@ -206,13 +298,11 @@ class AminoLibrary (object):
                         nat, central, radius = TokenizeLine (line, converters=[int, int, float])
                         line     = self._GetCleanLine (data)
                         serials  = TokenizeLine (line, converters=[int] * nat)
-                        symbol   = chr (ord (GROUP_START) + i)
+                        symbol   = chr (ord (_GROUP_START) + i)
                         group    = AminoGroup (natoms=nat, centralAtom=central, radius=radius, serials=serials, symbol=symbol)
                         groups.append (group)
-                    if logging:
-                        print ("Found component: %d %s (%d atoms, %d bonds, %d groups)" % (serial, name, natoms, nbonds, ngroups))
                     # . Create a component and add it to the list
-                    component = AminoComponent (serial=serial, name=name, atoms=atoms, bonds=bonds, groups=groups, connect=(connecta, connectb))
+                    component = AminoComponent (serial=serial, name=name, atoms=atoms, bonds=bonds, groups=groups, connect=(connecta, connectb), logging=logging)
                     components.append (component)
         except StopIteration:
             pass
@@ -221,18 +311,6 @@ class AminoLibrary (object):
         if logging:
             print ("Found %d components." % len (components))
         self.components = components
-
-
-    def GetComponent (self, serial=None, name=None):
-        """Find and return a component from the library."""
-        found = False
-        for component in self.components:
-            if component.serial == serial or component.name == name:
-                found = True
-                break
-        if not found:
-            raise exceptions.StandardError ("Component not found.")
-        return component
 
 
     def WriteComponent (self, serial=None, name=None, title="", showGroups=False, showLabels=False):
@@ -247,7 +325,7 @@ class AminoLibrary (object):
             component.Write (showGroups=showGroups, showLabels=showLabels)
         # . Write footer
         print ("%5d" % 0)
-        print (DEFAULT_DIVIDER)
+        print (_DEFAULT_DIVIDER)
 
 
 #===============================================================================

@@ -132,6 +132,24 @@ class MolarisResidue (object):
                 print (line)
 
 
+    def WriteVMDTopology (self):
+        """Write a list of bonds for VMD."""
+        bonds = []
+        # . Collect bonds
+        for alabel, adata in self.atoms.iteritems ():
+            acharge, atype, aserial, otherLabels, otherSerials = adata
+            for otherSerial in otherSerials:
+                pair     = (aserial, otherSerial)
+                pairFlip = (otherSerial, aserial)
+                if not ((pair in bonds) or (pairFlip in bonds)):
+                    bonds.append (pair)
+        # . Sort bonds
+        bonds.sort (key=lambda bond: bond[0])
+        # . Print bonds
+        for paira, pairb in bonds:
+            print ("topo  addbond    %5d    %5d" % (paira, pairb))
+
+
 #===============================================================================
 # . Main program
 #===============================================================================

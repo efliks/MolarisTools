@@ -58,7 +58,7 @@ class QMCallerMopac (QMCaller):
 
 
     def Run (self):
-        # . Run the calculation
+        """Run the calculation."""
         fileError  = open (self.fileMopacError, "w")
         subprocess.check_call ([self.pathMopac, self.fileMopacInput], stdout=fileError, stderr=fileError)
         fileError.close ()

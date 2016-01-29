@@ -11,8 +11,9 @@ import exceptions
 
 
 class QMCaller (object):
-    """Base class to provide communication between Molaris and QM programs."""
+    """Base class to provide communication between Molaris and a QM program.
 
+    This class should not be used directly."""
     # . General options
     # . If qmmm is True, point charges will be used to polarize the wavefunction
     defaultAttributes = {
@@ -72,6 +73,11 @@ class QMCaller (object):
             output.write (banner)
             output.close ()
             logData.close ()
+
+
+    def Run (self):
+        """Run the calculation."""
+        pass
 
 
 #===============================================================================
