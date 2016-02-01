@@ -21,3 +21,4 @@ from AminoLibrary        import AminoAtom, AminoGroup, AminoComponent, AminoLibr
 # . Handling of other files
 from GaussianOutputFile  import GaussianOutputFile
 from MopacOutputFile     import MopacOutputFile
+from XYZTrajectory       import XYZTrajectory

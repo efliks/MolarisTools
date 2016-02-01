@@ -236,6 +236,7 @@ class AminoLibrary (object):
 
     def _Parse (self, logging, reorder, unique):
         components = []
+        names      = []
         data       = open (self.filename)
         try:
             while True:
@@ -245,6 +246,8 @@ class AminoLibrary (object):
                     # . Get serial and name
                     line  = self._GetCleanLine (data)
                     entry = TokenizeLine (line, converters=[None, ])[0]
+                    # . Remove spaces
+                    entry = entry.replace (" ", "")
                     # . Check if last residue found
                     if entry == "0":
                         break
@@ -252,6 +255,11 @@ class AminoLibrary (object):
                         if not char.isdigit ():
                             break
                     serial, name = int (entry[:i]), entry[i:]
+                    # . Check if the component label is unique
+                    if unique:
+                        if name in names:
+                            raise exceptions.StandardError ("Component label %s is not unique." % name)
+                        names.append (name)
                     # . Get number of atoms
                     line   = self._GetCleanLine (data)
                     natoms = int (line)
