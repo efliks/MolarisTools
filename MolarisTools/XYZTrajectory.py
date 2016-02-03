@@ -7,7 +7,7 @@
 from    Utilities import TokenizeLine, WriteData
 import  collections, exceptions
 
-XYZAtom = collections.namedtuple ("Atom" , "label  x  y  z  charge")
+XYZAtom = collections.namedtuple ("Atom" , "label  x  y  z  fx  fy  fz  fm  charge")
 
 
 #===============================================================================
@@ -30,7 +30,12 @@ class XYZStep (object):
         """Write a step."""
         data = ["%d\n%s\n" % (self.natoms, self.comment)]
         for atom in self.atoms:
-            data.append ("%3s  %8.3f  %8.3f  %8.3f%s\n" % (atom.label, atom.x, atom.y, atom.z, "" if not atom.charge else "%8.4f" % atom.charge))
+            if atom.fx is None:
+                # . Write simple atom
+                data.append ("%3s  %8.3f  %8.3f  %8.3f\n" % (atom.label, atom.x, atom.y, atom.z))
+            else:
+                # . Write atom with forces and a charge
+                data.append ("%3s  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.4f\n" % (atom.label, atom.x, atom.y, atom.z, atom.fx, atom.fy, atom.fz, atom.fm, atom.charge))
         WriteData (data, filename=filename, append=append)
 
 
@@ -72,13 +77,21 @@ class XYZTrajectory (object):
                 natoms  = TokenizeLine (line, converters=[int])[0]
                 # . Read comment
                 line    = lines.next ()
-                comment = TokenizeLine (line, converters=[None])[0]
+                comment = line[:-1]
                 # . Read atoms
                 atoms   = []
                 for i in range (natoms):
                     line   = lines.next ()
-                    tokens = TokenizeLine (line, converters=[None, float, float, float, float])
-                    atom   = XYZAtom (label=tokens[0], x=tokens[1], y=tokens[2], z=tokens[3], charge=tokens[4])
+                    # . Detect format first
+                    tokens = TokenizeLine (line)
+                    if len (tokens) < 5:
+                        # . Simple format
+                        tokens = TokenizeLine (line, converters=[None, float, float, float])
+                        atom   = XYZAtom (label=tokens[0], x=tokens[1], y=tokens[2], z=tokens[3])
+                    else:
+                        # . Extended format with forces and charges
+                        tokens = TokenizeLine (line, converters=[None, float, float, float, float, float, float, float, float])
+                        atom   = XYZAtom (label=tokens[0], x=tokens[1], y=tokens[2], z=tokens[3], fx=tokens[4], fy=tokens[5], fz=tokens[6], fm=tokens[7], charge=tokens[8])
                     atoms.append (atom)
                 # . Create a step and add it to the list of steps
                 step = XYZStep (owner=self, atoms=atoms, comment=comment)

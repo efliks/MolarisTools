@@ -50,29 +50,6 @@ class QMCallerGaussian (QMCaller):
         # . Prepare a Gaussian input file
         self._WriteInput ()
 
-        # . Prepare archiving
-        self._logFile = self.fileMopacOutput
-
-
-    def Run (self):
-        # . Run the calculation
-        fileError  = open (self.fileGaussianError, "w")
-        if self.env:
-            subprocess.check_call ([self.pathGaussian, self.fileGaussianInput], stdout=fileError, stderr=fileError, env=self.env)
-        else:
-            subprocess.check_call ([self.pathGaussian, self.fileGaussianInput], stdout=fileError, stderr=fileError)
-        fileError.close ()
-
-        # . Convert the output file from Gaussian to forces.out
-        output = GaussianOutputFile (filename=self.fileGaussianOutput)
-        output.WriteMolarisForces (filename=self.fileForces)
-
-        # . Save some of the results
-        self.Efinal = output.Efinal
-
-        # . Archive the log file
-        self._Archive ()
-
 
     def _WriteInput (self):
         """Write a Gaussian input file."""
@@ -112,6 +89,25 @@ class QMCallerGaussian (QMCaller):
 
         # . Finish up
         WriteData (data, self.fileGaussianInput)
+
+
+    def Run (self):
+        # . Run the calculation
+        fileError  = open (self.fileGaussianError, "w")
+        if self.env:
+            subprocess.check_call ([self.pathGaussian, self.fileGaussianInput], stdout=fileError, stderr=fileError, env=self.env)
+        else:
+            subprocess.check_call ([self.pathGaussian, self.fileGaussianInput], stdout=fileError, stderr=fileError)
+        fileError.close ()
+
+        # . Parse the output file
+        gaussian     = GaussianOutputFile (filename=self.fileGaussianOutput)
+        self.Efinal  = gaussian.Efinal
+        self.forces  = gaussian.forces
+        self.charges = gaussian.charges
+
+        # . Finish up
+        self._Finalize ()
 
 
 #===============================================================================

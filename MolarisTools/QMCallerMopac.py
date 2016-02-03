@@ -35,9 +35,6 @@ class QMCallerMopac (QMCaller):
         # . Prepare a MOPAC input file
         self._WriteInput ()
 
-        # . Prepare archiving
-        self._logFile = self.fileMopacOutput
-
 
     def _WriteInput (self):
         """Write a Mopac input file."""
@@ -63,15 +60,14 @@ class QMCallerMopac (QMCaller):
         subprocess.check_call ([self.pathMopac, self.fileMopacInput], stdout=fileError, stderr=fileError)
         fileError.close ()
 
-        # . Convert the output file from MOPAC to forces.out
-        mopac = MopacOutputFile (filename=self.fileMopacOutput)
-        mopac.WriteMolarisForces (filename=self.fileForces)
+        # . Parse the output file
+        mopac        = MopacOutputFile (filename=self.fileMopacOutput)
+        self.Efinal  = mopac.Efinal
+        self.forces  = mopac.forces
+        self.charges = mopac.charges
 
-        # . Save some of the results
-        self.Efinal = mopac.Efinal
-
-        # . Archive the log file
-        self._Archive ()
+        # . Finish up
+        self._Finalize ()
 
 
 #===============================================================================
