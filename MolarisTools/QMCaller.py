@@ -18,6 +18,11 @@ _DEFAULT_FILE_ATOMS   =  "mol.in"
 _DEFAULT_FILE_FORCES  =  "d.o"
 _DEFAULT_FILE_QM_TRAJ =  "qm.xyz"
 
+_FORMAT_QM_EXT    = "%2s   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.4f\n"
+_FORMAT_QM_SIMPLE = "%2s   %8.3f   %8.3f   %8.3f\n"
+_FORMAT_FORCE     = "%14.6f  %14.6f  %14.6f\n"
+_FORMAT_CHARGE    = "%14.6f\n"
+
 
 class QMCaller (object):
     """Base class to provide communication between Molaris and a QM program.
@@ -26,17 +31,16 @@ class QMCaller (object):
     # . General options
     # . If qmmm is True, point charges will be used to polarize the wavefunction
     defaultAttributes = {
-        "method"             :     _DEFAULT_METHOD        ,
-        "charge"             :     _DEFAULT_CHARGE        ,
-        "multiplicity"       :     _DEFAULT_MULTIPLICITY  ,
-        "dielectric"         :     _DEFAULT_DIELECTRIC    ,
-        "fileAtoms"          :     _DEFAULT_FILE_ATOMS    ,
-        "fileForces"         :     _DEFAULT_FILE_FORCES   ,
-        "fileTrajectory"     :     _DEFAULT_FILE_QM_TRAJ  ,
-        "archive"            :     False                  ,
-        "cosmo"              :     False                  ,
-        "qmmm"               :     False                  ,
-        "filterSymbols"      :     ["MG", "CL", "BR", "Mg", "Cl", "Br", ] ,
+        "method"           :   _DEFAULT_METHOD         ,
+        "charge"           :   _DEFAULT_CHARGE         ,
+        "multiplicity"     :   _DEFAULT_MULTIPLICITY   ,
+        "dielectric"       :   _DEFAULT_DIELECTRIC     ,
+        "fileAtoms"        :   _DEFAULT_FILE_ATOMS     ,
+        "fileForces"       :   _DEFAULT_FILE_FORCES    ,
+        "fileTrajectory"   :   _DEFAULT_FILE_QM_TRAJ   ,
+        "archive"          :   False                   ,
+        "cosmo"            :   False                   ,
+        "qmmm"             :   False                   ,
             }
 
     def __init__ (self, **keywordArguments):
@@ -63,7 +67,7 @@ class QMCaller (object):
 
     def _Prepare (self):
         # . Read mol.in file from Molaris
-        self.molaris = MolarisAtomsFile (filename=self.fileAtoms, filterSymbols=self.filterSymbols)
+        self.molaris = MolarisAtomsFile (filename=self.fileAtoms, filterSymbols=None)
 
 
     def Run (self):
@@ -81,30 +85,26 @@ class QMCaller (object):
             caption = "qm: %f" % self.Efinal
             natoms  = len (atoms)
             data    = ["%d\n%s\n" % (natoms, caption)]
-    
-            # . Write atoms
             if self.archive:
                 # . Write geometry including forces and charges
                 for atom, force, charge in zip (atoms, self.forces, self.charges):
-                    magnitude = math.sqrt (force.x**2 + force.y**2 + force.z**2)
-                    data.append ("%2s   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.4f\n" % (atom.symbol, atom.x, atom.y, atom.z, force.x, force.y, force.z, magnitude, charge))
+                    magnitude = math.sqrt (force.x * force.x + force.y * force.y + force.z * force.z)
+                    data.append (_FORMAT_QM_EXT % (atom.symbol, atom.x, atom.y, atom.z, force.x, force.y, force.z, magnitude, charge))
             else:
                 # . Write simple geometry
                 for atom in atoms:
-                    data.append ("%2s   %8.3f   %8.3f   %8.3f\n" % (atom.symbol, atom.x, atom.y, atom.z))
+                    data.append (_FORMAT_QM_SIMPLE % (atom.symbol, atom.x, atom.y, atom.z))
             # . Update the trajectory file
             WriteData (data, self.fileTrajectory, append=True)
 
 
     def _WriteForces (self):
         data = ["%f\n" % self.Efinal]
-        # . Write forces
+        # . Write forces and charges
         for force in self.forces:
-            data.append ("%14.6f  %14.6f  %14.6f\n" % (force.x, force.y, force.z))
-
-        # . Write charges
+            data.append (_FORMAT_FORCE % (force.x, force.y, force.z))
         for charge in self.charges:
-            data.append ("%14.6f\n" % charge)
+            data.append (_FORMAT_CHARGE % charge)
 
         # . Write to a file
         WriteData (data, self.fileForces, append=False)
@@ -116,10 +116,10 @@ class QMCaller (object):
         if not all (checks):
             raise exceptions.StandardError ("Something went wrong.")
 
-        # . Write a d.o file
+        # . Write forces for Molaris
         self._WriteForces ()
 
-        # . Write a qm.xyz file for viewing
+        # . Write QM trajectory for viewing
         self._WriteQMTrajectory ()
 
 

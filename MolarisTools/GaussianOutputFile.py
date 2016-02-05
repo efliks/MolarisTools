@@ -29,8 +29,15 @@ class GaussianOutputFile (object):
         try:
             while True:
                 line = next (lines)
+                # . Get the version and revision of Gaussian
+                if line.startswith (" Gaussian"):
+                    if line.count ("Revision"):
+                        tokens = TokenizeLine (line, converters=[None, None, None, None])
+                        self.version  = tokens[1][:-1]
+                        self.revision = tokens[3][:-1]
+
                 # . Get the number of atoms and their coordinates
-                if line.count ("Input orientation:") or line.count ("Z-Matrix orientation:"):
+                elif line.count ("Input orientation:") or line.count ("Z-Matrix orientation:"):
                     for skip in range (4):
                         next (lines)
                     natoms = 0
@@ -67,7 +74,8 @@ class GaussianOutputFile (object):
                         self.espcharges.append (charge)
 
                 # . Get Mulliken charges
-                elif line.count ("Mulliken atomic charges:"):
+                # . The second condition is for Gaussian 09
+                elif line.startswith (" Mulliken atomic charges:") or line.startswith (" Mulliken charges:"):
                     next (lines)
                     self.charges = []
                     for i in range (natoms):

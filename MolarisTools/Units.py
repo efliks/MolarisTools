@@ -11,9 +11,20 @@ HARTREE_TO_KCAL_MOL               = 627.509469
 GRADIENT_TO_FORCE                 =  -1.
 EV_TO_KCAL_MOL                    =  23.0609
 
-atomicNumberToSymbol = {1 : "H", 6 : "C", 7 : "N", 8 : "O", 9 : "F", 17 : "CL", 15 : "P", 12 : "MG", 35 : "BR"}
 
-# . Dictionary comprehension does not work for Python 2.6
+atomicNumberToSymbol = {
+    1   :  "H"  ,
+    6   :  "C"  ,
+    7   :  "N"  ,
+    8   :  "O"  ,
+    9   :  "F"  ,
+    12  :  "MG" ,
+    15  :  "P"  ,
+    16  :  "S"  ,
+    17  :  "CL" ,
+    35  :  "BR" , }
+
+# . Dictionary comprehension does not work in Python 2.6
 symbolToAtomicNumber = {}
 for number, symbol in atomicNumberToSymbol.iteritems ():
     symbolToAtomicNumber[symbol] = number
