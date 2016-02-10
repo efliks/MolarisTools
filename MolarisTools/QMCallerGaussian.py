@@ -62,11 +62,21 @@ class QMCallerGaussian (QMCaller):
         if self.fileGaussianCheckpoint:
             data.append ("%%chk=%s\n" % self.fileGaussianCheckpoint)
 
+        # . Set up a charge scheme
+        schemes = {
+            "Chelpg"       :   "POP=CHELPG" ,
+            "Mulliken"     :   ""           ,
+            "MerzKollman"  :   "POP=MK"     ,
+            }
+        if not schemes.has_key (self.chargeScheme):
+            raise exceptions.StandardError ("Charge scheme %s is undefined." % self.chargeScheme)
+        chargeScheme = schemes[self.chargeScheme]
+
         # . Write header
         qmmm    = "CHARGE=ANGSTROMS"          if self.qmmm    else ""
         cosmo   = "SCRF=(Solvent=Water,Read)" if self.cosmo   else ""
         restart = "GUESS=READ"                if self.restart else ""
-        data.append ("# %s %s %s %s FORCE NOSYMM\n\n" % (self.method, qmmm, cosmo, restart))
+        data.append ("# %s %s %s %s %s FORCE NOSYMM\n\n" % (self.method, qmmm, cosmo, restart, chargeScheme))
         data.append ("Comment line\n\n")
         data.append ("%d %d\n" % (self.charge, self.multiplicity))
 
@@ -104,7 +114,12 @@ class QMCallerGaussian (QMCaller):
         gaussian     = GaussianOutputFile (filename=self.fileGaussianOutput)
         self.Efinal  = gaussian.Efinal
         self.forces  = gaussian.forces
-        self.charges = gaussian.charges
+        if self.chargeScheme == "Mulliken":
+            self.charges = gaussian.charges
+        elif self.chargeScheme == "MerzKollman":
+            self.charges = gaussian.espcharges
+        elif self.chargeScheme == "Chelpg":
+            self.charges = gaussian.espcharges
 
         # . Finish up
         self._Finalize ()

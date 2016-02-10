@@ -63,7 +63,7 @@ class GaussianOutputFile (object):
                     tokens      = TokenizeLine (line, converters=[None, None, None, None, float, None, None, int, None])
                     self.Efinal = tokens[4] * HARTREE_TO_KCAL_MOL
 
-                # . Get ESP charges
+                # . Get ESP charges (can be Merz-Kollman or CHELPG)
                 elif line.count ("Charges from ESP fit"):
                     next (lines)
                     next (lines)
@@ -195,18 +195,7 @@ class GaussianOutputFile (object):
 
     def WriteMolarisForces (self, filename="forces.out", Eref=0., useESPCharges=False):
         """Write a file in the Molaris-suitable format."""
-        data = []
-        data.append ("%f\n" % (self.Efinal - Eref))
-        for force in self.forces:
-            data.append ("%14.6f  %14.6f  %14.6f\n" % (force.x, force.y, force.z))
-        # . Do not use CHELPG charges with semi-empirical methods?
-        charges = self.charges
-        if useESPCharges:
-            charges = self.espcharges
-        for charge in charges:
-            data.append ("%14.6f\n" % charge)
-        # . Write the file
-        WriteData (data, filename)
+        pass
 
 
 #===============================================================================

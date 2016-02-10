@@ -38,12 +38,28 @@ class QMCallerMopac (QMCaller):
 
     def _WriteInput (self):
         """Write a Mopac input file."""
+        # . Set up a charge scheme
+        schemes = {
+            "Mulliken"     :   "MULLIK" ,
+            "MerzKollman"  :   "ESP"    ,
+            }
+        if not schemes.has_key (self.chargeScheme):
+            raise exceptions.StandardError ("Charge scheme %s is undefined." % self.chargeScheme)
+        chargeScheme = schemes[self.chargeScheme]
+        # . Set up a spin state
+        multp = {
+            1  :   ""        ,
+            2  :   "DOUBLET" ,
+            3  :   "TRIPLET" ,
+            }
+        spinState = multp[self.multiplicity]
+        # . Set up a solvation model
+        solvationModel = ("EPS=%.2f" % self.dielectric) if self.cosmo else ""
+        # . Set up a QM/MM model
+        qmmmModel = "DEBUG MOL_QMMM" if self.qmmm else ""
         # . Write header
-        multp = {1  :   ""        ,
-                 2  :   "DOUBLET" ,
-                 3  :   "TRIPLET" }
         data   = []
-        data.append ("%s  1SCF  CHARGE=%-2d  %s  %s  GRAD  XYZ  MULLIK  %s\n" % (self.method, self.charge, multp[self.multiplicity], (("EPS=%.2f" % self.dielectric) if self.cosmo else ""), "DEBUG MOL_QMMM" if self.qmmm else ""))
+        data.append ("%s  1SCF  CHARGE=%-2d  %s  %s  GRAD  XYZ  %s  %s\n" % (self.method, self.charge, spinState, solvationModel, chargeScheme, qmmmModel))
         data.append ("Comment line\n")
         data.append ("\n")
         # . Write geometry
@@ -64,7 +80,10 @@ class QMCallerMopac (QMCaller):
         mopac        = MopacOutputFile (filename=self.fileMopacOutput)
         self.Efinal  = mopac.Efinal
         self.forces  = mopac.forces
-        self.charges = mopac.charges
+        if self.chargeScheme == "Mulliken":
+            self.charges = mopac.charges
+        elif self.chargeScheme == "MerzKollman":
+            self.charges = mopac.mkcharges
 
         # . Finish up
         self._Finalize ()

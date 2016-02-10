@@ -15,22 +15,22 @@ Force = collections.namedtuple ("Force" , "x y z")
 class MolarisAtomsFile (object):
     """A class representing atoms for the QC/MM calculation."""
 
-    def __init__ (self, filename="atoms.inp", filterSymbols=None):
+    def __init__ (self, filename="atoms.inp", replaceSymbols=None):
         """Constructor."""
-        self.inputfile     = filename
-        self.filterSymbols = filterSymbols
+        self.inputfile      = filename
+        self.replaceSymbols = replaceSymbols
         self._Parse ()
 
 
     def _LineToAtom (self, line, includeCharge=False):
         tokens = TokenizeLine (line, converters=[None, float, float, float, float])
         symbol = tokens[0]
-        if self.filterSymbols:
-            # . Truncate all symbols to one character, except the filtered ones
-            if symbol in self.filterSymbols:
-                pass
-            else:
-                symbol = symbol[:1]
+        # . Replace selected atomic symbols (a workaround for a persisting bug in Molaris)
+        if self.replaceSymbols:
+            for (symbolOld, symbolNew) in self.replaceSymbols:
+                if symbolOld == symbol:
+                    symbol = symbolNew
+                    break
         # . Create an atom
         atom   = Atom (
             symbol =  symbol,

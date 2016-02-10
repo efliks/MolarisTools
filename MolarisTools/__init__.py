@@ -24,5 +24,3 @@ from XYZTrajectory       import XYZTrajectory
 
 # . Miscellaneous
 from CHELPGCharges       import CHELPGCharges
-from EVBMapping          import EVBMapping
-from WHAMData            import WHAMTwoDistances, WHAMData

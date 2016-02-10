@@ -59,16 +59,16 @@ class MopacOutputFile (object):
                     tokens = TokenizeLine (line, converters=[None, None, None, None, None, float, None, None, float, None])
                     self.Efinal = tokens [5]
 
-                # . Read ESP charges
+                # . Read ESP (= Merz-Kollman) charges
                 elif line.count ("ELECTROSTATIC POTENTIAL CHARGES"):
                     # . Skip the next two lines
                     next (lines)
                     next (lines)
-                    self.espcharges = []
+                    self.mkcharges = []
                     for i in range (natoms):
                         tokens = TokenizeLine (next (lines), converters=[int, None, float])
                         charge = tokens[2]
-                        self.espcharges.append (charge)
+                        self.mkcharges.append (charge)
 
                 # . Read Mulliken charges
                 elif line.count ("MULLIKEN POPULATIONS AND CHARGES"):
@@ -86,18 +86,7 @@ class MopacOutputFile (object):
 
     def WriteMolarisForces (self, filename="forces.out", Eref=0., useESPCharges=False):
         """Write a file in the Molaris-suitable format."""
-        data = []
-        data.append ("%f\n" % (self.Efinal - Eref))
-        for force in self.forces:
-            data.append ("%14.6f  %14.6f  %14.6f\n" % (force.x, force.y, force.z))
-        # . Do not use CHELPG charges with semi-empirical methods?
-        charges = self.charges
-        if useESPCharges:
-            charges = self.espcharges
-        for charge in charges:
-            data.append ("%14.6f\n" % charge)
-        # . Write the file
-        WriteData (data, filename)
+        pass
 
 
 #===============================================================================

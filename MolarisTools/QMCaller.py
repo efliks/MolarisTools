@@ -10,13 +10,15 @@ from MolarisAtomsFile    import MolarisAtomsFile
 import exceptions, math, copy
 
 
-_DEFAULT_METHOD       =  "PM3"
-_DEFAULT_CHARGE       =   0
-_DEFAULT_MULTIPLICITY =   1
-_DEFAULT_DIELECTRIC   =  78.4
-_DEFAULT_FILE_ATOMS   =  "mol.in"
-_DEFAULT_FILE_FORCES  =  "d.o"
-_DEFAULT_FILE_QM_TRAJ =  "qm.xyz"
+_DEFAULT_METHOD         =  "PM3"
+_DEFAULT_CHARGE         =   0
+_DEFAULT_MULTIPLICITY   =   1
+_DEFAULT_DIELECTRIC     =  78.4
+_DEFAULT_FILE_ATOMS     =  "mol.in"
+_DEFAULT_FILE_FORCES    =  "d.o"
+_DEFAULT_FILE_QM_TRAJ   =  "qm.xyz"
+# . Other schemes: MerzKollman, Chelpg (only Gaussian)
+_DEFAULT_CHARGE_SCHEME  =  "Mulliken"
 
 _FORMAT_QM_EXT    = "%2s   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.4f\n"
 _FORMAT_QM_SIMPLE = "%2s   %8.3f   %8.3f   %8.3f\n"
@@ -38,9 +40,11 @@ class QMCaller (object):
         "fileAtoms"        :   _DEFAULT_FILE_ATOMS     ,
         "fileForces"       :   _DEFAULT_FILE_FORCES    ,
         "fileTrajectory"   :   _DEFAULT_FILE_QM_TRAJ   ,
+        "chargeScheme"     :   _DEFAULT_CHARGE_SCHEME  ,
         "archive"          :   False                   ,
         "cosmo"            :   False                   ,
         "qmmm"             :   False                   ,
+        "replaceSymbols"   :   [("F0", "F"), ]         ,
             }
 
     def __init__ (self, **keywordArguments):
@@ -67,7 +71,7 @@ class QMCaller (object):
 
     def _Prepare (self):
         # . Read mol.in file from Molaris
-        self.molaris = MolarisAtomsFile (filename=self.fileAtoms, filterSymbols=None)
+        self.molaris = MolarisAtomsFile (filename=self.fileAtoms, replaceSymbols=self.replaceSymbols)
 
 
     def Run (self):
