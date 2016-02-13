@@ -5,18 +5,35 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from    Utilities import TokenizeLine, WriteData
-import  collections, exceptions
+import  math, exceptions
 
-XYZAtom = collections.namedtuple ("Atom" , "label  x  y  z  fx  fy  fz  fm  charge")
+
+class XYZAtom (object):
+    """A class to handle an atom in an XYZ trajectory."""
+
+    def __init__ (self, **keywordArguments):
+        """Constructor."""
+        for (key, value) in keywordArguments.iteritems ():
+            setattr (self, key, value)
+        # label  x  y  z  fx  fy  fz  fm  charge
+
+        # . Calculate the magnitude of the force
+        checks = (
+            not hasattr (self, "fm") ,
+                hasattr (self, "fx") ,)
+        if all (checks):
+            self.fm = math.sqrt (self.fx ** 2 + self.fy ** 2 + self.fz ** 2)
 
 
 #===============================================================================
+_FORMAT_QM_EXT    = "%2s   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.4f\n"
+_FORMAT_QM_SIMPLE = "%2s   %8.3f   %8.3f   %8.3f\n"
+
 class XYZStep (object):
     """A class to handle a single step in an XYZ trajectory."""
 
-    def __init__ (self, owner, atoms, comment=None):
+    def __init__ (self, atoms, comment=""):
         """Constructor."""
-        self.owner   = owner
         self.atoms   = atoms
         self.comment = comment
 
@@ -28,14 +45,15 @@ class XYZStep (object):
 
     def Write (self, filename="step.xyz", append=False):
         """Write a step."""
-        data = ["%d\n%s\n" % (self.natoms, self.comment)]
+        header  = "%d\n%s\n" % (self.natoms, self.comment)
+        data    = [header, ]
         for atom in self.atoms:
-            if atom.fx is None:
-                # . Write simple atom
-                data.append ("%3s  %8.3f  %8.3f  %8.3f\n" % (atom.label, atom.x, atom.y, atom.z))
+            if hasattr (atom, "charge"):
+                # . Write an atom with forces and a charge
+                data.append (_FORMAT_QM_EXT % (atom.label, atom.x, atom.y, atom.z, atom.fx, atom.fy, atom.fz, atom.fm, atom.charge))
             else:
-                # . Write atom with forces and a charge
-                data.append ("%3s  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.4f\n" % (atom.label, atom.x, atom.y, atom.z, atom.fx, atom.fy, atom.fz, atom.fm, atom.charge))
+                # . Write a simple atom
+                data.append (_FORMAT_QM_SIMPLE % (atom.label, atom.x, atom.y, atom.z))
         WriteData (data, filename=filename, append=append)
 
 
@@ -94,7 +112,7 @@ class XYZTrajectory (object):
                         atom   = XYZAtom (label=tokens[0], x=tokens[1], y=tokens[2], z=tokens[3], fx=tokens[4], fy=tokens[5], fz=tokens[6], fm=tokens[7], charge=tokens[8])
                     atoms.append (atom)
                 # . Create a step and add it to the list of steps
-                step = XYZStep (owner=self, atoms=atoms, comment=comment)
+                step = XYZStep (atoms=atoms, comment=comment)
                 steps.append (step)
         except StopIteration:
             pass
@@ -116,5 +134,4 @@ class XYZTrajectory (object):
 #===============================================================================
 # . Main program
 #===============================================================================
-if __name__ == "__main__":
-    pass
+if __name__ == "__main__": pass
