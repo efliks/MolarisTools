@@ -65,7 +65,7 @@ class QMCallerMopac (QMCaller):
         # . Write geometry
         atoms = self.molaris.qatoms + self.molaris.latoms
         for atom in atoms:
-            data.append ("%2s    %9.4f  1    %9.4f  1    %9.4f  1\n" % (atom.symbol, atom.x, atom.y, atom.z))
+            data.append ("%2s    %9.4f  1    %9.4f  1    %9.4f  1\n" % (atom.label, atom.x, atom.y, atom.z))
         # . Finish up
         WriteData (data, self.fileMopacInput)
 

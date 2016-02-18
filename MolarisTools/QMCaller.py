@@ -5,10 +5,11 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from Utilities           import TokenizeLine, WriteData
-from XYZTrajectory       import XYZAtom, XYZStep
+from Atom                import Atom
+from XYZTrajectory       import XYZStep
 from MolarisAtomsFile    import MolarisAtomsFile
 
-import exceptions, math, copy
+import exceptions, copy
 
 
 _FORMAT_FORCE     = "%14.6f  %14.6f  %14.6f\n"
@@ -23,18 +24,18 @@ class QMCaller (object):
     # . If qmmm is True, point charges will be used to polarize the wavefunction
     # . Charge schemes can be Mulliken, MerzKollman, Chelpg (only Gaussian)
     defaultAttributes = {
-        "method"           :   "PM3"            ,
-        "charge"           :    0               ,
-        "multiplicity"     :    1               ,
-        "dielectric"       :   78.4             ,
-        "fileAtoms"        :   "mol.in"         ,
-        "fileForces"       :   "d.o"            ,
-        "fileTrajectory"   :   "qm.xyz"         ,
-        "chargeScheme"     :   "Mulliken"       ,
-        "archive"          :   False            ,
-        "cosmo"            :   False            ,
-        "qmmm"             :   False            ,
-        "replaceSymbols"   :   [("F0", "F"), ]  ,
+        "method"             :     "PM3"              ,
+        "charge"             :      0                 ,
+        "multiplicity"       :      1                 ,
+        "dielectric"         :     78.4               ,
+        "fileAtoms"          :     "mol.in"           ,
+        "fileForces"         :     "d.o"              ,
+        "fileTrajectory"     :     "qm.xyz"           ,
+        "chargeScheme"       :     "Mulliken"         ,
+        "archive"            :     False              ,
+        "cosmo"              :     False              ,
+        "qmmm"               :     False              ,
+        "replaceSymbols"     :     [("F0", "F"), ]    ,
             }
 
     def __init__ (self, **keywordArguments):
@@ -71,24 +72,30 @@ class QMCaller (object):
 
     def _WriteQMTrajectory (self):
         if self.fileTrajectory:
-            # . Collect atoms
             atoms    = copy.deepcopy (self.molaris.qatoms)
             atoms.extend (self.molaris.latoms)
-            newatoms = []
+
             if self.archive:
+                templ = []
                 for atom, force, charge in zip (atoms, self.forces, self.charges):
-                    newatoms.append (XYZAtom (label=atom.symbol, x=atom.x, y=atom.y, z=atom.z, charge=charge, fx=force.x, fy=force.y, fz=force.z))
-            else:
-                for atom in atoms:
-                    newatoms.append (XYZAtom (label=atom.symbol, x=atom.x, y=atom.y, z=atom.z))
-            # . Write to a file
-            step = XYZStep (newatoms, comment="qm: %f" % self.Efinal)
+                    atom = Atom (
+                        label  = atom.label ,
+                        charge = charge     ,
+                        x      = atom.x     ,
+                        y      = atom.y     ,
+                        z      = atom.z     ,
+                        fx     = force.x    ,
+                        fy     = force.y    ,
+                        fz     = force.z    ,)
+                    templ.append (atom)
+                atoms = templ
+            # . Write a step
+            step = XYZStep (atoms, comment="qm: %f" % self.Efinal)
             step.Write (filename=self.fileTrajectory, append=True)
 
 
     def _WriteForces (self):
         data = ["%f\n" % self.Efinal]
-        # . Write forces and charges
         for force in self.forces:
             data.append (_FORMAT_FORCE % (force.x, force.y, force.z))
         for charge in self.charges:

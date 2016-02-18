@@ -20,7 +20,7 @@ from FVXFile             import FVXFile
 # . Handling of other files
 from GaussianOutputFile  import GaussianOutputFile
 from MopacOutputFile     import MopacOutputFile
-from XYZTrajectory       import XYZTrajectory, XYZStep, XYZAtom
+from XYZTrajectory       import XYZTrajectory, XYZStep
 
 # . Miscellaneous
 from CHELPGCharges       import CHELPGCharges

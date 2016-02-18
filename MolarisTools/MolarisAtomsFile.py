@@ -4,11 +4,11 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
+from   Atom        import Atom
 from   Units       import *
 from   Utilities   import TokenizeLine, WriteData
 import collections
 
-Atom  = collections.namedtuple ("Atom"  , "symbol x y z charge")
 Force = collections.namedtuple ("Force" , "x y z")
 
 
@@ -33,7 +33,7 @@ class MolarisAtomsFile (object):
                     break
         # . Create an atom
         atom   = Atom (
-            symbol =  symbol,
+            label  =  symbol,
             charge = (tokens[4] if includeCharge else None) ,
             x      =  tokens[1]  ,
             y      =  tokens[2]  ,
@@ -101,7 +101,7 @@ class MolarisAtomsFile (object):
         natoms = len (atoms)
         data   = ["%d\n%s\n" % (natoms, caption if caption else filename)]
         for atom in atoms:
-            data.append ("%2s    %8.3f    %8.3f    %8.3f    %8s\n" % ("" if skipSymbol else atom.symbol, atom.x, atom.y, atom.z, ("%8.4f" % atom.charge) if includeCharge else ""))
+            data.append ("%2s    %8.3f    %8.3f    %8.3f    %8s\n" % ("" if skipSymbol else atom.label, atom.x, atom.y, atom.z, ("%8.4f" % atom.charge) if includeCharge else ""))
         WriteData (data, filename, append=append)
 
 
