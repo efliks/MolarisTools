@@ -6,6 +6,7 @@
 #-------------------------------------------------------------------------------
 # . QM/MM interface for Molaris
 from QMCallerMopac       import QMCallerMopac
+from QMCallerGAMESS      import QMCallerGAMESS
 from QMCallerGaussian    import QMCallerGaussian
 
 # . Handling of Molaris files
@@ -19,6 +20,7 @@ from FVXFile             import FVXFile
 
 # . Handling of other files
 from GaussianOutputFile  import GaussianOutputFile
+from GAMESSOutputFile    import GAMESSOutputFile, GAMESSDatFile
 from MopacOutputFile     import MopacOutputFile
 from XYZTrajectory       import XYZTrajectory, XYZStep
 

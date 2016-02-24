@@ -121,6 +121,8 @@ class GaussianOutputFile (object):
                         opt.append (optStep)
         except StopIteration:
             pass
+        # . Close the file
+        lines.close ()
         # . Does the job involve a scan (IRC or PES)?
         if scan: self.scan = scan
         # . Does the job involve a geometry optimization?

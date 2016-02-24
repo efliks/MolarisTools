@@ -167,6 +167,8 @@ class MolarisOutputFile (object):
                     mdSteps = []
         except StopIteration:
             pass
+        # . Close the file
+        lines.close ()
 
 
 #-------------------------------------------------------------------------------

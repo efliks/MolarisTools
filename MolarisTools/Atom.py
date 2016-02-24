@@ -36,3 +36,9 @@ class Atom (object):
                 return _FORMAT_QM_FORCE % (self.label, self.x, self.y, self.z, self.fx, self.fy, self.fz, self.fm)
         else:
             return _FORMAT_QM_SIMPLE % (self.label, self.x, self.y, self.z)
+
+
+#===============================================================================
+# . Main program
+#===============================================================================
+if __name__ == "__main__": pass

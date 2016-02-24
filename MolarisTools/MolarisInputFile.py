@@ -40,6 +40,7 @@ class MolarisInputFile (object):
                         break
         except StopIteration:
             pass
+        # . Close the file
         lines.close ()
         self.equil = equil
 

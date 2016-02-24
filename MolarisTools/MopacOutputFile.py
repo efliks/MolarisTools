@@ -82,6 +82,8 @@ class MopacOutputFile (object):
                         self.charges.append (charge)
         except StopIteration:
             pass
+        # . Close the file
+        lines.close ()
 
 
     def WriteMolarisForces (self, filename="forces.out", Eref=0., useESPCharges=False):

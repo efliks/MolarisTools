@@ -15,6 +15,9 @@ def TokenizeLine (line, converters=None, separator=None, reverse=False):
             tokens = line.split ()
         else:
             tokens = line.split (separator)
+        # . If the line is empty, return nothing
+        if len (tokens) < 1:
+            return None
         # . The last token becomes first
         if reverse:
             tokens.reverse ()

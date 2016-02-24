@@ -79,6 +79,8 @@ class MolarisAtomsFile (object):
                     self.watoms = self._ReadAtoms (lines, nwater, includeCharge=True)
         except StopIteration:
             pass
+        # . Close the file
+        lines.close ()
 
 
     def WriteQM (self, filename="qm.xyz", link=False, append=False, caption=""):
