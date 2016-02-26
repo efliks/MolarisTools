@@ -19,8 +19,8 @@ from    Utilities import TokenizeLine
 import  collections, exceptions
 
 
-AminoAtom  = collections.namedtuple ("Atom"  , "atomNumber  atomLabel  atomType  atomCharge")
-AminoGroup = collections.namedtuple ("Group" , "natoms  centralAtom  radius  serials  symbol")
+AminoAtom  = collections.namedtuple ("Atom"  , "atomLabel  atomType  atomCharge")
+AminoGroup = collections.namedtuple ("Group" , "natoms  centralAtom  radius  labels  symbol")
 
 _DEFAULT_DIVIDER = "-" * 41
 _GROUP_START     = "A"
@@ -75,20 +75,11 @@ class AminoComponent (object):
             return 0.
 
 
-    def _NumberToLabel (self, atomNumber):
-        label = ""
-        for atom in self.atoms:
-            if atom.atomNumber == atomNumber:
-                label = atom.atomLabel
-                break
-        return label
-
-
     def CalculateGroup (self, group):
         """Calculate the charge of a group."""
         total = 0.
         for atom in self.atoms:
-            if atom.atomNumber in group.serials:
+            if atom.atomLabel in group.labels:
                 total += atom.atomCharge
         return total
 
@@ -118,8 +109,10 @@ class AminoComponent (object):
             if not found:
                 raise exceptions.StandardError ("Group %s not found." % symbol)
             # . Run for each atom in the group
-            for serial in group.serials:
-                atom    = self.atoms[serial - 1]
+            for label in group.labels:
+                for atom in self.atoms:
+                    if atom.atomLabel == label:
+                        break
                 atype   = atom.atomType
                 # . Check if the atom type has to be modified
                 if modify.has_key (symbol):
@@ -146,54 +139,108 @@ class AminoComponent (object):
         print ("}")
 
 
-    def Write (self, title=None, showGroups=False, showLabels=False):
+    def Write (self, filename=None, title=None, showGroups=False, showLabels=False):
+        output = []
+        # . Prepare conversion table label->serial
+        convert = {"" : 0, }
+        for atomSerial, atom in enumerate (self.atoms, 1):
+            convert[atom.atomLabel] = atomSerial
+
         # . Write header
         if title is None:
             if hasattr (self, "title"):
                 title = self.title
-        print ("%d%s%s" % (self.serial, self.name, ("  ! %s" % title) if title else ""))
+        output.append ("%d%s%s" % (self.serial, self.name, ("  ! %s" % title) if title else ""))
 
         # . Write atoms
-        print ("%5d  ! Number of atoms" % self.natoms)
+        output.append ("%5d  ! Number of atoms" % self.natoms)
         for atom in self.atoms:
             markGroup = ""
             if showGroups:
                 for igroup, group in enumerate (self.groups):
-                    if atom.atomNumber in group.serials:
+                    if atom.atomLabel in group.labels:
                         markGroup   = "  %s ! %s" % ("   " if (igroup % 2 == 1) else "", group.symbol)
                         break
-            print ("%5d %-4s %4s %6.2f%s" % (atom.atomNumber, atom.atomLabel, atom.atomType, atom.atomCharge, markGroup))
+            output.append ("%5d %-4s %4s %6.2f%s" % (convert[atom.atomLabel], atom.atomLabel, atom.atomType, atom.atomCharge, markGroup))
 
         # . Write bonds
-        print ("%5d  ! Number of bonds" % self.nbonds)
-        for atoma, atomb in self.bonds:
+        output.append ("%5d  ! Number of bonds" % self.nbonds)
+        for labela, labelb in self.bonds:
             label = ""
             if showLabels:
-                label = "%4s %4s" % (self._NumberToLabel (atoma), self._NumberToLabel (atomb))
-            print ("%5d%5d%s" % (atoma, atomb, ("    ! %s" % label) if showLabels else ""))
+                label = "%4s %4s" % (labela, labelb)
+            output.append ("%5d%5d%s" % (convert[labela], convert[labelb], ("    ! %s" % label) if showLabels else ""))
 
         # . Write connecting atoms
-        connecta, connectb = self.connect
-        print ("%5d%5d  ! Connecting atoms" % (connecta, connectb))
+        labela, labelb = self.connect
+        output.append ("%5d%5d  ! Connecting atoms" % (convert[labela], convert[labelb]))
 
         # . Write groups
-        print ("%5d  ! Number of electroneutral groups" % self.ngroups)
+        output.append ("%5d  ! Number of electroneutral groups" % self.ngroups)
         for group in self.groups:
-            print ("%5d%5d%6.1f" % (group.natoms, group.centralAtom, group.radius))
+            output.append ("%5d%5d%6.1f" % (group.natoms, convert[group.centralAtom], group.radius))
             line = "    "
-            for atomSerial in group.serials:
-                line = "%s%d  " % (line, atomSerial)
+            for atomLabel in group.labels:
+                line = "%s%d  " % (line, convert[atomLabel])
             if showGroups:
                 line = "%s  ! Group %s: %.4f" % (line, group.symbol, self.CalculateGroup (group))
-            print line
+            output.append (line)
         # . Finish up
-        print ("%5d" % 0)
-        print (_DEFAULT_DIVIDER)
+        output.append ("%5d" % 0)
+        output.append (_DEFAULT_DIVIDER)
+        # . Write to a file or terminal
+        if filename:
+            fo = open (filename, "w")
+            for line in output:
+                fo.write ("%s\n" % line)
+            fo.close ()
+        else:
+            for line in output:
+                print line
 
 
-    def KillAtom (self, label):
+    def KillAtom (self, label, correctCharges=False):
         """Delete an atom from the component."""
-        pass
+        # . Remove from the list of atoms
+        newAtoms   = []
+        for atom in self.atoms:
+            if not atom.atomLabel == label:
+                newAtoms.append (atom)
+            else:
+                charge = atom.atomCharge
+        if len (newAtoms) == len (self.atoms):
+            raise exceptions.StandardError ("Atom %s not found." % label)
+        self.atoms = newAtoms
+        # . Add the charge of the killed atom to other charges in the same group
+        if correctCharges:
+            pass
+        # . Remove bonds that include the killed atom
+        newBonds   = []
+        for labela, labelb in self.bonds:
+            if not (labela == label or labelb == label):
+                pair = (labela, labelb)
+                newBonds.append (pair)
+        self.bonds = newBonds
+        # . Modify the group that includes the killed atom
+        newGroups  = []
+        for group in self.groups:
+            labels     = []
+            foundGroup = False
+            for atomLabel in group.labels:
+                if atomLabel == label:
+                    foundGroup = True
+                else:
+                    labels.append (atomLabel)
+            if foundGroup:
+                if label == group.centralAtom:
+                    centralAtom = labels[len (labels) / 2]
+                else:
+                    centralAtom = group.centralAtom
+                newGroup = AminoGroup (natoms=(group.natoms - 1), centralAtom=centralAtom, radius=group.radius, labels=labels, symbol=group.symbol)
+            else:
+                newGroup = group
+            newGroups.append (newGroup)
+        self.groups = newGroups
 
 
     def KillBond (self, label, labelOther):
@@ -265,8 +312,12 @@ class AminoLibrary (object):
     def _GetLineWithComment (self, data):
         line      = data.next ()
         position  = line.find ("!")
-        text      = line[             : position].strip ()
-        comment   = line[position + 1 :         ].strip ()
+        if position > -1:
+            text      = line[             : position].strip ()
+            comment   = line[position + 1 :         ].strip ()
+        else:
+            text      = line
+            comment   = ""
         return (text, comment)
 
 
@@ -290,18 +341,20 @@ class AminoLibrary (object):
                     for i, char in enumerate (entry):
                         if not char.isdigit ():
                             break
-                    serial, name = int (entry[:i]), entry[i:]
+                    componentSerial, name = int (entry[:i]), entry[i:]
                     # . Check if the component label is unique
                     if unique:
                         if name in names:
                             raise exceptions.StandardError ("Component label %s is not unique." % name)
                         names.append (name)
                     # . Get number of atoms
-                    line   = self._GetCleanLine (data)
-                    natoms = int (line)
+                    line    = self._GetCleanLine (data)
+                    natoms  = int (line)
+                    # . Initiate conversion table serial->label
+                    convert = {}
                     # . Read atoms
-                    atoms  = []
-                    labels = []
+                    atoms   = []
+                    labels  = []
                     for i in range (natoms):
                         line = self._GetCleanLine (data)
                         atomNumber, atomLabel, atomType, atomCharge = TokenizeLine (line, converters=[int, None, None, float])
@@ -311,8 +364,10 @@ class AminoLibrary (object):
                                 raise exceptions.StandardError ("Component %s %d: Atom label %s is not unique." % (name, serial, atomLabel))
                             labels.append (atomLabel)
                         # . Create atom
-                        atom = AminoAtom (atomNumber=atomNumber, atomLabel=atomLabel, atomType=atomType, atomCharge=atomCharge)
+                        atom = AminoAtom (atomLabel=atomLabel, atomType=atomType, atomCharge=atomCharge)
                         atoms.append (atom)
+                        # . Update conversion table serial->label
+                        convert[atomNumber] = atomLabel
                     # . Get number of bonds
                     line   = self._GetCleanLine (data)
                     nbonds = int (line)
@@ -329,9 +384,25 @@ class AminoLibrary (object):
                     if reorder:
                         # . Sort bonds
                         bonds.sort (key=lambda bond: bond[0])
+                    # . Convert numerical bonds to labeled bonds
+                    labeledBonds = []
+                    for atoma, atomb in bonds:
+                        # . FIXME: Workaround for invalid entries in the amino file
+                        try:
+                            pair = (convert[atoma], convert[atomb])
+                            labeledBonds.append (pair)
+                        except:
+                            pass
+                    bonds = labeledBonds
                     # . Read connecting atoms
-                    line = self._GetCleanLine (data)
-                    connecta, connectb = TokenizeLine (line, converters=[int, int])
+                    line  = self._GetCleanLine (data)
+                    seriala, serialb = TokenizeLine (line, converters=[int, int])
+                    # . Convert serials of connecting atoms to labels
+                    connecta, connectb = "", ""
+                    if seriala > 0:
+                        connecta = convert[seriala]
+                    if serialb > 0:
+                        connectb = convert[serialb]
                     # . Read number of electroneutral groups
                     line    = self._GetCleanLine (data)
                     ngroups = int (line)
@@ -342,11 +413,21 @@ class AminoLibrary (object):
                         nat, central, radius = TokenizeLine (line, converters=[int, int, float])
                         line     = self._GetCleanLine (data)
                         serials  = TokenizeLine (line, converters=[int] * nat)
-                        symbol   = chr (ord (_GROUP_START) + i)
-                        group    = AminoGroup (natoms=nat, centralAtom=central, radius=radius, serials=serials, symbol=symbol)
-                        groups.append (group)
+                        # . Convert central atom's serial to a label
+                        # . FIXME: Workaround for invalid entries in the amino file
+                        try:
+                            central  = convert[central]
+                            # . Convert serials to labels
+                            labels   = []
+                            for serial in serials:
+                                labels.append (convert[serial])
+                            symbol   = chr (ord (_GROUP_START) + i)
+                            group    = AminoGroup (natoms=nat, centralAtom=central, radius=radius, labels=labels, symbol=symbol)
+                            groups.append (group)
+                        except:
+                            pass
                     # . Create a component and add it to the list
-                    component = AminoComponent (serial=serial, name=name, atoms=atoms, bonds=bonds, groups=groups, connect=(connecta, connectb), logging=logging, title=title, verbose=verbose)
+                    component = AminoComponent (serial=componentSerial, name=name, atoms=atoms, bonds=bonds, groups=groups, connect=(connecta, connectb), logging=logging, title=title, verbose=verbose)
                     components.append (component)
         except StopIteration:
             pass
