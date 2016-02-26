@@ -29,18 +29,18 @@ _GROUP_START     = "A"
 class AminoComponent (object):
     """A class to represent a residue."""
 
-    def __init__ (self, logging=True, **keywordArguments):
+    def __init__ (self, logging=True, verbose=False, **keywordArguments):
         """Constructor."""
         for (key, value) in keywordArguments.iteritems ():
             if key != "logging":
                 setattr (self, key, value)
         # . Print info
-        if logging: self.Info ()
+        if logging: self.Info (verbose=verbose)
 
 
-    def Info (self):
+    def Info (self, verbose=False):
         """Print info."""
-        print ("Component: %d %s (%d atoms, %d bonds, %d groups, %-5.2f charge)" % (self.serial, self.name, self.natoms, self.nbonds, self.ngroups, self.charge))
+        print ("Component: %d %s (%d atoms, %d bonds, %d groups, %-5.2f charge%s)" % (self.serial, self.name, self.natoms, self.nbonds, self.ngroups, self.charge, (", %s" % self.title) if verbose else ""))
 
 
     @property
@@ -146,8 +146,11 @@ class AminoComponent (object):
         print ("}")
 
 
-    def Write (self, title="", showGroups=False, showLabels=False):
+    def Write (self, title=None, showGroups=False, showLabels=False):
         # . Write header
+        if title is None:
+            if hasattr (self, "title"):
+                title = self.title
         print ("%d%s%s" % (self.serial, self.name, ("  ! %s" % title) if title else ""))
 
         # . Write atoms
@@ -188,35 +191,56 @@ class AminoComponent (object):
         print (_DEFAULT_DIVIDER)
 
 
+    def KillAtom (self, label):
+        """Delete an atom from the component."""
+        pass
+
+
+    def KillBond (self, label, labelOther):
+        """Delete a bond from the component."""
+        pass
+
+
 #===============================================================================
 class AminoLibrary (object):
     """A class to represent data from the Molaris amino98.lib file."""
 
-    def __init__ (self, filename="amino98_custom.lib", logging=True, reorder=True, unique=False):
+    def __init__ (self, filename="amino98_custom.lib", logging=True, reorder=True, unique=False, verbose=False):
         """Constructor."""
         self.filename = filename
-        self._Parse (logging=logging, reorder=reorder, unique=unique)
+        self._Parse (logging=logging, reorder=reorder, unique=unique, verbose=verbose)
 
 
-    def __getitem__ (self, key):
-        """Find and return a component from the library."""
-        found = False
+    def _FindComponent (self, key):
         if isinstance (key, int):
             # . Search by serial
             for component in self.components:
                 if component.serial == key:
-                    found = True
-                    break
+                    return component
         elif isinstance (key, str):
             # . Search by name
             for component in self.components:
                 if component.name == key:
-                    found = True
-                    break
+                    return component
         else:
             raise exceptions.StandardError ("Unknown type of key.")
-        if not found:
-            raise exceptions.StandardError ("Component not found.")
+        # . Component not found
+        return None
+
+
+    def __contains__ (self, key):
+        """Check if a site is in the library."""
+        component = self._FindComponent (key)
+        if component:
+            return True
+        return False
+
+
+    def __getitem__ (self, key):
+        """Find and return a component from the library."""
+        component = self._FindComponent (key)
+        if not component:
+            raise exceptions.StandardError ("Site %s not found in the library." % key)
         return component
 
 
@@ -228,13 +252,25 @@ class AminoLibrary (object):
             return 0
 
 
+    def __len__ (self):
+        return self.ncomponents
+
+
     def _GetCleanLine (self, data):
         line      = data.next ()
         lineClean = line[:line.find ("!")].strip ()
         return lineClean
 
 
-    def _Parse (self, logging, reorder, unique):
+    def _GetLineWithComment (self, data):
+        line      = data.next ()
+        position  = line.find ("!")
+        text      = line[             : position].strip ()
+        comment   = line[position + 1 :         ].strip ()
+        return (text, comment)
+
+
+    def _Parse (self, logging, reorder, unique, verbose=False):
         components = []
         names      = []
         data       = open (self.filename)
@@ -244,7 +280,7 @@ class AminoLibrary (object):
                 # . Check if a new residue starts
                 if line.startswith ("---"):
                     # . Get serial and name
-                    line  = self._GetCleanLine (data)
+                    line, title  = self._GetLineWithComment (data)
                     entry = TokenizeLine (line, converters=[None, ])[0]
                     # . Remove spaces
                     entry = entry.replace (" ", "")
@@ -310,7 +346,7 @@ class AminoLibrary (object):
                         group    = AminoGroup (natoms=nat, centralAtom=central, radius=radius, serials=serials, symbol=symbol)
                         groups.append (group)
                     # . Create a component and add it to the list
-                    component = AminoComponent (serial=serial, name=name, atoms=atoms, bonds=bonds, groups=groups, connect=(connecta, connectb), logging=logging)
+                    component = AminoComponent (serial=serial, name=name, atoms=atoms, bonds=bonds, groups=groups, connect=(connecta, connectb), logging=logging, title=title, verbose=verbose)
                     components.append (component)
         except StopIteration:
             pass
