@@ -177,6 +177,7 @@ class AminoComponent (object):
 
         # . Write groups
         output.append ("%5d  ! Number of electroneutral groups" % self.ngroups)
+        totalCharge = 0.
         for group in self.groups:
             output.append ("%5d%5d%6.1f" % (group.natoms, convert[group.centralAtom], group.radius))
             line = "    "
@@ -184,9 +185,10 @@ class AminoComponent (object):
                 line = "%s%d  " % (line, convert[atomLabel])
             if showGroups:
                 line = "%s  ! Group %s: %.4f" % (line, group.symbol, self.CalculateGroup (group))
+                totalCharge += self.CalculateGroup (group)
             output.append (line)
         # . Finish up
-        output.append ("%5d" % 0)
+        output.append ("%5d%s" % (0, "  ! Total charge: %.4f" % totalCharge if showGroups else ""))
         output.append (_DEFAULT_DIVIDER)
         # . Write to a file or terminal
         if filename:
