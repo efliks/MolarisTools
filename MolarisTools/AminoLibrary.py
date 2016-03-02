@@ -250,6 +250,47 @@ class AminoComponent (object):
         pass
 
 
+    def ReplaceAtom (self, label, newLabel, newType, newCharge):
+        """Replace the label, type and charge of an atom."""
+        # . Replace in the list of atoms
+        found    = False
+        newAtoms = []
+        for atom in self.atoms:
+            if atom.atomLabel == label:
+                found = True
+                atom  = AminoAtom (atomLabel=newLabel, atomType=newType, atomCharge=newCharge)
+            newAtoms.append (atom)
+        if not found:
+            raise exceptions.StandardError ("Atom %s not found." % label)
+        self.atoms = newAtoms
+
+        # . Replace in the list of bonds
+        newBonds = []
+        for bonda, bondb in self.bonds:
+            if   bonda == label:
+                bonda = newLabel
+            elif bondb == label:
+                bondb = newLabel
+            newBonds.append ((bonda, bondb))
+        self.bonds = newBonds
+
+        # . Replace in the group
+        newGroups = []
+        for group in self.groups:
+            found     = False
+            newLabels = []
+            for atomLabel in group.labels:
+                if atomLabel == label:
+                    found     = True
+                    atomLabel = newLabel
+                newLabels.append (atomLabel)
+            if found:
+                newGroup = AminoGroup (natoms=group.natoms, centralAtom=group.centralAtom, radius=group.radius, labels=newLabels, symbol=group.symbol)
+                group    = newGroup
+            newGroups.append (group)
+        self.groups = newGroups
+
+
 #===============================================================================
 class AminoLibrary (object):
     """A class to represent data from the Molaris amino98.lib file."""
@@ -299,6 +340,15 @@ class AminoLibrary (object):
             return len (self.components)
         else:
             return 0
+
+
+    @property
+    def lastSerial (self):
+        serial = 1
+        if self.ncomponents > 1:
+            for component in self.components:
+                serial = component.serial
+        return serial
 
 
     def __len__ (self):
