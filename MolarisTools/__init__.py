@@ -10,6 +10,7 @@ from QMCallerGAMESS      import QMCallerGAMESS
 from QMCallerGaussian    import QMCallerGaussian
 
 # . Handling of Molaris files
+from DetermineAtoms      import DetermineAtoms
 from MolarisResidue      import MolarisResidue
 from MolarisAtomsFile    import MolarisAtomsFile
 from MolarisInputFile    import MolarisInputFile

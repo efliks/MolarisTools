@@ -139,22 +139,31 @@ class AminoComponent (object):
         print ("}")
 
 
-    def Write (self, filename=None, title=None, showGroups=False, showLabels=False):
+    def Write (self, filename=None, title=None, showGroups=False, showLabels=False, sortGroups=False):
         output = []
-        # . Prepare conversion table label->serial
-        convert = {"" : 0, }
-        for atomSerial, atom in enumerate (self.atoms, 1):
-            convert[atom.atomLabel] = atomSerial
-
         # . Write header
         if title is None:
             if hasattr (self, "title"):
                 title = self.title
         output.append ("%d%s%s" % (self.serial, self.name, ("  ! %s" % title) if title else ""))
 
+        # . Prepare a list of atoms
+        atoms = self.atoms
+        if sortGroups:
+            atoms = []
+            for group in self.groups:
+                for atom in self.atoms:
+                    if atom.atomLabel in group.labels:
+                        atoms.append (atom)
+
+        # . Prepare conversion table label->serial
+        convert = {"" : 0, }
+        for atomSerial, atom in enumerate (atoms, 1):
+            convert[atom.atomLabel] = atomSerial
+
         # . Write atoms
         output.append ("%5d  ! Number of atoms" % self.natoms)
-        for atom in self.atoms:
+        for atom in atoms:
             markGroup = ""
             if showGroups:
                 for igroup, group in enumerate (self.groups):
@@ -163,9 +172,34 @@ class AminoComponent (object):
                         break
             output.append ("%5d %-4s %4s %6.2f%s" % (convert[atom.atomLabel], atom.atomLabel, atom.atomType, atom.atomCharge, markGroup))
 
+        # . Reorder bonds after sorting the groups
+        bonds = self.bonds
+        if sortGroups:
+            # . Prepare serial bonds
+            serialBonds = []
+            for labela, labelb in self.bonds:
+                seriala, serialb = convert[labela], convert[labelb]
+                # . Keep the lower serial first
+                if seriala > serialb:
+                    seriala, serialb = serialb, seriala
+                serialBonds.append ([seriala, serialb])
+            # . Sort bonds
+            serialBonds.sort (key=lambda bond: (bond[0], bond[1]))
+            # . Invert the conversion table label->serial to serial->label
+            trevnoc = {}
+            for label, serial in convert.iteritems ():
+                trevnoc[serial] = label
+            # . Convert serial bonds to label bonds
+            bonds = []
+            for seriala, serialb in serialBonds:
+                labela, labelb = trevnoc[seriala], trevnoc[serialb]
+                pair = labela, labelb
+                bonds.append (pair)
+            # . We are done!
+
         # . Write bonds
         output.append ("%5d  ! Number of bonds" % self.nbonds)
-        for labela, labelb in self.bonds:
+        for labela, labelb in bonds:
             label = ""
             if showLabels:
                 label = "%4s %4s" % (labela, labelb)
@@ -180,9 +214,15 @@ class AminoComponent (object):
         totalCharge = 0.
         for group in self.groups:
             output.append ("%5d%5d%6.1f" % (group.natoms, convert[group.centralAtom], group.radius))
-            line = "    "
+            # . Sort atoms in a group depending on their serial
+            serials = []
             for atomLabel in group.labels:
-                line = "%s%d  " % (line, convert[atomLabel])
+                serials.append (convert[atomLabel])
+            serials.sort ()
+            # . Write serials of the group
+            line = "    "
+            for serial in serials:
+                line = "%s%d  " % (line, serial)
             if showGroups:
                 line = "%s  ! Group %s: %.4f" % (line, group.symbol, self.CalculateGroup (group))
                 totalCharge += self.CalculateGroup (group)
