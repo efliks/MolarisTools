@@ -331,6 +331,60 @@ class AminoComponent (object):
         self.groups = newGroups
 
 
+    # . Convert atom types Enzymix -> CHARMM
+    _DEFAULT_CONVERT_TYPE = {
+        "P4"    :   "P2"    ,
+        "O3"    :   "ON3"   ,
+        "O4"    :   "ON2"   ,
+        "H4"    :   "HN8"   ,
+        "CT"    :   "CN8"   ,
+        }
+    def WriteToCHARMM (self, filename=None, convertTypes=_DEFAULT_CONVERT_TYPE):
+        """Convert to CHARMM format."""
+        output = []
+        # . Write header
+        output.append ("RESI %s    %.2f%s" % (self.name, self.charge, ("  ! %s" % self.title) if self.title else ""))
+        # . Write groups of atoms
+        for group in self.groups:
+            output.append ("GROUP")
+            groupCharge = 0.
+            for iatom, atomLabel in enumerate (group.labels, 1):
+                for atom in self.atoms:
+                    if atom.atomLabel == atomLabel:
+                        groupCharge += atom.atomCharge
+                        atomType = atom.atomType
+                        if convertTypes:
+                            atomType = convertTypes[atom.atomType]
+                        groupSummary = ""
+                        if iatom == len (group.labels):
+                            groupSummary = "  ! Charge: %5.2f" % groupCharge
+                        output.append ("ATOM %-4s %-4s    %5.2f%s" % (atom.atomLabel, atomType, atom.atomCharge, groupSummary))
+                        break
+            output.append ("!")
+        # . Write bonds
+        counter = 0
+        line    = "BOND "
+        for (bonda, bondb) in self.bonds:
+            line = "%s %-4s %-4s    " % (line, bonda, bondb)
+            counter += 1
+            if counter > 4:
+                output.append (line)
+                counter = 0
+                line    = "BOND "
+        if line:
+            output.append (line)
+        output.append ("!")
+        # . Write to a file or terminal
+        if filename:
+            fo = open (filename, "w")
+            for line in output:
+                fo.write ("%s\n" % line)
+            fo.close ()
+        else:
+            for line in output:
+                print line
+
+
 #===============================================================================
 class AminoLibrary (object):
     """A class to represent data from the Molaris amino98.lib file."""

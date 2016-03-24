@@ -8,7 +8,7 @@ from    AminoLibrary   import AminoLibrary
 import  collections, exceptions
 
 Residue = collections.namedtuple ("Residue" , "label  serial  charge  atoms")
-Atom    = collections.namedtuple ("Atom"    , "label  serial  charge  connectLabels  connectSerials")
+Atom    = collections.namedtuple ("Atom"    , "label  serial  charge  connectLabels  connectSerials  x  y  z")
 
 
 class DetermineAtoms (object):
@@ -66,8 +66,10 @@ class DetermineAtoms (object):
                                 bondSerials.append (serial)
                             else:
                                 bondLabels.append (item)
+                        # . Get coordinates (useful for imposing positional restraints)
+                        x, y, z = map (float, tokens[3:6])
                         # . Create a new atom
-                        atom = Atom (label=atomLabel, serial=atomSerial, charge=atomCharge, connectLabels=bondLabels, connectSerials=bondSerials)
+                        atom = Atom (label=atomLabel, serial=atomSerial, charge=atomCharge, connectLabels=bondLabels, connectSerials=bondSerials, x=x, y=y, z=z)
                         atoms.append (atom)
                     # . Skip one line
                     next (data)

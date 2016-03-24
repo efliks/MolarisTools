@@ -17,6 +17,7 @@ from MolarisInputFile    import MolarisInputFile
 from MolarisOutputFile   import MolarisOutputFile, MolarisOutputFile2
 from DistanceFile        import DistanceFile
 from AminoLibrary        import AminoAtom, AminoGroup, AminoComponent, AminoLibrary
+from EVBLibrary          import EVBLibrary
 from FVXFile             import FVXFile
 
 # . Handling of other files
