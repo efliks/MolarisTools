@@ -23,6 +23,7 @@ class QMCallerGaussian (QMCaller):
         "ncpu"                    :   1            ,
         "memory"                  :   1            ,
         "restart"                 :   False        ,
+        "extraOptions"            :   None         ,
         "fileGaussianError"       :   "job.err"    ,
         "fileGaussianInput"       :   "job.inp"    ,
         "fileGaussianOutput"      :   "job.log"    ,
@@ -72,11 +73,16 @@ class QMCallerGaussian (QMCaller):
             raise exceptions.StandardError ("Charge scheme %s is undefined." % self.chargeScheme)
         chargeScheme = schemes[self.chargeScheme]
 
+        # . Include extra options, if any present
+        extraOptions = ""
+        if self.extraOptions:
+            for option in self.extraOptions:
+                extraOptions = "%s %s" % (extraOptions, option)
         # . Write header
         qmmm    = "CHARGE=ANGSTROMS"          if self.qmmm    else ""
         cosmo   = "SCRF=(Solvent=Water,Read)" if self.cosmo   else ""
         restart = "GUESS=READ"                if self.restart else ""
-        data.append ("# %s %s %s %s %s FORCE NOSYMM\n\n" % (self.method, qmmm, cosmo, restart, chargeScheme))
+        data.append ("# %s %s %s %s %s FORCE NOSYMM%s\n\n" % (self.method, qmmm, cosmo, restart, chargeScheme, extraOptions))
         data.append ("Comment line\n\n")
         data.append ("%d %d\n" % (self.charge, self.multiplicity))
 

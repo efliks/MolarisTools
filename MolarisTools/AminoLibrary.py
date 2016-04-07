@@ -354,7 +354,8 @@ class AminoComponent (object):
                         groupCharge += atom.atomCharge
                         atomType = atom.atomType
                         if convertTypes:
-                            atomType = convertTypes[atom.atomType]
+                            if convertTypes.has_key (atom.atomType):
+                                atomType = convertTypes[atom.atomType]
                         groupSummary = ""
                         if iatom == len (group.labels):
                             groupSummary = "  ! Charge: %5.2f" % groupCharge
@@ -580,7 +581,8 @@ class AminoLibrary (object):
         # . Finish up
         data.close ()
         if logging:
-            print ("Found %d components." % len (components))
+            ncomponents = len (components)
+            print ("Found %d component%s." % (ncomponents, "s" if ncomponents > 1 else ""))
         self.components = components
 
 

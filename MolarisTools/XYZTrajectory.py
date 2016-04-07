@@ -96,13 +96,13 @@ class XYZTrajectory (object):
         self.steps = steps
 
 
-    def WriteAll (self, filename="traj.xyz"):
+    def WriteAll (self, filename="traj.xyz", start=0, stop=-1):
         """Write all steps."""
         # . Reset the file
         fp = open (filename, "w")
         fp.close ()
         # . Write steps
-        for step in self.steps:
+        for step in self.steps[start:stop]:
             step.Write (filename=filename, append=True)
 
 
