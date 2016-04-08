@@ -24,7 +24,7 @@ from FVXFile             import FVXFile
 from GaussianOutputFile  import GaussianOutputFile
 from GAMESSOutputFile    import GAMESSOutputFile, GAMESSDatFile
 from MopacOutputFile     import MopacOutputFile
-from XYZTrajectory       import XYZTrajectory, XYZStep
+from XYZTrajectory       import XYZTrajectory
 
 # . Miscellaneous
 from CHELPGCharges       import CHELPGCharges

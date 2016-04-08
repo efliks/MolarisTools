@@ -5,15 +5,17 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from Utilities           import TokenizeLine, WriteData
-from Atom                import Atom
-from XYZTrajectory       import XYZStep
 from MolarisAtomsFile    import MolarisAtomsFile
 
-import exceptions, copy
+import exceptions, copy, math
 
 
 _FORMAT_FORCE     = "%14.6f  %14.6f  %14.6f\n"
 _FORMAT_CHARGE    = "%14.6f\n"
+
+_FORMAT_SIMPLE    = "%2s   %8.3f   %8.3f   %8.3f\n"
+_FORMAT_ARCHIVE   = "%2s   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f\n"
+
 
 
 class QMCaller (object):
@@ -70,52 +72,56 @@ class QMCaller (object):
         pass
 
 
-    def _WriteQMTrajectory (self):
-        if self.fileTrajectory:
-            atoms    = copy.deepcopy (self.molaris.qatoms)
-            atoms.extend (self.molaris.latoms)
-
-            if self.archive:
-                templ = []
-                for atom, force, charge in zip (atoms, self.forces, self.charges):
-                    atom = Atom (
-                        label  = atom.label ,
-                        charge = charge     ,
-                        x      = atom.x     ,
-                        y      = atom.y     ,
-                        z      = atom.z     ,
-                        fx     = force.x    ,
-                        fy     = force.y    ,
-                        fz     = force.z    ,)
-                    templ.append (atom)
-                atoms = templ
-            # . Write a step
-            step = XYZStep (atoms, comment="qm: %f" % self.Efinal)
-            step.Write (filename=self.fileTrajectory, append=True)
-
-
-    def _WriteForces (self):
-        data = ["%f\n" % self.Efinal]
-        for force in self.forces:
-            data.append (_FORMAT_FORCE % (force.x, force.y, force.z))
-        for charge in self.charges:
-            data.append (_FORMAT_CHARGE % charge)
-
-        # . Write to a file
-        WriteData (data, self.fileForces, append=False)
-
-
     def _Finalize (self):
         # . Check if the QM calculation is OK
-        checks = [hasattr (self, "Efinal"), hasattr (self, "forces"), hasattr (self, "charges"), ]
+        checks = [ hasattr (self, "Efinal" )  ,
+                   hasattr (self, "forces" )  ,
+                   hasattr (self, "charges")  ,]
         if not all (checks):
             raise exceptions.StandardError ("Something went wrong.")
 
-        # . Write forces for Molaris
-        self._WriteForces ()
+        # . Write a file for Molaris containing QM forces and charges
+        self._WriteForcesCharges ()
+        # . Write a file containing the QM trajectory
+        self._WriteTrajectory    ()
 
-        # . Write QM trajectory for viewing
-        self._WriteQMTrajectory ()
+
+    def _WriteForcesCharges (self):
+        openfile = open (self.fileForces, "w")
+        # . Write header
+        openfile.write ("%f\n" % self.Efinal)
+        # . Write forces
+        for force in self.forces:
+            openfile.write (_FORMAT_FORCE  % (force.x, force.y, force.z))
+        # . Write charges
+        for charge in self.charges:
+            openfile.write (_FORMAT_CHARGE % charge)
+        # . Close the file
+        openfile.close ()
+
+
+    def _WriteTrajectory (self):
+        if self.fileTrajectory:
+            atoms    = copy.deepcopy (self.molaris.qatoms)
+            # . Append link atoms
+            atoms.extend (self.molaris.latoms)
+            # . Write header
+            openfile = open (self.fileTrajectory, "a")
+            natoms   = len (atoms)
+            openfile.write ("%d\n" % natoms)
+            openfile.write ("qm: %f\n" % self.Efinal)
+
+            if self.archive:
+                # . Write coordinates, forces and charges
+                for atom, force, charge in zip (atoms, self.forces, self.charges):
+                    forceMagnitude = math.sqrt (force.x ** 2 + force.y ** 2 + force.z ** 2)
+                    openfile.write (_FORMAT_ARCHIVE % (atom.label, atom.x, atom.y, atom.z, force.x, force.y, force.z, forceMagnitude, charge))
+            else:
+                # . Write coordinates only
+                for atom in atoms:
+                    openfile.write (_FORMAT_SIMPLE  % (atom.label, atom.x, atom.y, atom.z))
+            # . Close the file
+            openfile.close ()
 
 
 #===============================================================================

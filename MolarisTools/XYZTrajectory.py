@@ -4,35 +4,21 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-from    Atom      import Atom
 from    Utilities import TokenizeLine, WriteData
-import  math, exceptions
+import  math, exceptions, collections
 
 
-class XYZStep (object):
-    """A class to handle a single step in an XYZ trajectory."""
-
-    def __init__ (self, atoms, comment=""):
-        """Constructor."""
-        self.atoms   = atoms
-        self.comment = comment
+_FORMAT_SIMPLE    = "%2s   %8.3f   %8.3f   %8.3f\n"
+_FORMAT_EXTENDED  = "%2s   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f\n"
 
 
-    @property
-    def natoms (self):
-        return len (self.atoms)
+TrajStep         = collections.namedtuple ("TrajStep"  , "atoms  comment")
+
+TrajAtom         = collections.namedtuple ("TrajAtom"  , "label  x  y  z")
+TrajAtomExtended = collections.namedtuple ("TrajAtomExtended"  , "label  x  y  z  fx  fy  fz  fm  charge")
 
 
-    def Write (self, filename="step.xyz", append=False):
-        """Write a step."""
-        header  = "%d\n%s\n" % (self.natoms, self.comment)
-        data    = [header, ]
-        for atom in self.atoms:
-            data.append (atom.line)
-        WriteData (data, filename=filename, append=append)
 
-
-#===============================================================================
 class XYZTrajectory (object):
     """A class to handle trajectories in the XYZ format (with varying number of atoms)."""
 
@@ -79,15 +65,15 @@ class XYZTrajectory (object):
                     tokens = TokenizeLine (line)
                     if len (tokens) < 5:
                         # . Simple format
-                        tokens = TokenizeLine (line, converters=[None, float, float, float])
-                        atom   = Atom (label=tokens[0], x=tokens[1], y=tokens[2], z=tokens[3])
+                        tokens = TokenizeLine (line, converters=[None, ] + [float, ] * 3)
+                        atom   = TrajAtom (label=tokens[0], x=tokens[1], y=tokens[2], z=tokens[3])
                     else:
                         # . Extended format with forces and charges
-                        tokens = TokenizeLine (line, converters=[None, float, float, float, float, float, float, float, float])
-                        atom   = Atom (label=tokens[0], x=tokens[1], y=tokens[2], z=tokens[3], fx=tokens[4], fy=tokens[5], fz=tokens[6], fm=tokens[7], charge=tokens[8])
+                        tokens = TokenizeLine (line, converters=[None, ] + [float, ] * 8)
+                        atom   = TrajAtomExtended (label=tokens[0], x=tokens[1], y=tokens[2], z=tokens[3], fx=tokens[4], fy=tokens[5], fz=tokens[6], fm=tokens[7], charge=tokens[8])
                     atoms.append (atom)
                 # . Create a step and add it to the list of steps
-                step = XYZStep (atoms=atoms, comment=comment)
+                step = TrajStep (atoms=atoms, comment=comment)
                 steps.append (step)
         except StopIteration:
             pass
@@ -96,14 +82,20 @@ class XYZTrajectory (object):
         self.steps = steps
 
 
-    def WriteAll (self, filename="traj.xyz", start=0, stop=-1):
+    def Write (self, filename="traj.xyz", start=0, stop=-1):
         """Write all steps."""
-        # . Reset the file
-        fp = open (filename, "w")
-        fp.close ()
+        openfile = open (filename, "w")
         # . Write steps
         for step in self.steps[start:stop]:
-            step.Write (filename=filename, append=True)
+            openfile.write ("%d\n" % len (step.atoms))
+            openfile.write ("%s\n" % step.comment)
+            for atom in step.atoms:
+                if   isinstance (atom, TrajAtom):
+                    openfile.write (_FORMAT_SIMPLE   % atom.label, atom.x, atom.y, atom.z)
+                elif isinstance (atom, TrajAtomExtended):
+                    openfile.write (_FORMAT_EXTENDED % atom.label, atom.x, atom.y, atom.z, atom.fx, atom.fy, atom.fz, atom.fm, atom.charge)
+        # . Close the file
+        openfile.close ()
 
 
 #===============================================================================

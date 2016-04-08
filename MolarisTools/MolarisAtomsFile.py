@@ -4,12 +4,14 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-from   Atom        import Atom
 from   Units       import *
 from   Utilities   import TokenizeLine, WriteData
 import collections
 
-Force = collections.namedtuple ("Force" , "x y z")
+
+Atom  = collections.namedtuple ("Atom"  , "label  charge  x  y  z")
+Force = collections.namedtuple ("Force" , "x  y  z")
+
 
 
 class MolarisAtomsFile (object):
