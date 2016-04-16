@@ -15,7 +15,7 @@ Water     =  collections.namedtuple ("Water"    ,  " ebond    ethet             
 Prowat    =  collections.namedtuple ("Prowat"   ,  "                                     evdw     emumu     ehb_pw  ")
 Long      =  collections.namedtuple ("Long"     ,  " elong                                                          ")
 Ac        =  collections.namedtuple ("Ac"       ,  " evd_ac   evd_acw   ehb_ac  ehb_acw  emumuac  emumuacw          ")
-Evb       =  collections.namedtuple ("Evb"      ,  " ebond    ethet     ephi             evdw     emumu     eoff  egaschift  eindq   ebulk ")
+Evb       =  collections.namedtuple ("Evb"      ,  " ebond    ethet     ephi             evdw     emumu     eoff  egashift   eindq   ebulk ")
 Induce    =  collections.namedtuple ("Induce"   ,  " eindp    eindw             ")
 Const     =  collections.namedtuple ("Const"    ,  " ewatc    eproc     edistc  ")
 Langevin  =  collections.namedtuple ("Langevin" ,  " elgvn    evdw_lgv  eborn   ")
@@ -23,6 +23,11 @@ Classic   =  collections.namedtuple ("Classic"  ,  " classic  quantum           
 System    =  collections.namedtuple ("System"   ,  " epot     ekin      etot    ")
 
 MolarisAtom = collections.namedtuple ("molarisAtom", "resSerial resName atomSerial atomName atomType atomCharge x y z connectNames connectSerials")
+
+
+Atom      = collections.namedtuple ("Atom"    ,   "label  serial  charge  bonds  x  y  z")
+Residue   = collections.namedtuple ("Residue" ,   "label  serial  atoms")
+
 
 
 class MDStep (object):
@@ -33,142 +38,245 @@ class MDStep (object):
             setattr (self, att, None)
 
 
-#  Energies for the system at step          0:
-#  ------------------------------------------------------------------------
-#  protein - ebond    :      2.57 ethet    :      4.29
-#            ephi     :      0.00 eitor    :      0.00
-#            evdw     :     -0.24 emumu    :      0.00
-#            ehb_pp   :      0.00
-#
-#  water   - ebond    :    674.31 ethet    :    414.66
-#            evdw     :    949.15 emumu    :  -8517.96
-#            ehb_ww   :      0.00
-#
-#  pro-wat - evdw     :     -5.33 emumu    :      0.00
-#            ehb_pw   :      0.00
-#
-#  long    - elong    :     89.62
-#
-#  ac      - evd_ac   :      0.00 emumuac  :      0.00
-#            evd_acw  :      0.00 emumuacw :      0.00
-#            ehb_ac   :      0.00
-#            ehb_acw  :      0.00
-#
-#  evb     - ebond    :      0.00 ethet    :      0.00 ephi     :      0.00
-#            evdw     :     11.93 emumu    :      0.00 eoff     :      0.00
-#            egashift :      0.00 eindq    :      0.00 ebulk    :    -99.57
-#
-#  induce  - eindp    :      0.00 eindw    :      0.00
-#
-#  const.  - ewatc    :     27.05 eproc    :      1.45 edistc   :     45.08
-#
-#  langevin- elgvn    :    -33.50 evdw_lgv :     81.45 eborn    :    -33.07
-#
-#  classic - epot     :  -6518.24 equantum :   -199.94
-#
-#  system  - epot     :  -6718.18 ekin     :   2140.90 etot     :  -4577.28
-#  _____________________________________________________________________________
 class MolarisOutputFile (object):
     """A class for reading output files from Molaris."""
 
     def __init__ (self, filename="rs_fep.out"):
         """Constructor."""
-        self.filename      = filename
-        self.currentMDStep = None
-        # . fepSteps are the FEP steps (usually 11), each consists of many MD steps (usually 500)
-        self.fepSteps      = []
+        self.filename = filename
         self._Parse ()
 
 
     # . Returns the number of FEP steps (lambda 0 ... 1)
     @property
     def nfepSteps (self):
-        return len (self.fepSteps)
+        if hasattr (self, "fepSteps"):
+            return len (self.fepSteps)
+        return 0
 
     # . Returns the total number of MD steps
     @property
     def nmdSteps (self):
-        return sum (map (lambda fepStep: len (fepStep), self.fepSteps))
+        if hasattr (self, "fepSteps"):
+            nmdSteps = 0
+            for fepStep in self.fepSteps:
+               nmdSteps += len (fepStep)
+            return nmdSteps
+        return 0
 
+    # . Returns the number of residues (useful for determine_atoms type of script)
+    @property
+    def nresidues (self):
+        if hasattr (self, "residues"):
+            return len (self.residues)
+        return 0
 
-    def _ReadProtein (self, line, lines):
-        toka = line.split ()
-        tokb = lines.next ().split ()
-        tokc = lines.next ().split ()
-        tokd = lines.next ().split ()
-        protein = Protein (
-                ebond  = float ( toka[4] ) ,
-                ethet  = float ( toka[7] ) ,
-                ephi   = float ( tokb[2] ) ,
-                eitor  = float ( tokb[5] ) ,
-                evdw   = float ( tokc[2] ) ,
-                emumu  = float ( tokc[5] ) ,
-                ehb_pp = float ( tokd[2] ) ,
-                          )
-        self.currentMDStep.protein = protein
-
-
-    def _ReadSystem (self, line, lines):
-        toka   = line.split ()
-        system = System (
-                epot = float ( toka[4]  ) ,
-                ekin = float ( toka[7]  ) ,
-                etot = float ( toka[10] ) ,
-                        )
-        self.currentMDStep.system = system
-
-
-    def _ReadClassic (self, line, lines):
-        toka     = line.split ()
-        energies = Classic (
-                classic = float ( toka[4] ) ,
-                quantum = float ( toka[7] ) ,
-                           )
-        self.currentMDStep.classic = energies
+    # . Returns the total number of atoms from all residues
+    @property
+    def natoms (self):
+        if hasattr (self, "residues"):
+            total = 0
+            for residue in self.residues:
+                total += len (residue.atoms)
+            return total
+        return 0
 
 
     def _Parse (self):
-        lines   = iter (open (self.filename).readlines ())
-        mdSteps = []
+        # . fepSteps are the FEP steps (usually 11), each consisting of many MD steps (usually 500)
+        fepSteps      = []
+        mdSteps       = []
+        currentMDStep = None
+        residues      = []
+        lines         = open (self.filename)
         try:
             while True:
                 line = lines.next ()
+
+                #  Energies for the system at step          0:
+                #  ------------------------------------------------------------------------
                 if line.startswith (" Energies for the system at step"):
-                    self.currentMDStep = MDStep ()
+                    currentMDStep = MDStep ()
                     while True:
                         line = lines.next ()
+
+                        #  protein - ebond    :      2.57 ethet    :      4.29
+                        #            ephi     :      0.00 eitor    :      0.00
+                        #            evdw     :     -0.24 emumu    :      0.00
+                        #            ehb_pp   :      0.00
+                        #
                         if   line.startswith ( " protein"  ):
-                            self._ReadProtein (line, lines)
+                            toka = line.split ()
+                            tokb = lines.next ().split ()
+                            tokc = lines.next ().split ()
+                            tokd = lines.next ().split ()
+                            protein = Protein (
+                                    ebond  = float ( toka[4] ) ,
+                                    ethet  = float ( toka[7] ) ,
+                                    ephi   = float ( tokb[2] ) ,
+                                    eitor  = float ( tokb[5] ) ,
+                                    evdw   = float ( tokc[2] ) ,
+                                    emumu  = float ( tokc[5] ) ,
+                                    ehb_pp = float ( tokd[2] ) ,)
+                            currentMDStep.protein = protein
+
+
+                        #  water   - ebond    :    674.31 ethet    :    414.66
+                        #            evdw     :    949.15 emumu    :  -8517.96
+                        #            ehb_ww   :      0.00
+                        #
                         elif line.startswith ( " water"    ):
                             pass
+                        #  pro-wat - evdw     :     -5.33 emumu    :      0.00
+                        #            ehb_pw   :      0.00
+                        #
                         elif line.startswith ( " pro-wat"  ):
                             pass
+                        #  long    - elong    :     89.62
+                        #
                         elif line.startswith ( " long"     ):
                             pass
+                        #  ac      - evd_ac   :      0.00 emumuac  :      0.00
+                        #            evd_acw  :      0.00 emumuacw :      0.00
+                        #            ehb_ac   :      0.00
+                        #            ehb_acw  :      0.00
+                        #
                         elif line.startswith ( " ac"       ):
                             pass
+                        #  evb     - ebond    :      0.00 ethet    :      0.00 ephi     :      0.00
+                        #            evdw     :     11.93 emumu    :      0.00 eoff     :      0.00
+                        #            egashift :      0.00 eindq    :      0.00 ebulk    :    -99.57
+                        #
                         elif line.startswith ( " evb"      ):
-                            pass
+                            toka = line.split ()
+                            tokb = lines.next ().split ()
+                            tokc = lines.next ().split ()
+                            evb  = Evb (
+                                ebond    = float (toka[4] )    ,
+                                ethet    = float (toka[7] )    ,
+                                ephi     = float (toka[10])    ,
+                                evdw     = float (tokb[2] )    ,
+                                emumu    = float (tokb[5] )    ,
+                                eoff     = float (tokb[8] )    ,
+                                egashift = float (tokc[2] )    ,
+                                eindq    = float (tokc[5] )    ,
+                                ebulk    = float (tokc[8] )    ,)
+                            currentMDStep.evb = evb
+
+                        #  induce  - eindp    :      0.00 eindw    :      0.00
+                        #
                         elif line.startswith ( " induce"   ):
                             pass
+                        #  const.  - ewatc    :     27.05 eproc    :      1.45 edistc   :     45.08
+                        #
                         elif line.startswith ( " const."   ):
                             pass
+                        #  langevin- elgvn    :    -33.50 evdw_lgv :     81.45 eborn    :    -33.07
+                        #
                         elif line.startswith ( " langevin" ):
                             pass
+                        #  classic - epot     :  -6518.24 equantum :   -199.94
+                        #
                         elif line.startswith ( " classic"  ):
-                            self._ReadClassic (line, lines)
+                            toka     = line.split ()
+                            energies = Classic (
+                                    classic = float ( toka[4] ) ,
+                                    quantum = float ( toka[7] ) ,)
+                            currentMDStep.classic = energies
+
+
+                        #  system  - epot     :  -6718.18 ekin     :   2140.90 etot     :  -4577.28
+                        #  _____________________________________________________________________________
                         elif line.startswith ( " system"   ):
-                            self._ReadSystem (line, lines)
+                            toka   = line.split ()
+                            system = System (
+                                    epot = float ( toka[4]  ) ,
+                                    ekin = float ( toka[7]  ) ,
+                                    etot = float ( toka[10] ) ,)
+                            currentMDStep.system = system
                             break
-                    mdSteps.append (self.currentMDStep)
+                    mdSteps.append (currentMDStep)
 
                 elif line.startswith (" Average energies for the system at the step"):
-                    self.fepSteps.append (mdSteps)
+                    fepSteps.append (mdSteps)
                     mdSteps = []
+
+
+
+                # atom list for residue:     2_WAT,    # of atoms in this residue:   3
+                #
+                # number  name  type      x          y          z      charge      atoms bonded(name)      atoms bonded(number)
+                # ------  ----  ----   -------    -------    -------   ------   ------------------------ ------------------------
+                elif line.count ("atom list for residue"):
+                    tokens    = line.split ()
+                    residue   = tokens[4]
+                    resSerial, resLabel = residue.split ("_")
+                    resSerial = int (resSerial)
+                    resLabel  = resLabel.replace (",", "")
+                    # . Skip a few lines
+                    for i in range (3):
+                        lines.next ()
+                    # . Read atoms
+                    #    2    OH     O2     -0.087     -0.022      2.081   -0.800   H1   H2                      3     4
+                    #    3    H1     H2     -0.139     -0.807      2.652    0.400   OH                           2
+                    #    4    H2     H2     -0.056      0.751      2.671    0.400   OH                           2
+                    #
+                    # Total charge of this residue:     0.000
+                    atoms     = []
+                    while True:
+                        line   = lines.next ()
+                        if line.count ("Total charge"):
+                            break
+                        tokens = line.split ()
+                        if len (tokens) > 0:
+                            if tokens[0].isdigit ():
+                                (atomSerial, atomLabel, atomType), atomCharge = tokens[:3], tokens[6]
+                                atomSerial     = int (atomSerial)
+                                atomCharge     = float (atomCharge)
+                                x, y, z        = map (float, tokens[3:6])
+                                # . Read atoms the current atom is connected to
+                                bondAtoms      = tokens[7:]
+                                bondLabels     = []
+                                bondSerials    = []
+                                for atom in bondAtoms:
+                                    if atom.isdigit ():
+                                        bondSerials.append (int (atom))
+                                    else:
+                                        bondLabels.append (atom)
+                                # . Prepare bonded atoms
+                                bonds = []
+                                for serial, label in zip (bondSerials, bondLabels):
+                                    bondedAtom = (serial, label)
+                                    bonds.append (bondedAtom)
+                                # . Add a new atom
+                                atom = Atom (
+                                    label   =   atomLabel   ,
+                                    serial  =   atomSerial  ,
+                                    charge  =   atomCharge  ,
+                                    bonds   =   bonds       ,
+                                    x       =   x           ,
+                                    y       =   y           ,
+                                    z       =   z           ,
+                                    )
+                                atoms.append (atom)
+                    # . Add a new residue
+                    residue = Residue (
+                        serial  =   resSerial   ,
+                        label   =   resLabel    ,
+                        atoms   =   atoms       ,
+                        )
+                    residues.append (residue)
         except StopIteration:
             pass
         # . Close the file
         lines.close ()
+        # . Finish up
+        if fepSteps != []:
+            self.fepSteps = fepSteps
+        if currentMDStep != None:
+            self.currentMDStep = currentMDStep
+        if residues != []:
+            self.residues = residues
 
 
 #-------------------------------------------------------------------------------

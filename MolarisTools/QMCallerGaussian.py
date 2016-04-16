@@ -82,7 +82,7 @@ class QMCallerGaussian (QMCaller):
         qmmm    = "CHARGE=ANGSTROMS"          if self.qmmm    else ""
         cosmo   = "SCRF=(Solvent=Water,Read)" if self.cosmo   else ""
         restart = "GUESS=READ"                if self.restart else ""
-        data.append ("# %s %s %s %s %s FORCE NOSYMM%s\n\n" % (self.method, qmmm, cosmo, restart, chargeScheme, extraOptions))
+        data.append ("#P %s %s %s %s %s FORCE NOSYMM%s\n\n" % (self.method, qmmm, cosmo, restart, chargeScheme, extraOptions))
         data.append ("Comment line\n\n")
         data.append ("%d %d\n" % (self.charge, self.multiplicity))
 
