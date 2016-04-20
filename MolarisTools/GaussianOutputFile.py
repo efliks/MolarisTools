@@ -63,6 +63,11 @@ class GaussianOutputFile (object):
                     tokens      = TokenizeLine (line, converters=[None, None, None, None, float, None, None, int, None])
                     self.Efinal = tokens[4] * HARTREE_TO_KCAL_MOL
 
+                # . Get the self energy of the charges
+                elif line.count ("Self energy of the charges"):
+                    tokens      = TokenizeLine (line, converters=[None, float], reverse=True)
+                    self.Echrg  = tokens[1] * HARTREE_TO_KCAL_MOL
+
                 # . Get ESP charges (can be Merz-Kollman or CHELPG)
                 elif line.count ("Charges from ESP fit"):
                     next (lines)

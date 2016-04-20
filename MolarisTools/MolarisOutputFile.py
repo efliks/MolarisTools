@@ -41,10 +41,10 @@ class MDStep (object):
 class MolarisOutputFile (object):
     """A class for reading output files from Molaris."""
 
-    def __init__ (self, filename="rs_fep.out"):
+    def __init__ (self, filename="rs_fep.out", logging=False):
         """Constructor."""
         self.filename = filename
-        self._Parse ()
+        self._Parse (logging=logging)
 
 
     # . Returns the number of FEP steps (lambda 0 ... 1)
@@ -82,7 +82,7 @@ class MolarisOutputFile (object):
         return 0
 
 
-    def _Parse (self):
+    def _Parse (self, logging=False):
         # . fepSteps are the FEP steps (usually 11), each consisting of many MD steps (usually 500)
         fepSteps      = []
         mdSteps       = []
@@ -196,10 +196,16 @@ class MolarisOutputFile (object):
                             currentMDStep.system = system
                             break
                     mdSteps.append (currentMDStep)
+                    if logging:
+                        nsteps = len (mdSteps)
+                        print ("Read energies for %d MD step%s." % (nsteps, "" if nsteps < 2 else "s"))
 
                 elif line.startswith (" Average energies for the system at the step"):
                     fepSteps.append (mdSteps)
                     mdSteps = []
+                    if logging:
+                        nfep = len (fepSteps)
+                        print ("Read FEP step %d." % nfep)
 
 
 
@@ -266,6 +272,59 @@ class MolarisOutputFile (object):
                         atoms   =   atoms       ,
                         )
                     residues.append (residue)
+                    if logging:
+                        natoms = len (atoms)
+                        print ("Found residue %s-%d with %d atom%s." % (resLabel, resSerial, natoms, "" if natoms < 2 else "s"))
+
+
+                # Classical forces which are not calculated in qm:
+                #   evb_atom     fx        fy        fz
+                #         6     2.792   -10.205     9.635
+                #         5    -7.012    14.479   -21.646
+                # (...)
+                elif line.count ("Classical forces which are not calculated in qm"):
+                    for i in range (2):
+                        line = lines.next ()
+                    forces = []
+                    while line != "\n":
+                        tokens = TokenizeLine (line, converters=[int, float, float, float])
+                        evbSerial, fx, fy, fz = tokens
+                        force  = (fx, fy, fz)
+                        forces.append (force)
+                        line   = lines.next ()
+                    #if logging:
+                    #    nforces = len (forces)
+                    #    print ("Read classical forces for %d atoms." % nforces)
+
+
+                #  Forces(classical+qm) and Charges will be used for dynamics:
+                #  EVB_atom	 x         y         z        fx        fy       fz      crg
+                #         6     3.666     6.485    12.973    -8.915    -1.595    -4.922   0.272
+                #         5     4.872     6.423    13.671     1.443     1.123     0.273  -0.750
+                # (...)
+                elif line.count ("Forces(classical+qm) and Charges will be used for dynamics:"):
+                    for i in range (2):
+                        line = lines.next ()
+                    forcesQMMM = []
+                    while line != "\n":
+                        tokens = TokenizeLine (line, converters=[int, float, float, float, float, float, float, float])
+                        evbSerial, x, y, z, fx, fy, fz, charge = tokens
+                        force  = (fx, fy, fz)
+                        forcesQMMM.append (force)
+                        line   = lines.next ()
+                    #if logging:
+                    #    nforces = len (forces)
+                    #    print ("Read QM/MM forces for %d atoms." % nforces)
+                    if logging:
+                        for forceClassic, forceQMMM in zip (forces, forcesQMMM):
+                            fx, fy, fz = forceClassic
+                            qmmmFx, qmmmFy, qmmmFz = forceQMMM
+                            dfx = qmmmFx - fx
+                            dfy = qmmmFy - fy
+                            dfz = qmmmFz - fz
+                            print ("%8.3f  %8.3f  %8.3f      %8.3f  %8.3f  %8.3f      %8.3f  %8.3f  %8.3f" % (fx, fy, fz, qmmmFx, qmmmFy, qmmmFz, dfx, dfy, dfz))
+                        print ("======================")
+
         except StopIteration:
             pass
         # . Close the file

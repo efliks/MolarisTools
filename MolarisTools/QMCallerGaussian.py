@@ -119,7 +119,10 @@ class QMCallerGaussian (QMCaller):
         # . Parse the output file
         gaussian     = GaussianOutputFile (filename=self.fileGaussianOutput)
         self.Efinal  = gaussian.Efinal
+        if hasattr (gaussian, "Echrg"):
+            self.Efinal -= gaussian.Echrg
         self.forces  = gaussian.forces
+
         if self.chargeScheme == "Mulliken":
             self.charges = gaussian.charges
         elif self.chargeScheme == "MerzKollman":
