@@ -89,7 +89,7 @@ class QMCallerGaussian (QMCaller):
         # . Write geometry
         atoms = self.molaris.qatoms + self.molaris.latoms
         for atom in atoms:
-            data.append ("%2s    %9.4f    %9.4f    %9.4f\n" % (atom.label, atom.x, atom.y, atom.z))
+            data.append ("%2s    %16.10f    %16.10f    %16.10f\n" % (atom.label, atom.x, atom.y, atom.z))
         data.append ("\n")
 
         # . If cosmo=True, write epsilon
@@ -100,7 +100,7 @@ class QMCallerGaussian (QMCaller):
         if self.qmmm:
             pointCharges = self.molaris.patoms + self.molaris.watoms
             for atom in pointCharges:
-                data.append ("%9.4f    %9.4f    %9.4f    %9.4f\n" % (atom.x, atom.y, atom.z, atom.charge))
+                data.append ("%16.10f    %16.10f    %16.10f    %16.10f\n" % (atom.x, atom.y, atom.z, atom.charge))
             data.append ("\n")
 
         # . Finish up

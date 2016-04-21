@@ -93,7 +93,7 @@ class GaussianOutputFile (object):
                 # elif line.count ("***** Axes restored to original set *****"):
                 #     for skip in range (4):
                 #         next (lines)
-                elif line.count ("Forces (Hartrees/Bohr)"):
+                elif line.count ("Center     Atomic                   Forces (Hartrees/Bohr)"):
                     next (lines)
                     next (lines)
                     self.forces = []

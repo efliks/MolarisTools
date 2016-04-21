@@ -10,8 +10,8 @@ from MolarisAtomsFile    import MolarisAtomsFile
 import exceptions, copy, math
 
 
-_FORMAT_FORCE     = "%14.6f  %14.6f  %14.6f\n"
-_FORMAT_CHARGE    = "%14.6f\n"
+_FORMAT_FORCE     = "%16.10f  %16.10f  %16.10f\n"
+_FORMAT_CHARGE    = "%16.10f\n"
 
 _FORMAT_SIMPLE    = "%2s   %8.3f   %8.3f   %8.3f\n"
 _FORMAT_ARCHIVE   = "%2s   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f\n"
