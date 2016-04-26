@@ -65,7 +65,7 @@ class GAMESSOutputFile (object):
                 # UNITS ARE HARTREE/BOHR    E'X               E'Y               E'Z 
                 #    1 P                0.000961748       0.034900593      -0.184607470
                 #    2 O               -0.056832094       0.021746718      -0.036701933
-                # ...
+                # (...)
                 if   line.count ("GRADIENT OF THE ENERGY"):
                     for i in range (3):
                         line = next (lines)
@@ -76,8 +76,11 @@ class GAMESSOutputFile (object):
                             tokens     = TokenizeLine (next (lines), converters=[int, None, float, float, float])
                             if not tokens:
                                 break
-                            fx, fy, fz = map (lambda convert: convert * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM, tokens[2:5])
-                            force      = Force (x=fx, y=fy, z=fz)
+                            force = Force (
+                                x   =   fx * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM ,
+                                y   =   fy * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM ,
+                                z   =   fz * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM ,
+                                )
                             self.forces.append (force)
 
 
@@ -86,7 +89,7 @@ class GAMESSOutputFile (object):
                 #       ATOM         MULL.POP.    CHARGE          LOW.POP.     CHARGE
                 #    1 P            14.103960    0.896040        14.020001    0.979999
                 #    2 O             8.406488   -0.406488         8.409966   -0.409966
-                # ...
+                # (...)
                 elif line.count ("TOTAL MULLIKEN AND LOWDIN ATOMIC POPULATIONS"):
                     next (lines)
                     self.charges = []
@@ -110,7 +113,7 @@ class GAMESSOutputFile (object):
                 #           CHARGE         X                   Y                   Z
                 # P          15.0     7.9538566823        2.4755410439       30.4000219645
                 # O           8.0    10.6145908730        2.1127136543       31.2258322211
-                # ...
+                # (...)
                 elif line.count ("COORDINATES (BOHR)"):
                     next (lines)
                     self.atoms = []
@@ -118,7 +121,13 @@ class GAMESSOutputFile (object):
                         tokens = TokenizeLine (next (lines), converters=[None, float, float, float, float])
                         if not tokens:
                             break
-                        atom   = Atom (symbol=tokens[0], x=tokens[2], y=tokens[3], z=tokens[4], charge=0.)
+                        atom = Atom (
+                            symbol  =   tokens[0] ,
+                            x       =   tokens[2] * BOHR_TO_ANGSTROM ,
+                            y       =   tokens[3] * BOHR_TO_ANGSTROM ,
+                            z       =   tokens[4] * BOHR_TO_ANGSTROM ,
+                            charge  =   0.
+                            )
                         self.atoms.append (atom)
 
 

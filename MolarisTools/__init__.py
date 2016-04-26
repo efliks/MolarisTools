@@ -23,6 +23,7 @@ from FVXFile             import FVXFile
 # . Handling of other files
 from GaussianOutputFile  import GaussianOutputFile
 from GAMESSOutputFile    import GAMESSOutputFile, GAMESSDatFile
+from ORCAOutputFile      import ORCAOutputFile, PCgradFile, EngradFile
 from MopacOutputFile     import MopacOutputFile
 from MopacInputFile      import MopacInputFile
 from XYZTrajectory       import XYZTrajectory
