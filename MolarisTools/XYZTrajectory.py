@@ -17,6 +17,8 @@ TrajStep         = collections.namedtuple ("TrajStep"  , "atoms  comment")
 TrajAtom         = collections.namedtuple ("TrajAtom"  , "label  x  y  z")
 TrajAtomExtended = collections.namedtuple ("TrajAtomExtended"  , "label  x  y  z  fx  fy  fz  fm  charge")
 
+_MAX_ATOMS       = 1000
+_MAX_STEPS       = 1000000
 
 
 class XYZTrajectory (object):
@@ -82,13 +84,14 @@ class XYZTrajectory (object):
         self.steps = steps
 
 
-    def Write (self, filename="traj.xyz", start=0, stop=-1):
+    def Write (self, filename="traj.xyz", rangeSteps=(0, _MAX_STEPS)):
         """Write all steps."""
         openfile = open (filename, "w")
         # . Write steps
+        start, stop = rangeSteps
         for step in self.steps[start:stop]:
-            openfile.write ("%d\n" % len (step.atoms))
-            openfile.write ("%s\n" % step.comment)
+            natoms  = len (step.atoms)
+            openfile.write ("%d\n%s\n" % (natoms, step.comment))
             for atom in step.atoms:
                 if   isinstance (atom, TrajAtom):
                     openfile.write (_FORMAT_SIMPLE   % atom.label, atom.x, atom.y, atom.z)
@@ -96,6 +99,146 @@ class XYZTrajectory (object):
                     openfile.write (_FORMAT_EXTENDED % atom.label, atom.x, atom.y, atom.z, atom.fx, atom.fy, atom.fz, atom.fm, atom.charge)
         # . Close the file
         openfile.close ()
+
+
+    def _GetHeader (self, rangeAtoms):
+        line        = "#    "
+        step        = self.steps[0]
+        start, stop = rangeAtoms
+        atoms       = step.atoms[start:stop]
+        # . Replace atom serials by labels
+        convert     = {}
+        for iatom, atom in enumerate (atoms):
+            line = "%s%9s" % (line, atom.label.center (9))
+            convert[iatom + 1] = atom.label
+        return (convert, line)
+
+
+    def _WriteAtomicProperty (self, atomicProperty, filename, rangeAtoms, rangeSteps):
+        convert, header = self._GetHeader (rangeAtoms)
+        output      = open (filename, "w")
+        output.write ("%s\n" % header)
+        start, stop = rangeSteps
+        steps       = self.steps[start:stop]
+        start, stop = rangeAtoms
+        for istep, step in enumerate (steps, 1):
+            line    = "%4d" % istep
+            for iatom, atom in enumerate (step.atoms[start:stop]):
+                if isinstance (atom, TrajAtomExtended):
+                    if   atomicProperty == "charge":
+                        line     = "%s  %7.3f" % (line, atom.charge)
+                    elif atomicProperty == "force" :
+                        line     = "%s  %7.3f" % (line, atom.fm)
+                    else:
+                        raise exceptions.StandardError ("Unknown atomic property: %s" % atomicProperty)
+                else:
+                    raise exceptions.StandardError ("Atom has no properties.")
+            output.write ("%s\n" % line)
+        output.close ()
+        return convert
+
+
+    def WriteGnuplotCharges (self, filename="charges.dat", rangeAtoms=(0, _MAX_ATOMS), rangeSteps=(0, _MAX_STEPS)):
+        """Write charges in a format suitable for viewing in Gnuplot."""
+        return self._WriteAtomicProperty ("charge", filename, rangeAtoms, rangeSteps)
+
+
+    def WriteGnuplotForces (self, filename="forces.dat", rangeAtoms=(0, _MAX_ATOMS), rangeSteps=(0, _MAX_STEPS)):
+        """Write forces in a format suitable for viewing in Gnuplot."""
+        return self._WriteAtomicProperty ("force", filename, rangeAtoms, rangeSteps)
+
+
+    def BinCharges (self, rangeAtoms=(0, _MAX_ATOMS), rangeSteps=(0, _MAX_STEPS), sampling=0.05, limits=None):
+        """For each atom, calculate the distribution of its charge."""
+        start, stop = rangeSteps
+        steps       = self.steps[start:stop]
+        nsteps      = len (steps)
+        step        = steps[0]
+        start, stop = rangeAtoms
+        natoms      = len (step.atoms[start:stop])
+        # . For each atom, collect its charges throughout the trajectory
+        atoms       = []
+        for i in range (natoms):
+            charges = []
+            for step in steps:
+                atom = step.atoms[start + i]
+                if isinstance (atom, TrajAtomExtended):
+                    charges.append (atom.charge)
+                else:
+                    raise exceptions.StandardError ("Atom has no charge property.")
+            atoms.append (charges)
+        # . Find extreme charges
+        if limits:
+            (minc, maxc) = limits
+        else:
+            minc =  999.
+            maxc = -999.
+            for atom in atoms:
+                charges = atom
+                mint    = min (charges)
+                maxt    = max (charges)
+                if mint < minc:
+                    minc = mint
+                if maxt > maxc:
+                    maxc = maxt
+        # . Calculate the number of bins and recalculate the sampling parameter
+        spread   = maxc - minc
+        nbins    = int (spread / sampling)
+        sampling = spread / nbins
+        # . For each bin, calculate its boundaries
+        boundaries = []
+        for i in range (nbins):
+            left     = i * sampling + minc
+            right    = left + sampling
+            boundary = (left, right)
+            boundaries.append (boundary)
+        # . For each atom, calculate counts in each bin
+        atomData = []
+        for atom in atoms:
+            charges = atom
+            bins    = [0] * nbins
+            for charge in charges:
+                for iboundary, (left, right) in enumerate (boundaries):
+                    if   iboundary < 1:
+                        if charge >= left and charge <  right:
+                            break
+                    elif iboundary > (nbins - 2):
+                        if charge >  left and charge <= right:
+                            break
+                    else:
+                        if charge >  left and charge <  right:
+                            break
+                bins[iboundary] += 1
+            atomData.append (bins)
+        # . Finish up
+        info = (natoms, minc, maxc, spread, nbins, sampling)
+        return (boundaries, atomData, info)
+
+
+    def BinCharges_ToFile (self, filename="histogram.dat", rangeAtoms=(0, _MAX_ATOMS), rangeSteps=(0, _MAX_STEPS), sampling=0.1):
+        """Write histogram data to a file in a format suitable for Gnuplot."""
+        boundaries, atomData, (natoms, minc, maxc, spread, nbins, sampling) = self.BinCharges (rangeAtoms=rangeAtoms, rangeSteps=rangeSteps, sampling=sampling)
+        # . Write header
+        message = "natoms=%d, minc=%.3f, maxc=%.3f, spread=%.3f, nbins=%d, sampling=%f" % (natoms, minc, maxc, spread, nbins, sampling)
+        lines   = ["# %s" % message, ]
+        line    = "#" + 9 * " "
+        for atom in self.steps[0].atoms:
+            line = "%s %5s" % (line, atom.label.center (5))
+        lines.append (line)
+        # . Write histogram
+        for iboundary, (left, right) in enumerate (boundaries):
+            charge = (left + right) / 2.
+            line   = "%7.3f  " % charge
+            for atom in atomData:
+                counts = atom
+                count  = counts[iboundary]
+                line   = "%s  %4d" % (line, count)
+            lines.append (line)
+        # . Write file
+        fo = open (filename, "w")
+        for line in lines:
+            fo.write (line + "\n")
+        fo.close ()
 
 
 #===============================================================================

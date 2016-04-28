@@ -8,9 +8,11 @@
 
 HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM = 627.509469 / 0.529177       # 1185.8215096272136
 HARTREE_TO_KCAL_MOL               = 627.509469
-BOHR_TO_ANGSTROM                  =   1. / 0.529177
 GRADIENT_TO_FORCE                 =  -1.
 EV_TO_KCAL_MOL                    =  23.0609
+
+BOHR_TO_ANGSTROM                  =   0.529177
+ANGSTROM_TO_BOHR                  =   1. / BOHR_TO_ANGSTROM
 
 
 atomicNumberToSymbol = {

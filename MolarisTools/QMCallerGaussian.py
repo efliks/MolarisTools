@@ -8,7 +8,11 @@ from QMCaller            import QMCaller
 from Utilities           import WriteData
 from GaussianOutputFile  import GaussianOutputFile
 
-import subprocess, os.path, exceptions
+import subprocess, os.path, exceptions, collections
+
+
+Force       = collections.namedtuple ("Force"    , "x  y  z")
+
 
 
 class QMCallerGaussian (QMCaller):
@@ -132,11 +136,27 @@ class QMCallerGaussian (QMCaller):
         # . Parse the output file
         gaussian     = GaussianOutputFile (filename=self.fileGaussianOutput)
         self.Efinal  = gaussian.Efinal
+
         # . From the total calculated energy, remove the electrostatic interaction energy between point charges
         if hasattr (gaussian, "Echrg"):
             self.Efinal -= gaussian.Echrg
+
+        # . Include forces on QM atoms
         self.forces  = gaussian.forces
 
+        # . Include forces on point charges
+        if hasattr (gaussian, "pointCharges"):
+            mmforces = []
+            for pc in gaussian.pointCharges:
+                force = Force (
+                    x   =   -pc.ex   *   pc.charge   ,
+                    y   =   -pc.ey   *   pc.charge   ,
+                    z   =   -pc.ez   *   pc.charge   ,
+                    )
+                mmforces.append (force)
+            self.mmforces = mmforces
+
+        # . Include charges
         if self.chargeScheme == "Mulliken":
             self.charges = gaussian.charges
         elif self.chargeScheme == "MerzKollman":

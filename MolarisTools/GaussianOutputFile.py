@@ -190,6 +190,7 @@ class GaussianOutputFile (object):
                             # . Electrostatic potential and field on a nucleus
                             atomsElectric.append (field)
                         line   = next (lines)
+                    self.atomsElectric = atomsElectric
                     # . Save point charges
                     pointCharges = []
                     for (x, y, z, charge), (ex, ey, ez, potential) in zip (points, pointsElectric):
@@ -239,6 +240,23 @@ class GaussianOutputFile (object):
         if scan: self.scan = scan
         # . Does the job involve a geometry optimization?
         if opt:  self.opt  = opt
+
+
+    def WritePointCharges (self, filename="pc.xyz"):
+        """Write point charges as dummy atoms."""
+        if self.ncharges > 0:
+            totalCharge = 0.
+            for pc in self.pointCharges:
+                totalCharge += pc.charge
+            header = "%d\nTotal charge: %.4f\n" % (self.ncharges, totalCharge)
+            lines  = []
+            lines.append (header)
+            for pc in self.pointCharges:
+                lines.append ("Xx    %8.3f    %8.3f    %8.3f    %9.4f\n" % (pc.x, pc.y, pc.z, pc.charge))
+            fo = open (filename, "w")
+            for line in lines:
+                fo.write (line)
+            fo.close ()
 
 
     @property
