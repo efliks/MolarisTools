@@ -5,6 +5,7 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 # . QM/MM interface for Molaris
+from QMCallerORCA        import QMCallerORCA
 from QMCallerMopac       import QMCallerMopac
 from QMCallerGAMESS      import QMCallerGAMESS
 from QMCallerGaussian    import QMCallerGaussian

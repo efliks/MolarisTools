@@ -126,8 +126,8 @@ class ORCAOutputFile (object):
                     line    = next (lines)
                     charges = []
                     while not line.startswith ("Sum of atomic charges:"):
-                        tokens = TokenizeLine (line, converters=[int, None, None, float])
-                        charge = tokens[-1]
+                        tokens = TokenizeLine (line, separator=":", converters=[None, float])
+                        charge = tokens[1]
                         charges.append (charge)
                         line   = next (lines)
                     self.charges = charges
