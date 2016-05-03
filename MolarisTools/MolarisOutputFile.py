@@ -25,7 +25,7 @@ System    =  collections.namedtuple ("System"   ,  " epot     ekin      etot    
 MolarisAtom = collections.namedtuple ("molarisAtom", "resSerial resName atomSerial atomName atomType atomCharge x y z connectNames connectSerials")
 
 
-Atom      = collections.namedtuple ("Atom"    ,   "label  serial  charge  bonds  x  y  z")
+Atom      = collections.namedtuple ("Atom"    ,   "label  atype  serial  charge  bonds  x  y  z")
 Residue   = collections.namedtuple ("Residue" ,   "label  serial  atoms")
 
 
@@ -257,6 +257,7 @@ class MolarisOutputFile (object):
                                 # . Add a new atom
                                 atom = Atom (
                                     label   =   atomLabel   ,
+                                    atype   =   atomType    ,
                                     serial  =   atomSerial  ,
                                     charge  =   atomCharge  ,
                                     bonds   =   bonds       ,

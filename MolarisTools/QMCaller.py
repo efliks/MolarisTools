@@ -38,6 +38,8 @@ class QMCaller (object):
         "cosmo"              :     False              ,
         "qmmm"               :     False              ,
         "replaceSymbols"     :     [("F0", "F"), ]    ,
+        # . Setting this option to True will prevent writing QM forces on MM atoms to the "d.o" file
+        "disableQMForces"    :     False              ,
             }
 
     def __init__ (self, **keywordArguments):
@@ -98,8 +100,9 @@ class QMCaller (object):
             openfile.write (_FORMAT_CHARGE % charge)
         # . Write forces on MM atoms, if they are present
         if hasattr (self, "mmforces"):
-            for force in self.mmforces:
-                openfile.write (_FORMAT_FORCE  % (force.x, force.y, force.z))
+            if not self.disableQMForces:
+                for force in self.mmforces:
+                    openfile.write (_FORMAT_FORCE  % (force.x, force.y, force.z))
         # . Close the file
         openfile.close ()
 

@@ -64,13 +64,15 @@ class FVXFile (object):
                     step.append (atom)
         except StopIteration:
             pass
-        # . Finalize
+        # . Close the file
         data.close ()
+        # . Are there any steps left?
+        if step:
+            steps.append (step)
         self.steps = steps
 
 
 #===============================================================================
 # . Main program
 #===============================================================================
-if __name__ == "__main__":
-    pass
+if __name__ == "__main__": pass

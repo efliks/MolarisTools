@@ -35,7 +35,7 @@ class QMCallerORCA (QMCaller):
 
 
     def _WriteInput (self):
-        """Write an ORCA input file."""
+        """Write ORCA input files."""
         # . Check for the scratch directory
         if not os.path.exists (self.scratch):
             os.makedirs (self.scratch)
