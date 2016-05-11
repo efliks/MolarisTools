@@ -17,6 +17,7 @@ ANGSTROM_TO_BOHR                  =   1. / BOHR_TO_ANGSTROM
 
 atomicNumberToSymbol = {
     1   :  "H"  ,
+    3   :  "Li" ,
     6   :  "C"  ,
     7   :  "N"  ,
     8   :  "O"  ,

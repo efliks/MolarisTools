@@ -90,14 +90,18 @@ class QMCaller (object):
 
     def _WriteForcesCharges (self):
         openfile = open (self.fileForces, "w")
+
         # . Write the final QM energy
         openfile.write ("%f\n" % self.Efinal)
+
         # . Write forces on QM atoms
         for force in self.forces:
             openfile.write (_FORMAT_FORCE  % (force.x, force.y, force.z))
+
         # . Write charges on QM atoms
         for charge in self.charges:
             openfile.write (_FORMAT_CHARGE % charge)
+
         # . Write forces on MM atoms, if they are present
         if hasattr (self, "mmforces"):
             if not self.disableQMForces:

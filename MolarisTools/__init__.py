@@ -31,3 +31,4 @@ from XYZTrajectory       import XYZTrajectory
 
 # . Miscellaneous
 from CHELPGCharges       import CHELPGCharges
+from Scripts             import GenerateEVBList

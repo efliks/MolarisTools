@@ -6,7 +6,7 @@
 #-------------------------------------------------------------------------------
 from   Units       import *
 from   Utilities   import TokenizeLine, WriteData
-import collections
+import collections, math
 
 
 Atom  = collections.namedtuple ("Atom"  , "label  charge  x  y  z")
@@ -16,6 +16,24 @@ Force = collections.namedtuple ("Force" , "x  y  z")
 
 class MolarisAtomsFile (object):
     """A class representing atoms for the QC/MM calculation."""
+
+
+    def CalculatePotentials (self):
+        """Calculate the electrostatic potential at centers of the QM atoms."""
+        # . Solute QM atoms, including link atoms
+        qmatoms = self.qatoms + self.latoms
+
+        # . Protein and waters MM atoms
+        mmatoms = self.patoms + self.watoms
+
+        # . Calculate the electrostatic potential for each QM center
+        for qm in qmatoms:
+            elpot = 0.
+            for mm in mmatoms:
+                r = math.sqrt ((qm.x - mm.x) ** 2 + (qm.y - mm.y) ** 2 + (qm.z - mm.z) ** 2)
+                elpot += (mm.charge / r)
+            print ("%2s    %16.10f    %16.10f    %16.10f    %16.10f" % (qm.label, qm.x, qm.y, qm.z, 332. * elpot))
+
 
     def __init__ (self, filename="atoms.inp", replaceSymbols=None):
         """Constructor."""

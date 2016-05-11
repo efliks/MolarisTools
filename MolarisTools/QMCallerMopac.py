@@ -59,7 +59,7 @@ class QMCallerMopac (QMCaller):
         qmmmModel = "DEBUG MOL_QMMM" if self.qmmm else ""
         # . Write header
         data   = []
-        data.append ("%s  1SCF  CHARGE=%-2d  %s  %s  GRAD  XYZ  %s  %s\n" % (self.method, self.charge, spinState, solvationModel, chargeScheme, qmmmModel))
+        data.append ("%s  1SCF  CHARGE=%-2d  %s  %s  GRAD  XYZ  AUX  %s  %s\n" % (self.method, self.charge, spinState, solvationModel, chargeScheme, qmmmModel))
         data.append ("Comment line\n")
         data.append ("\n")
         # . Write geometry

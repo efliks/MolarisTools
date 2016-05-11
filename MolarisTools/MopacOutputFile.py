@@ -80,6 +80,36 @@ class MopacOutputFile (object):
                         tokens = TokenizeLine (next (lines), converters=[int, None, float, float])
                         charge = tokens[3]
                         self.charges.append (charge)
+
+
+                # . Get the most recent coordinates of atoms
+                #          CARTESIAN COORDINATES 
+                #
+                #    NO.       ATOM         X         Y         Z
+                #
+                #     1         C        3.6656    6.4672   12.9744
+                #     2         O        4.9097    6.3868   13.6162
+                #   (...)
+                elif line.count ("CARTESIAN COORDINATES"):
+                    for i in range (3):
+                        next (lines)
+                    atoms  = []
+                    while True:
+                        line   = next (lines)
+                        templ  = line.split ()
+                        if len (templ) != 5:
+                            break
+                        tokens = TokenizeLine (line, converters=[int, None, float, float, float])
+                        serial, symbol, x, y, z = tokens
+                        atom = Atom (
+                            symbol  =   symbol  ,
+                            x       =   x       ,
+                            y       =   y       ,
+                            z       =   z       ,
+                            charge  =   0.      ,
+                            )
+                        atoms.append (atom)
+                    self.atoms = atoms
         except StopIteration:
             pass
         # . Close the file
@@ -89,6 +119,13 @@ class MopacOutputFile (object):
     def WriteMolarisForces (self, filename="forces.out", Eref=0., useESPCharges=False):
         """Write a file in the Molaris-suitable format."""
         pass
+
+
+    @property
+    def natoms (self):
+        if hasattr (self, "atoms"):
+            return len (self.atoms)
+        return 0
 
 
 #===============================================================================

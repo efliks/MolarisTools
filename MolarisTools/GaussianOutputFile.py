@@ -100,7 +100,9 @@ class GaussianOutputFile (object):
 
                 # . Get forces
                 # . http://www.gaussian.com/g_tech/g_ur/k_force.htm
-                # . It looks like there is no need to multiply by -1, since Gaussian prints actual forces, not gradients (?)
+                # . Gaussian prints gradients, not forces, despite the misleading label "Forces" (?)
+                # . There is not need to multiply the gradients by -1, since Molaris does it after reading the d.o file.
+                # . In Plotnikov's script, there was no multiplication by -1.
                 # elif line.count ("***** Axes restored to original set *****"):
                 #     for skip in range (4):
                 #         next (lines)
@@ -207,6 +209,32 @@ class GaussianOutputFile (object):
                             )
                         pointCharges.append (pc)
                     self.pointCharges = pointCharges
+
+
+                # . Get atoms from the input file
+                #  Symbolic Z-matrix:
+                #  Charge =  1 Multiplicity = 1
+                #  LI                   -0.112     0.       -0.104 
+                #  XX                   -0.796    -1.788    -0.682 
+                #  O                     0.093     0.        1.723 
+                #   (...)
+                elif line.count ("Symbolic Z-matrix"): 
+                    next (lines)
+                    atomsInput = []
+                    while True:
+                        tokens = TokenizeLine (next (lines), converters=[None, float, float, float])
+                        if not tokens:
+                            break
+                        symbol, x, y, z = tokens
+                        atom = Atom (
+                            symbol  =   symbol  ,
+                            x       =   x       ,
+                            y       =   y       ,
+                            z       =   z       ,
+                            charge  =   0.      ,
+                            )
+                        atomsInput.append (atom)
+                    self.atomsInput = atomsInput
 
 
                 # . Get timing information

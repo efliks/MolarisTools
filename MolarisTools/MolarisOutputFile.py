@@ -178,10 +178,12 @@ class MolarisOutputFile (object):
                         #  classic - epot     :  -6518.24 equantum :   -199.94
                         #
                         elif line.startswith ( " classic"  ):
-                            toka     = line.split ()
+                            toka     = line.split (":")
+                            tokb     = toka[1].split ()
+                            tokc     = toka[2].split ()
                             energies = Classic (
-                                    classic = float ( toka[4] ) ,
-                                    quantum = float ( toka[7] ) ,)
+                                    classic = float ( tokb[0] ) ,
+                                    quantum = float ( tokc[0] ) ,)
                             currentMDStep.classic = energies
 
 
@@ -198,14 +200,14 @@ class MolarisOutputFile (object):
                     mdSteps.append (currentMDStep)
                     if logging:
                         nsteps = len (mdSteps)
-                        print ("Read energies for %d MD step%s." % (nsteps, "" if nsteps < 2 else "s"))
+                        print ("# Read energies for %d MD step%s." % (nsteps, "" if nsteps < 2 else "s"))
 
                 elif line.startswith (" Average energies for the system at the step"):
                     fepSteps.append (mdSteps)
                     mdSteps = []
                     if logging:
                         nfep = len (fepSteps)
-                        print ("Read FEP step %d." % nfep)
+                        print ("# Read FEP step %d." % nfep)
 
 
 
@@ -221,7 +223,7 @@ class MolarisOutputFile (object):
                     resLabel  = resLabel.replace (",", "")
                     # . Skip a few lines
                     for i in range (3):
-                        lines.next ()
+                        next (lines)
                     # . Read atoms
                     #    2    OH     O2     -0.087     -0.022      2.081   -0.800   H1   H2                      3     4
                     #    3    H1     H2     -0.139     -0.807      2.652    0.400   OH                           2
@@ -230,7 +232,7 @@ class MolarisOutputFile (object):
                     # Total charge of this residue:     0.000
                     atoms     = []
                     while True:
-                        line   = lines.next ()
+                        line   = next (lines)
                         if line.count ("Total charge"):
                             break
                         tokens = line.split ()
@@ -275,7 +277,7 @@ class MolarisOutputFile (object):
                     residues.append (residue)
                     if logging:
                         natoms = len (atoms)
-                        print ("Found residue %s-%d with %d atom%s." % (resLabel, resSerial, natoms, "" if natoms < 2 else "s"))
+                        print ("# Found residue %s-%d with %d atom%s." % (resLabel, resSerial, natoms, "" if natoms < 2 else "s"))
 
 
                 # Classical forces which are not calculated in qm:
@@ -285,17 +287,18 @@ class MolarisOutputFile (object):
                 # (...)
                 elif line.count ("Classical forces which are not calculated in qm"):
                     for i in range (2):
-                        line = lines.next ()
-                    forces = []
+                        line = next (lines)
+                    forcesClassical = []
                     while line != "\n":
                         tokens = TokenizeLine (line, converters=[int, float, float, float])
                         evbSerial, fx, fy, fz = tokens
-                        force  = (fx, fy, fz)
-                        forces.append (force)
-                        line   = lines.next ()
-                    #if logging:
-                    #    nforces = len (forces)
-                    #    print ("Read classical forces for %d atoms." % nforces)
+                        force  = (evbSerial, fx, fy, fz)
+                        forcesClassical.append (force)
+                        line   = next (lines)
+                    self.forcesClassical = forcesClassical
+                    if logging:
+                        nforces = len (forcesClassical)
+                        print ("# Read classical forces for %d atoms." % nforces)
 
 
                 #  Forces(classical+qm) and Charges will be used for dynamics:
@@ -305,27 +308,72 @@ class MolarisOutputFile (object):
                 # (...)
                 elif line.count ("Forces(classical+qm) and Charges will be used for dynamics:"):
                     for i in range (2):
-                        line = lines.next ()
+                        line = next (lines)
                     forcesQMMM = []
                     while line != "\n":
                         tokens = TokenizeLine (line, converters=[int, float, float, float, float, float, float, float])
                         evbSerial, x, y, z, fx, fy, fz, charge = tokens
-                        force  = (fx, fy, fz)
+                        force  = (evbSerial, fx, fy, fz)
                         forcesQMMM.append (force)
-                        line   = lines.next ()
-                    #if logging:
-                    #    nforces = len (forces)
-                    #    print ("Read QM/MM forces for %d atoms." % nforces)
+                        line   = next (lines)
+                    self.forcesQMMM = forcesQMMM
                     if logging:
-                        for forceClassic, forceQMMM in zip (forces, forcesQMMM):
-                            fx, fy, fz = forceClassic
-                            qmmmFx, qmmmFy, qmmmFz = forceQMMM
-                            dfx = qmmmFx - fx
-                            dfy = qmmmFy - fy
-                            dfz = qmmmFz - fz
-                            print ("%8.3f  %8.3f  %8.3f      %8.3f  %8.3f  %8.3f      %8.3f  %8.3f  %8.3f" % (fx, fy, fz, qmmmFx, qmmmFy, qmmmFz, dfx, dfy, dfz))
-                        print ("======================")
+                        nforces = len (forcesQMMM)
+                        print ("# Read QM/MM forces for %d atoms." % nforces)
 
+
+                # . Skip reading a table that has no use
+                #
+                #  CALCULATING EVB ENERGY FOR QMMM FEP:
+                #  Classical force for user-specified atoms:
+                #  atom     fx        fy        fz
+                #     1     0.736     0.000     6.360
+                elif line.count ("CALCULATING EVB ENERGY FOR QMMM FEP"):
+                    next (lines)
+
+
+                # Classical force for user-specified atoms:
+                # atom#    fx        fy        fz
+                #    1     0.859     0.000     7.456
+                #    2    -5.120     0.000   -45.629
+                #   (...)
+                elif line.count ("Classical force for user-specified atoms"):
+                    next (lines)
+                    line = next (lines)
+                    forcesClassicalCustom = []
+                    while line != "\n":
+                        tokens = TokenizeLine (line, converters=[int, float, float, float])
+                        serial, fx, fy, fz = tokens
+                        force  = (serial, fx, fy, fz)
+                        forcesClassicalCustom.append (force)
+                        line   = next (lines)
+                    if hasattr (self, "forcesClassical"):
+                        self.forcesClassical.extend (forcesClassicalCustom)
+                    if logging:
+                        nforces = len (forcesClassicalCustom)
+                        print ("# Read classical forces for %d user-specified atoms." % nforces)
+
+
+                # Forces(classical+qm) for user-specified atoms:
+                #      atom     x         y         z        fx        fy        fz      crg
+                #    1    -0.612     0.000     2.392     0.859     0.000     7.456     1.000
+                #    2    -0.612     0.000     2.392    -4.938     0.000   -44.075    -0.778
+                #   (...)
+                elif line.count ("Forces(classical+qm) for user-specified atoms"):
+                    next (lines)
+                    line = next (lines)
+                    forcesQMMMCustom = []
+                    while line != "\n":
+                        tokens = TokenizeLine (line, converters=[int, float, float, float, float, float, float, float])
+                        serial, x, y, z, fx, fy, fz, charge = tokens
+                        force  = (serial, fx, fy, fz)
+                        forcesQMMMCustom.append (force)
+                        line   = next (lines)
+                    if hasattr (self, "forcesQMMM"):
+                        self.forcesQMMM.extend (forcesQMMMCustom)
+                    if logging:
+                        nforces = len (forcesQMMMCustom)
+                        print ("# Read QM/MM forces for %d user-specified atoms." % nforces)
         except StopIteration:
             pass
         # . Close the file
