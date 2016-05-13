@@ -149,9 +149,9 @@ class QMCallerGaussian (QMCaller):
             mmforces = []
             for pc in gaussian.pointCharges:
                 force = Force (
-                    x   =   -pc.ex   *   pc.charge   ,
-                    y   =   -pc.ey   *   pc.charge   ,
-                    z   =   -pc.ez   *   pc.charge   ,
+                    x   =   pc.ex   *   pc.charge   ,
+                    y   =   pc.ey   *   pc.charge   ,
+                    z   =   pc.ez   *   pc.charge   ,
                     )
                 mmforces.append (force)
             self.mmforces = mmforces

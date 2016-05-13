@@ -13,7 +13,9 @@ Force       = collections.namedtuple ("Force"    , "x  y  z")
 ScanStep    = collections.namedtuple ("ScanStep" , "Efinal  atoms  forces  charges  espcharges")
 
 # . Coordinates, electric field, potential, charge
-PointCharge = collections.namedtuple ("PointCharge" , "x  y  z  ex  ey  ez  potential  charge")
+PointCharge      = collections.namedtuple ("PointCharge" , "x  y  z  ex  ey  ez  potential  charge")
+
+ElectricProperty = collections.namedtuple ("ElectricProperty" , "x  y  z  ex  ey  ez  potential")
 
 
 class GaussianOutputFile (object):
@@ -134,7 +136,9 @@ class GaussianOutputFile (object):
                         line     = next (lines)
 
 
-                # . Get electrostatic properties
+                # . Read in positions of points in space, other than nuclei, where electrostatic
+                # . properties are evaluated.
+                #
                 # **********************************************************************
                 #
                 #            Electrostatic Properties Using The SCF Density
@@ -147,23 +151,19 @@ class GaussianOutputFile (object):
                 #      Read-in Center 2400 is at   5.504554 14.162232 26.811879
                 #      Read-in Center 2401 is at   5.086579 15.682876 27.049785
                 elif line.count ("Electrostatic Properties Using The SCF Density"):
-                    pass
-                #    pcPositions = []
-                #    for i in range (3):
-                #        next (lines)
-                #    line = next (lines)
-                #    while not line.count ("----"):
-                #        x   =   float (line[32:42])
-                #        y   =   float (line[42:52])
-                #        z   =   float (line[52:62])
-                #        position = (x, y, z)
-                #        if line.startswith ("      Read-in Center"):
-                #            # . Add a point charge
-                #            pcPositions.append (position)
-                #        else:
-                #            # . Add a nucleus
-                #            pass
-                #        line = next (lines)
+                    positions = []
+                    for i in range (3):
+                        next (lines)
+                    line = next (lines)
+                    while not line.count ("----"):
+                        # . Fixed format!
+                        x   =   float (line[32:42])
+                        y   =   float (line[42:52])
+                        z   =   float (line[52:62])
+                        position = (x, y, z)
+                        if line.startswith ("      Read-in Center"):
+                            positions.append (position)
+                        line = next (lines)
 
 
                 #              Electrostatic Properties (Atomic Units)
@@ -193,22 +193,44 @@ class GaussianOutputFile (object):
                             atomsElectric.append (field)
                         line   = next (lines)
                     self.atomsElectric = atomsElectric
+
                     # . Save point charges
-                    pointCharges = []
-                    for (x, y, z, charge), (ex, ey, ez, potential) in zip (points, pointsElectric):
-                        pc = PointCharge (
+                    try:
+                        pointCharges = []
+                        for (x, y, z, charge), (ex, ey, ez, potential) in zip (points, pointsElectric):
+                            pc = PointCharge (
+                                x       =  x       ,
+                                y       =  y       ,
+                                z       =  z       ,
+                                charge  =  charge  ,
+                                # . Convert from Eh/bohr to kcal/(mol*A)
+                                ex        =  ex        * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
+                                ey        =  ey        * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
+                                ez        =  ez        * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
+                                # . Convert from Eh/e to kcal/(mol*e)
+                                potential =  potential * HARTREE_TO_KCAL_MOL                ,
+                                )
+                            pointCharges.append (pc)
+                        self.pointCharges = pointCharges
+                    except:
+                        pass
+
+                    # . Save electric (a.k.a. electrostatic) properties
+                    properties = []
+                    for (x, y, z), (ex, ey, ez, potential) in zip (positions, pointsElectric):
+                        prop = ElectricProperty (
                             x   =  x   ,
                             y   =  y   ,
                             z   =  z   ,
-                            # . Convert Eh/bohr to kcal/(mol*A)
-                            ex  =  ex * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
-                            ey  =  ey * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
-                            ez  =  ez * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
-                            potential  =  potential * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
-                            charge     =  charge    ,
+                            # . Convert from Eh/bohr to kcal/(mol*A)
+                            ex        =  ex        * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
+                            ey        =  ey        * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
+                            ez        =  ez        * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
+                            # . Convert from Eh/e to kcal/(mol*e)
+                            potential =  potential * HARTREE_TO_KCAL_MOL                ,
                             )
-                        pointCharges.append (pc)
-                    self.pointCharges = pointCharges
+                        properties.append (prop)
+                    self.properties = properties
 
 
                 # . Get atoms from the input file
