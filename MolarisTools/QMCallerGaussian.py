@@ -137,10 +137,6 @@ class QMCallerGaussian (QMCaller):
         gaussian     = GaussianOutputFile (filename=self.fileGaussianOutput)
         self.Efinal  = gaussian.Efinal
 
-        # . From the total calculated energy, remove the electrostatic interaction energy between point charges
-        if hasattr (gaussian, "Echrg"):
-            self.Efinal -= gaussian.Echrg
-
         # . Include forces on QM atoms
         self.forces  = gaussian.forces
 

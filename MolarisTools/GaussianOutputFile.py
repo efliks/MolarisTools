@@ -11,6 +11,8 @@ import collections, exceptions
 Atom        = collections.namedtuple ("Atom"     , "symbol  x  y  z  charge")
 Force       = collections.namedtuple ("Force"    , "x  y  z")
 ScanStep    = collections.namedtuple ("ScanStep" , "Efinal  atoms  forces  charges  espcharges")
+Thermo      = collections.namedtuple ("Thermo"   , "Ezpe  U  H  G")
+
 
 # . Coordinates, electric field, potential, charge
 PointCharge      = collections.namedtuple ("PointCharge" , "x  y  z  ex  ey  ez  potential  charge")
@@ -69,6 +71,37 @@ class GaussianOutputFile (object):
                 elif line.count ("SCF Done"):
                     tokens      = TokenizeLine (line, converters=[None, None, None, None, float, None, None, int, None])
                     self.Efinal = tokens[4] * HARTREE_TO_KCAL_MOL
+
+
+                # . Get the thermochemistry
+                #
+                #  Zero-point correction=                           0.381354 (Hartree/Particle)
+                #  Thermal correction to Energy=                    0.400762
+                #  Thermal correction to Enthalpy=                  0.401706
+                #  Thermal correction to Gibbs Free Energy=         0.334577
+                #  Sum of electronic and zero-point Energies=           -965.928309
+                #  Sum of electronic and thermal Energies=              -965.908901
+                #  Sum of electronic and thermal Enthalpies=            -965.907957
+                #  Sum of electronic and thermal Free Energies=         -965.975086
+                elif line.startswith (" Sum of electronic and zero-point Energies"):
+                    tokens    = TokenizeLine (line, converters=[float, ], reverse=True)
+                    thermoZPE = tokens[-1] * HARTREE_TO_KCAL_MOL
+                elif line.startswith (" Sum of electronic and thermal Energies"):
+                    tokens    = TokenizeLine (line, converters=[float, ], reverse=True)
+                    thermoU   = tokens[-1] * HARTREE_TO_KCAL_MOL
+                elif line.startswith (" Sum of electronic and thermal Enthalpies"):
+                    tokens    = TokenizeLine (line, converters=[float, ], reverse=True)
+                    thermoH   = tokens[-1] * HARTREE_TO_KCAL_MOL
+                elif line.startswith (" Sum of electronic and thermal Free Energies"):
+                    tokens    = TokenizeLine (line, converters=[float, ], reverse=True)
+                    thermoG   = tokens[-1] * HARTREE_TO_KCAL_MOL
+                    thermo    = Thermo (
+                        Ezpe = thermoZPE ,
+                        U    = thermoU   ,
+                        H    = thermoH   ,
+                        G    = thermoG   ,
+                        )
+                    self.thermo = thermo
 
 
                 # . Get the self energy of the charges

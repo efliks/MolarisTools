@@ -31,9 +31,9 @@ class PCgradFile (object):
             line   = next (lines)
             tokens = TokenizeLine (line, converters=[float, float, float])
             force = Force (
-                x   =   -tokens[0] * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
-                y   =   -tokens[1] * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
-                z   =   -tokens[2] * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
+                x   =   tokens[0] * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
+                y   =   tokens[1] * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
+                z   =   tokens[2] * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM  ,
                 )
             forces.append (force)
         self.forces = forces
@@ -67,7 +67,7 @@ class EngradFile (object):
             for j in range (3):
                 line = next (lines)
                 component = float (line)
-                templ.append (-component * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM)
+                templ.append (component * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM)
             force = Force (
                 x   =   templ[0]    ,
                 y   =   templ[1]    ,
@@ -162,9 +162,9 @@ class ORCAOutputFile (object):
                         tokens = TokenizeLine (line, converters=[int, None, None, float, float, float])
                         gx, gy, gz = tokens[3:6]
                         force  = Force (
-                            x   =   -gx * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM ,
-                            y   =   -gy * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM ,
-                            z   =   -gz * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM ,
+                            x   =   gx * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM ,
+                            y   =   gy * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM ,
+                            z   =   gz * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM ,
                             )
                         forces.append (force)
                         line   = next (lines)
