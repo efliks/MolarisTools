@@ -148,7 +148,7 @@ class XYZTrajectory (object):
         return self._WriteAtomicProperty ("force", filename, rangeAtoms, rangeSteps)
 
 
-    def BinCharges (self, rangeAtoms=(0, _MAX_ATOMS), rangeSteps=(0, _MAX_STEPS), sampling=0.05, limits=None):
+    def BinCharges (self, rangeAtoms=(0, _MAX_ATOMS), rangeSteps=(0, _MAX_STEPS), sampling=0.1, limits=None):
         """For each atom, calculate the distribution of its charge."""
         start, stop = rangeSteps
         steps       = self.steps[start:stop]
@@ -215,15 +215,16 @@ class XYZTrajectory (object):
         return (boundaries, atomData, info)
 
 
-    def BinCharges_ToFile (self, filename="histogram.dat", rangeAtoms=(0, _MAX_ATOMS), rangeSteps=(0, _MAX_STEPS), sampling=0.1):
+    def BinCharges_ToFile (self, filename="histogram.dat", rangeAtoms=(0, _MAX_ATOMS), rangeSteps=(0, _MAX_STEPS), sampling=0.1, limits=None):
         """Write histogram data to a file in a format suitable for Gnuplot."""
-        boundaries, atomData, (natoms, minc, maxc, spread, nbins, sampling) = self.BinCharges (rangeAtoms=rangeAtoms, rangeSteps=rangeSteps, sampling=sampling)
+        boundaries, atomData, (natoms, minc, maxc, spread, nbins, sampling) = self.BinCharges (rangeAtoms=rangeAtoms, rangeSteps=rangeSteps, sampling=sampling, limits=limits)
         # . Write header
         message = "natoms=%d, minc=%.3f, maxc=%.3f, spread=%.3f, nbins=%d, sampling=%f" % (natoms, minc, maxc, spread, nbins, sampling)
         lines   = ["# %s" % message, ]
         line    = "#" + 9 * " "
-        for atom in self.steps[0].atoms:
-            line = "%s %5s" % (line, atom.label.center (5))
+        for (serial, atom) in enumerate (self.steps[0].atoms, 1):
+            label = "%s%d" % (atom.label, serial)
+            line  = "%s %5s" % (line, label.center (5))
         lines.append (line)
         # . Write histogram
         for iboundary, (left, right) in enumerate (boundaries):

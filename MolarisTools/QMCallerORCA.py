@@ -97,18 +97,15 @@ class QMCallerORCA (QMCaller):
             fileOutput.close ()
 
         # . Parse the output file
-        orca        = ORCAOutputFile (orcaOutput)
+        orca        = ORCAOutputFile (orcaOutput, reverse=True)
         self.Efinal = orca.Efinal
-        # . From the total calculated energy, remove the electrostatic interaction energy between point charges
-        if hasattr (orca, "Echrg"):
-            self.Efinal -= orca.Echrg
 
         # . Include forces on QM atoms
-        engrad      = EngradFile (os.path.join (self.scratch, self.job + ".engrad"))
+        engrad      = EngradFile (os.path.join (self.scratch, self.job + ".engrad"), reverse=True)
         self.forces = engrad.forces
         # . Include forces on point charges
         if self.qmmm:
-            pcgrad        = PCgradFile (os.path.join (self.scratch, self.job + ".pcgrad"))
+            pcgrad        = PCgradFile (os.path.join (self.scratch, self.job + ".pcgrad"), reverse=True)
             self.mmforces = pcgrad.forces
 
         # . Include charges
