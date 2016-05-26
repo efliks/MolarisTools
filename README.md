@@ -9,5 +9,7 @@ A Python library and a set of example scripts to facilitate working with the Mol
 * Charges
 * CheckMapping
 * CompareMopacVSGaussian
+* MopacNumericalForces
 * PrepareConstraints
 * PrepareWHAM
+* QMMM

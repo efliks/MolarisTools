@@ -21,10 +21,11 @@ and call_gaussian.py on how to run EE or ME.
 This example was tested with molaris_hpc9.15, whose md5sum was 
 0cf32647d1aa4087689b14a2c6d2220e (because version numbers are not terribly meaningful in Molaris).
 
-Note that before running this example, you need to supply your own
-libraries for parm.lib, pdb_dictionary and solvent.opt. 
+Note that in addition to amino98_custom_small.lib and evb_poll_clean.lib,
+you need to supply your own libraries for parm.lib, pdb_dictionary and 
+solvent.opt before running this example.
 They are part of the Molaris package and hence cannot be attached here.
 
 --------------
 Mikolaj Feliks
-Fri May 20 15:37:19 PDT 2016
+Thu May 26 14:03:09 PDT 2016

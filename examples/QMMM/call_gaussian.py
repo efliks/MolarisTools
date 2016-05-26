@@ -7,7 +7,7 @@
 #-------------------------------------------------------------------------------
 import sys, os
 
-# . Define a path to the MTL library or comment this out and 
+# . Define a path to the MolarisTools library or comment this out and 
 # . place MolarisTools in the current directory
 sys.path.append (os.path.join (os.environ["HOME"], "devel", "MolarisTools"))
 

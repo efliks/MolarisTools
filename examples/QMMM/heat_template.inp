@@ -47,7 +47,6 @@ enzymix
             qmmm
                 qmmm_interval   1
                 fep_qmmm        1.0
-                script          ./call_gaussian.py
                 qmmm_in         ./mol.in
                 qmmm_out        ./d.o
                 red_lk_crg
@@ -55,18 +54,24 @@ enzymix
                 qmmm_on_evb     1   # QM/MM runs on state 1
                 # qmmm_on_2_evb_states    1   2
 
-                # . Mechanical embedding
-                # . DO NOT include point charges in the QM calculation (set qmmm=False in call_gaussian.py)
+                # . Mopac
+                # script ./call_mopac
                 # cl_elec
 
-                # . Electrostatic embedding
+                # . Gaussian: Mechanical embedding
+                # . DO NOT include point charges in the QM calculation (set qmmm=False in call_gaussian.py)
+                # script          ./call_gaussian.py
+                # cl_elec
+
+                # . Gaussian: Electrostatic embedding
                 # . Include point charges in the QM calculation (set qmmm=True in call_gaussian.py)
+                script          ./call_gaussian.py
                 use_qm_reg2w_force
             end
             temperature     @TEMP@
             ss                0.001   # timestep is 0.001ps = 1fs
-            nsteps          50        # 50*2fs = 100fs = 0.1ps
-            log_write_fq     5        # write every 5 steps = 1fs
+            nsteps          50        # 50*1fs = 50fs = 0.01ps
+            log_write_fq     5        # write every 5 steps = 5fs
             movie_co        all wat
             movie_fq         5
             # . NMS1

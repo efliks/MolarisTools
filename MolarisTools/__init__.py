@@ -28,6 +28,7 @@ from ORCAOutputFile      import ORCAOutputFile, PCgradFile, EngradFile
 from MopacOutputFile     import MopacOutputFile
 from MopacInputFile      import MopacInputFile
 from XYZTrajectory       import XYZTrajectory
+from PDBFile             import PDBFile
 
 # . Miscellaneous
 from CHELPGCharges       import CHELPGCharges
