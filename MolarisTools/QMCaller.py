@@ -120,7 +120,10 @@ class QMCaller (object):
             openfile = open (self.fileTrajectory, "a")
             natoms   = len (atoms)
             openfile.write ("%d\n" % natoms)
-            openfile.write ("qm: %f\n" % self.Efinal)
+            mdstep   = ""
+            if hasattr (self.molaris, "mdstep"):
+                mdstep = " (MD step: %d)" % self.molaris.mdstep
+            openfile.write ("qm: %f%s\n" % (self.Efinal, mdstep))
 
             if self.archive:
                 # . Write coordinates, forces and charges

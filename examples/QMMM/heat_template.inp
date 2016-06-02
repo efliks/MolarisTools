@@ -55,7 +55,7 @@ enzymix
                 # qmmm_on_2_evb_states    1   2
 
                 # . Mopac
-                # script ./call_mopac
+                # script ./call_mopac.py
                 # cl_elec
 
                 # . Gaussian: Mechanical embedding

@@ -60,7 +60,10 @@ class QMCallerMopac (QMCaller):
         # . Write header
         data   = []
         data.append ("%s  1SCF  CHARGE=%-2d  %s  %s  GRAD  XYZ  AUX  %s  %s\n" % (self.method, self.charge, spinState, solvationModel, chargeScheme, qmmmModel))
-        data.append ("Comment line\n")
+        mdstep = ""
+        if hasattr (self.molaris, "mdstep"):
+            mdstep = "MD step: %d" % self.molaris.mdstep
+        data.append ("%s\n" % mdstep)
         data.append ("\n")
         # . Write geometry
         atoms = self.molaris.qatoms + self.molaris.latoms

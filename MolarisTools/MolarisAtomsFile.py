@@ -74,7 +74,9 @@ class MolarisAtomsFile (object):
         lines   = open (self.inputfile)
         line    = next (lines)
         # . Get step number and total energy
-        step, G = TokenizeLine (line, converters=[int, float])
+        step, energy = TokenizeLine (line, converters=[int, float])
+        self.mdstep  = step
+        self.Etot    = energy
         try:
             while True:
                 line = next (lines)

@@ -386,6 +386,19 @@ class AminoComponent (object):
                 print line
 
 
+    def DetectAngles (self):
+        """Automatically generate a list of angles."""
+        angles = []
+        for (bonda, bondb) in self.bonds:
+            # . Check connections of the first atom
+            for (othera, otherb) in self.bonds:
+                pass
+            # . Check connections of the second atom
+            for (othera, otherb) in self.bonds:
+                pass
+        self.angles = angles
+
+
 #===============================================================================
 class AminoLibrary (object):
     """A class to represent data from the Molaris amino98.lib file."""
@@ -394,6 +407,27 @@ class AminoLibrary (object):
         """Constructor."""
         self.filename = filename
         self._Parse (logging=logging, reorder=reorder, unique=unique, verbose=verbose)
+        self._i = 0
+
+
+    def __len__ (self):
+        return self.ncomponents
+
+    def __iter__ (self):
+        return self
+
+    def __next__ (self):
+        return self.next ()
+
+
+    def next (self):
+        """Next component."""
+        if self._i >= self.ncomponents:
+            self._i = 0
+            raise exceptions.StopIteration ()
+        else:
+            self._i += 1
+        return self.components[self._i - 1]
 
 
     def _FindComponent (self, key):
@@ -444,10 +478,6 @@ class AminoLibrary (object):
             for component in self.components:
                 serial = component.serial
         return serial
-
-
-    def __len__ (self):
-        return self.ncomponents
 
 
     def _GetCleanLine (self, data):
