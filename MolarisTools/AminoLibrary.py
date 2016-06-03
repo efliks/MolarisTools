@@ -58,6 +58,20 @@ class AminoComponent (object):
             return 0
 
     @property
+    def nangles (self):
+        if hasattr (self, "angles"):
+            return len (self.angles)
+        else:
+            return 0
+
+    @property
+    def ntorsions (self):
+        if hasattr (self, "torsions"):
+            return len (self.torsions)
+        else:
+            return 0
+
+    @property
     def ngroups (self):
         if hasattr (self, "groups"):
             return len (self.groups)
@@ -139,8 +153,10 @@ class AminoComponent (object):
         print ("}")
 
 
-    def Write (self, filename=None, title=None, showGroups=False, showLabels=False, sortGroups=False):
+    def Write (self, filename=None, title=None, showGroups=False, showLabels=False, sortGroups=False, terminate=True):
+        """Write component in a format understandable by Molaris."""
         output = []
+        output.append (_DEFAULT_DIVIDER)
         # . Write header
         if title is None:
             if hasattr (self, "title"):
@@ -230,6 +246,10 @@ class AminoComponent (object):
         # . Finish up
         output.append ("%5d%s" % (0, "  ! Total charge: %.4f" % totalCharge if showGroups else ""))
         output.append (_DEFAULT_DIVIDER)
+        # . Make it the last component in the library
+        if terminate:
+            output.append ("%5d" % 0)
+            output.append (_DEFAULT_DIVIDER)
         # . Write to a file or terminal
         if filename:
             fo = open (filename, "w")
@@ -386,17 +406,114 @@ class AminoComponent (object):
                 print line
 
 
-    def DetectAngles (self):
+    def GenerateAngles (self):
         """Automatically generate a list of angles."""
         angles = []
-        for (bonda, bondb) in self.bonds:
+        for i, (bonda, bondb) in enumerate (self.bonds):
             # . Check connections of the first atom
-            for (othera, otherb) in self.bonds:
-                pass
+            for j, (othera, otherb) in enumerate (self.bonds):
+                if i != j:
+                    angle = None
+                    if   bonda == othera:
+                        angle = (otherb, bonda, bondb)
+                    elif bonda == otherb:
+                        angle = (bondb, bonda, othera)
+                    if angle:
+                        (a, b, c) = angle
+                        if ((a, b, c) not in angles) and ((c, b, a) not in angles):
+                            angles.append (angle)
             # . Check connections of the second atom
-            for (othera, otherb) in self.bonds:
-                pass
+            for j, (othera, otherb) in enumerate (self.bonds):
+                if i != j:
+                    angle = None
+                    if   bondb == othera:
+                        angle = (otherb, othera, bondb)
+                    elif bondb == otherb:
+                        angle = (bondb, othera, otherb)
+                    if angle:
+                        (a, b, c) = angle
+                        if ((a, b, c) not in angles) and ((c, b, a) not in angles):
+                            angles.append (angle)
         self.angles = angles
+
+
+    def GenerateTorsions (self):
+        """Automatically generate a list of torsions (dihedral angles)."""
+        torsions = []
+        self.torsions = torsions
+
+
+    def _BondsToTypes (self):
+        types  = []
+        for (bonda, bondb) in self.bonds:
+            for atom in self.atoms:
+                if   atom.atomLabel == bonda:
+                    typea = atom.atomType
+                elif atom.atomLabel == bondb:
+                    typeb = atom.atomType
+            pair = (typea, typeb)
+            types.append (pair)
+        unique = []
+        for (typea, typeb) in types:
+            if (typea, typeb) not in unique:
+                if (typeb, typea) not in unique:
+                    pair = (typea, typeb)
+                    unique.append (pair)
+        return (types, unique)
+
+
+    def _AnglesToTypes (self):
+        types  = []
+        for (anglea, angleb, anglec) in self.angles:
+            for atom in self.atoms:
+                if   atom.atomLabel == anglea:
+                    typea = atom.atomType
+                elif atom.atomLabel == angleb:
+                    typeb = atom.atomType
+                elif atom.atomLabel == anglec:
+                    typec = atom.atomType
+            triplet = (typea, typeb, typec)
+            types.append (triplet)
+        unique = []
+        for (typea, typeb, typec) in types:
+            if (typea, typeb, typec) not in unique:
+                if (typec, typeb, typea) not in unique:
+                    triplet = (typea, typeb, typec)
+                    unique.append (triplet)
+        return (types, unique)
+
+
+    def WriteTopology (self, writeTypes=False):
+        """Write object's bonds, angles and dihedrals."""
+        print ("*** Bonds ***")
+        bondTypes, bondUnique = self._BondsToTypes ()
+        for i, ((bonda, bondb), (typea, typeb)) in enumerate (zip (self.bonds, bondTypes), 1):
+            types = ""
+            if writeTypes:
+                types = " " * 10 + "# %-4s    %-4s" % (typea, typeb)
+            print ("%3d    %-4s    %-4s%s" % (i, bonda, bondb, types))
+        
+        if hasattr (self, "angles"):
+            print ("*** Angles ***")
+            angleTypes, angleUnique = self._AnglesToTypes ()
+            for i, ((anglea, angleb, anglec), (typea, typeb, typec)) in enumerate (zip (self.angles, angleTypes), 1):
+                types = ""
+                if writeTypes:
+                    types = " " * 10 + "# %-4s    %-4s    %-4s" % (typea, typeb, typec)
+                print ("%3d    %-4s    %-4s    %-4s%s" % (i, anglea, angleb, anglec, types))
+
+
+    def WriteTypes (self):
+        """Write object's types for bonds, angles and dihedrals."""
+        print ("*** Bond types ***")
+        bondTypes, bondUnique = self._BondsToTypes ()
+        for i, (typea, typeb) in enumerate (bondUnique, 1):
+            print ("%3d    %-4s    %-4s" % (i, typea, typeb))
+
+        print ("*** Angle types ***")
+        angleTypes, angleUnique = self._AnglesToTypes ()
+        for i, (typea, typeb, typec) in enumerate (angleUnique, 1):
+            print ("%3d    %-4s    %-4s    %-4s" % (i, typea, typeb, typec))
 
 
 #===============================================================================
@@ -413,12 +530,13 @@ class AminoLibrary (object):
     def __len__ (self):
         return self.ncomponents
 
+
+    # . The next 3 methods are for the iterator
     def __iter__ (self):
         return self
 
     def __next__ (self):
         return self.next ()
-
 
     def next (self):
         """Next component."""

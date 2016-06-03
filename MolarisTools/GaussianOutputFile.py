@@ -248,7 +248,7 @@ class GaussianOutputFile (object):
                     except:
                         pass
 
-                    # . Save electric (a.k.a. electrostatic) properties
+                    # . Save electric (=electrostatic) properties
                     properties = []
                     for (x, y, z), (ex, ey, ez, potential) in zip (positions, pointsElectric):
                         prop = ElectricProperty (
