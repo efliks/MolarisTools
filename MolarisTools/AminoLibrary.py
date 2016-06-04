@@ -245,9 +245,9 @@ class AminoComponent (object):
             output.append (line)
         # . Finish up
         output.append ("%5d%s" % (0, "  ! Total charge: %.4f" % totalCharge if showGroups else ""))
-        output.append (_DEFAULT_DIVIDER)
         # . Make it the last component in the library
         if terminate:
+            output.append (_DEFAULT_DIVIDER)
             output.append ("%5d" % 0)
             output.append (_DEFAULT_DIVIDER)
         # . Write to a file or terminal
@@ -406,41 +406,57 @@ class AminoComponent (object):
                 print line
 
 
-    def GenerateAngles (self):
+    def GenerateAngles (self, quiet=False):
         """Automatically generate a list of angles."""
         angles = []
+        # . Outer loop
         for i, (bonda, bondb) in enumerate (self.bonds):
-            # . Check connections of the first atom
+            # . Inner loop
             for j, (othera, otherb) in enumerate (self.bonds):
                 if i != j:
                     angle = None
                     if   bonda == othera:
-                        angle = (otherb, bonda, bondb)
+                        angle = (bondb, bonda, otherb)
                     elif bonda == otherb:
-                        angle = (bondb, bonda, othera)
-                    if angle:
-                        (a, b, c) = angle
-                        if ((a, b, c) not in angles) and ((c, b, a) not in angles):
-                            angles.append (angle)
-            # . Check connections of the second atom
-            for j, (othera, otherb) in enumerate (self.bonds):
-                if i != j:
-                    angle = None
-                    if   bondb == othera:
-                        angle = (otherb, othera, bondb)
-                    elif bondb == otherb:
-                        angle = (bondb, othera, otherb)
+                        angle = (othera, bonda, bondb)
+                    elif bondb == othera:
+                        angle = (bonda, othera, otherb)
+                    elif bondb == othera:
+                        angle = (bonda, bondb, othera)
                     if angle:
                         (a, b, c) = angle
                         if ((a, b, c) not in angles) and ((c, b, a) not in angles):
                             angles.append (angle)
         self.angles = angles
+        if not quiet:
+            print ("# . Generated %d angles." % self.nangles)
 
 
-    def GenerateTorsions (self):
-        """Automatically generate a list of torsions (dihedral angles)."""
-        torsions = []
-        self.torsions = torsions
+    def GenerateTorsions (self, quiet=False):
+        """Automatically generate a list of torsions (=dihedral angles)."""
+        if hasattr (self, "angles"):
+            torsions = []
+            # . Outer loop
+            for i, (anglea, angleb, anglec) in enumerate (self.angles):
+                # . Inner loop: check the first pair of atoms
+                for j, (othera, otherb, otherc) in enumerate (self.angles):
+                    if i != j:
+                        if (anglea == otherb) and (angleb == otherc):
+                            torsion      = (othera, anglea, angleb, anglec)
+                            (a, b, c, d) = torsion
+                            if ((a, b, c, d) not in torsions) and ((d, c, b, a) not in torsions):
+                                torsions.append (torsion)
+                # . Inner loop: check the second pair of atoms
+                for j, (othera, otherb, otherc) in enumerate (self.angles):
+                    if i != j:
+                        if (angleb == othera) and (anglec == otherb):
+                            torsion      = (anglea, angleb, anglec, otherc)
+                            (a, b, c, d) = torsion
+                            if ((a, b, c, d) not in torsions) and ((d, c, b, a) not in torsions):
+                                torsions.append (torsion)
+            self.torsions = torsions
+        if not quiet:
+            print ("# . Generated %d torsions." % self.ntorsions)
 
 
     def _BondsToTypes (self):
@@ -483,6 +499,35 @@ class AminoComponent (object):
         return (types, unique)
 
 
+    def _TorsionsToTypes (self):
+        types   = []
+        for (torsiona, torsionb, torsionc, torsiond) in self.torsions:
+            for atom in self.atoms:
+                if   atom.atomLabel == torsiona:
+                    typea = atom.atomType
+                elif atom.atomLabel == torsionb:
+                    typeb = atom.atomType
+                elif atom.atomLabel == torsionc:
+                    typec = atom.atomType
+                elif atom.atomLabel == torsiond:
+                    typed = atom.atomType
+            quadruplet = (typea, typeb, typec, typed)
+            types.append (quadruplet)
+        unique  = []
+        for (typea, typeb, typec, typed) in types:
+            if (typea, typeb, typec, typed) not in unique:
+                if (typed, typec, typeb, typea) not in unique:
+                    quadruplet = (typea, typeb, typec, typed)
+                    unique.append (quadruplet)
+        general = []
+        for (typea, typeb, typec, typed) in types:
+            if (typeb, typec) not in general:
+                if (typec, typeb) not in general:
+                    pair = (typeb, typec)
+                    general.append (pair)
+        return (types, unique, general)
+
+
     def WriteTopology (self, writeTypes=False):
         """Write object's bonds, angles and dihedrals."""
         print ("*** Bonds ***")
@@ -502,6 +547,31 @@ class AminoComponent (object):
                     types = " " * 10 + "# %-4s    %-4s    %-4s" % (typea, typeb, typec)
                 print ("%3d    %-4s    %-4s    %-4s%s" % (i, anglea, angleb, anglec, types))
 
+        if hasattr (self, "torsions"):
+            print ("*** Torsions ***")
+            torsionTypes, torsionUnique, torsionGeneral = self._TorsionsToTypes ()
+            for i, ((torsiona, torsionb, torsionc, torsiond), (typea, typeb, typec, typed)) in enumerate (zip (self.torsions, torsionTypes), 1):
+                types = ""
+                if writeTypes:
+                    types = " " * 10 + "# %-4s    %-4s    %-4s    %-4s" % (typea, typeb, typec, typed)
+                print ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, torsiona, torsionb, torsionc, torsiond, types))
+
+            print ("*** General torsions ***")
+            general      = []
+            generalTypes = []
+            for (torsiona, torsionb, torsionc, torsiond), (typea, typeb, typec, typed) in zip (self.torsions, torsionTypes):
+                pair = (torsionb, torsionc)
+                reverse = (torsionc, torsionb)
+                if (pair not in general) and (reverse not in general):
+                    general.append (pair)
+                    types = (typeb, typec)
+                    generalTypes.append (types)
+            for i, ((torsionb, torsionc), (typeb, typec)) in enumerate (zip (general, generalTypes), 1):
+                types = ""
+                if writeTypes:
+                    types = " " * 10 + "# %-4s    %-4s    %-4s    %-4s" % ("@@", typeb, typec, "@@")
+                print ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, "@@", torsionb, torsionc, "@@", types))
+
 
     def WriteTypes (self):
         """Write object's types for bonds, angles and dihedrals."""
@@ -510,10 +580,21 @@ class AminoComponent (object):
         for i, (typea, typeb) in enumerate (bondUnique, 1):
             print ("%3d    %-4s    %-4s" % (i, typea, typeb))
 
-        print ("*** Angle types ***")
-        angleTypes, angleUnique = self._AnglesToTypes ()
-        for i, (typea, typeb, typec) in enumerate (angleUnique, 1):
-            print ("%3d    %-4s    %-4s    %-4s" % (i, typea, typeb, typec))
+        if hasattr (self, "angles"):
+            print ("*** Angle types ***")
+            angleTypes, angleUnique = self._AnglesToTypes ()
+            for i, (typea, typeb, typec) in enumerate (angleUnique, 1):
+                print ("%3d    %-4s    %-4s    %-4s" % (i, typea, typeb, typec))
+
+        if hasattr (self, "torsions"):
+            print ("*** Torsion types ***")
+            torsionTypes, torsionUnique, torsionGeneral = self._TorsionsToTypes ()
+            for i, (typea, typeb, typec, typed) in enumerate (torsionUnique, 1):
+                print ("%3d    %-4s    %-4s    %-4s    %-4s" % (i, typea, typeb, typec, typed))
+
+            print ("*** General torsion types ***")
+            for i, (typeb, typec) in enumerate (torsionGeneral, 1):
+                print ("%3d    %-4s    %-4s    %-4s    %-4s" % (i, "@@", typeb, typec, "@@"))
 
 
 #===============================================================================
@@ -734,19 +815,14 @@ class AminoLibrary (object):
         self.components = components
 
 
-    def WriteComponent (self, serial=None, name=None, title="", showGroups=False, showLabels=False):
-        """Write out a specific component from the library."""
-        component = self.GetComponent (serial=serial, name=name)
-        component.Write (title=title, showGroups=showGroups, showLabels=showLabels)
-
-
     def WriteAll (self, showGroups=False, showLabels=False):
         """Write out all components from the library."""
-        for component in self.components:
-            component.Write (showGroups=showGroups, showLabels=showLabels)
-        # . Write footer
-        print ("%5d" % 0)
-        print (_DEFAULT_DIVIDER)
+        for component in self.components[:-1]:
+            component.Write (showGroups=showGroups, showLabels=showLabels, terminate=False)
+
+        # . Write the last component
+        component = self.components[-1]
+        component.Write (showGroups=showGroups, showLabels=showLabels, terminate=True)
 
 
 #===============================================================================

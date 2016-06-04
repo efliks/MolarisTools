@@ -87,6 +87,53 @@ def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="deter
                 print ("%s# constraint_post  %4d    %4.1f  %4.1f  %4.1f  %8.3f  %8.3f  %8.3f    add_to_qm_force    0   # %s" % (tabs, atom.serial, _DEFAULT_FORCE, _DEFAULT_FORCE, _DEFAULT_FORCE, atom.x, atom.y, atom.z, atom.label))
 
 
+def DetermineBAT (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", residueLabels=(), ):
+    """Determine bonds, angles and torsions to analyze their statistical distributions."""
+
+    # . Load the log file
+    mof     = MolarisOutputFile (fileMolarisOutput)
+    # . Load the library
+    library = AminoLibrary (fileLibrary, logging=False)
+
+    if mof.nresidues > 0:
+        for residue in mof.residues:
+            include = True
+            if len (residueLabels) > 0:
+                if residue.label not in residueLabels:
+                    include = False
+            if include:
+                component = library[residue.label]
+                component.GenerateAngles (quiet=True)
+                component.GenerateTorsions (quiet=True)
+
+                # . Write bond serials
+                for (bonda, bondb) in component.bonds:
+                    serials = []
+                    for bond in (bonda, bondb):
+                        for atom in residue.atoms:
+                            if atom.label == bond: break
+                        serials.append (atom.serial)
+                    print ("%4d    %4d    # %4s    %4s" % (serials[0], serials[1], bonda, bondb))
+
+                # . Write angle serials
+                for (anglea, angleb, anglec) in component.angles:
+                    serials = []
+                    for angle in (anglea, angleb, anglec):
+                        for atom in residue.atoms:
+                            if atom.label == angle: break
+                        serials.append (atom.serial)
+                    print ("%4d    %4d    %4d    # %4s    %4s    %4s" % (serials[0], serials[1], serials[2], anglea, angleb, anglec))
+
+                # . Write torsion serials
+                for (torsiona, torsionb, torsionc, torsiond) in component.torsions:
+                    serials = []
+                    for torsion in (torsiona, torsionb, torsionc, torsiond):
+                        for atom in residue.atoms:
+                            if atom.label == torsion: break
+                        serials.append (atom.serial)
+                    print ("%4d    %4d    %4d    %4d    # %4s    %4s    %4s    %4s" % (serials[0], serials[1], serials[2], serials[3], torsiona, torsionb, torsionc, torsiond))
+
+
 #===============================================================================
 # . Main program
 #===============================================================================
