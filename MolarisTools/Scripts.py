@@ -13,7 +13,7 @@ import os
 _DEFAULT_LIBRARY_FILE = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
 _DEFAULT_FORCE = 5.
 
-def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", )):
+def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", )):
     """Generate a list of EVB atoms and bonds based on a Molaris output file."""
     library = AminoLibrary (fileLibrary, logging=False)
     

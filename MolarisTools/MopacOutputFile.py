@@ -31,6 +31,8 @@ class MopacOutputFile (object):
 
     def _Parse (self):
         lines = open (self.inputfile)
+        # . Assume the job is failed until finding a "MOPAC DONE" statement
+        jobOK = False
         try:
             while True:
                 line = next (lines)
@@ -110,10 +112,17 @@ class MopacOutputFile (object):
                             )
                         atoms.append (atom)
                     self.atoms = atoms
+
+                # . Check for a failed job
+                elif line.startswith (" == MOPAC DONE =="):
+                    jobOK = True
         except StopIteration:
             pass
         # . Close the file
         lines.close ()
+        # . Check for a failed job
+        if not jobOK:
+            raise exceptions.StandardError ("Job %s did not end normally." % self.inputfile)
 
 
     def WriteMolarisForces (self, filename="forces.out", Eref=0., useESPCharges=False):

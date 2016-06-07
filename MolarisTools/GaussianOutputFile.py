@@ -33,6 +33,8 @@ class GaussianOutputFile (object):
         lines = open (self.inputfile)
         scan  = []
         opt   = []
+        # . Assume the job is failed until finding a "Normal termination" statement
+        jobOK = False
         try:
             while True:
                 line = next (lines)
@@ -300,10 +302,9 @@ class GaussianOutputFile (object):
                     # . Quit here, since composite jobs are not supported (?)
                     # break
 
-
                 # . Check for a failed job
-                elif line.count ("Error termination"):
-                    raise exceptions.StandardError ("Error termination in Gaussian output file %s." % self.inputfile)
+                elif line.startswith (" Normal termination of Gaussian"):
+                    jobOK = True
 
                 # . Determine if we have reached the end of an IRC step
                 elif line.count ("-- Optimized point #"):
@@ -319,6 +320,10 @@ class GaussianOutputFile (object):
             pass
         # . Close the file
         lines.close ()
+        # . Check for a failed job
+        if not jobOK:
+            raise exceptions.StandardError ("Job %s did not end normally." % self.inputfile)
+
         # . Does the job involve a scan (IRC or PES)?
         if scan: self.scan = scan
         # . Does the job involve a geometry optimization?

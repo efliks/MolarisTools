@@ -106,6 +106,8 @@ class ORCAOutputFile (object):
 
     def _Parse (self, reverse, convert):
         lines = open (self.inputfile)
+        # . Assume the job is failed until finding a "TERMINATED NORMALLY" statement
+        jobOK = False
         try:
             while True:
                 line = next (lines)
@@ -198,10 +200,18 @@ class ORCAOutputFile (object):
                         self.Efinal = tokens[-1] * HARTREE_TO_KCAL_MOL
                     else:
                         self.Efinal = tokens[-1]
+
+
+                # . Check for a failed job
+                elif line.count ("****ORCA TERMINATED NORMALLY****"):
+                    jobOK = True
         except StopIteration:
             pass
         # . Close the file
         lines.close ()
+        # . Check for a failed job
+        if not jobOK:
+            raise exceptions.StandardError ("Job %s did not end normally." % self.inputfile)
 
 
     @property
