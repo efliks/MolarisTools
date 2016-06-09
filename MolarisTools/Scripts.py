@@ -40,13 +40,18 @@ def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="deter
                 if atom.label in group.labels:
                     groupLabel = group.symbol
                     break
-            # . selectGroups looks the following:
+            # . If selectGroups is empty, select all atoms from all residues.
+            # . Otherwise, select only atoms belonging to specific groups in residues.
+            #
+            # . selectGroups has the following format:
             #       "residueLabel" : ("groupLabel1", "groupLabel2", )
             includeAtom = True
-            if selectGroups.has_key (residue.label):
-                groupLabels = selectGroups[residue.label]
-                if groupLabel not in groupLabels:
-                    includeAtom = False
+            if selectGroups != {}:
+                includeAtom = False
+                if selectGroups.has_key (residue.label):
+                    groupLabels = selectGroups[residue.label]
+                    if groupLabel in groupLabels:
+                        includeAtom = True
             if includeAtom:
                 print ("%sevb_atm    %2d    %6.3f    %2s        %6.3f    %2s    #  %6.3f  %4s  %4s    %1s" % (tabs, atom.serial, atom.charge, evbType, atom.charge, evbType, atom.charge, atom.atype, atom.label, groupLabel))
                 evbSerials.append (atom.serial)

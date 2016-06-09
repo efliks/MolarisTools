@@ -53,15 +53,17 @@ class MopacInputFile (object):
                 line      = next (lines)
                 if xyz:
                     tokens    = TokenizeLine (line, converters=[None, float, int, float, int, float, int])
-                    atomLabel = tokens[0]
-                    atomX, atomY, atomZ = tokens[1], tokens[3], tokens[5]
-                    atom = Atom (
-                        label   =   atomLabel   ,
-                        x       =   atomX       ,
-                        y       =   atomY       ,
-                        z       =   atomZ       ,
-                        )
-                    atoms.append (atom)
+                    # . There may be a blank line at the end
+                    if len (tokens) > 0:
+                        atomLabel = tokens[0]
+                        atomX, atomY, atomZ = tokens[1], tokens[3], tokens[5]
+                        atom = Atom (
+                            label   =   atomLabel   ,
+                            x       =   atomX       ,
+                            y       =   atomY       ,
+                            z       =   atomZ       ,
+                            )
+                        atoms.append (atom)
         except StopIteration:
             pass
         # . Close the file

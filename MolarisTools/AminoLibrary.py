@@ -88,6 +88,17 @@ class AminoComponent (object):
         else:
             return 0.
 
+    @property
+    def label (self):
+        if hasattr (self, "name"):
+            return self.name
+        return ""
+
+    @label.setter
+    def label (self, new):
+        if hasattr (self, "name"):
+            self.name = new
+
 
     def CalculateGroup (self, group):
         """Calculate the charge of a group."""
@@ -161,7 +172,7 @@ class AminoComponent (object):
         if title is None:
             if hasattr (self, "title"):
                 title = self.title
-        output.append ("%d%s%s" % (self.serial, self.name, ("  ! %s" % title) if title else ""))
+        output.append ("%3d%s%s" % (self.serial, self.name, ("  ! %s" % title) if title else ""))
 
         # . Prepare a list of atoms
         atoms = self.atoms
@@ -223,7 +234,10 @@ class AminoComponent (object):
 
         # . Write connecting atoms
         labela, labelb = self.connect
-        output.append ("%5d%5d  ! Connecting atoms" % (convert[labela], convert[labelb]))
+        clabels = ""
+        if labela != "" or labelb != "":
+            clabels = " (%s, %s)" % (labela, labelb)
+        output.append ("%5d%5d  ! Connecting atoms%s" % (convert[labela], convert[labelb], clabels))
 
         # . Write groups
         output.append ("%5d  ! Number of electroneutral groups" % self.ngroups)
@@ -528,35 +542,35 @@ class AminoComponent (object):
         return (types, unique, general)
 
 
-    def WriteTopology (self, writeTypes=False):
+    def WriteTopology (self, writeTypes=False, filename=""):
         """Write object's bonds, angles and dihedrals."""
-        print ("*** Bonds ***")
+        lines = ["*** Bonds ***", ]
         bondTypes, bondUnique = self._BondsToTypes ()
         for i, ((bonda, bondb), (typea, typeb)) in enumerate (zip (self.bonds, bondTypes), 1):
             types = ""
             if writeTypes:
                 types = " " * 10 + "# %-4s    %-4s" % (typea, typeb)
-            print ("%3d    %-4s    %-4s%s" % (i, bonda, bondb, types))
+            lines.append ("%3d    %-4s    %-4s%s" % (i, bonda, bondb, types))
         
         if hasattr (self, "angles"):
-            print ("*** Angles ***")
+            lines.append ("*** Angles ***")
             angleTypes, angleUnique = self._AnglesToTypes ()
             for i, ((anglea, angleb, anglec), (typea, typeb, typec)) in enumerate (zip (self.angles, angleTypes), 1):
                 types = ""
                 if writeTypes:
                     types = " " * 10 + "# %-4s    %-4s    %-4s" % (typea, typeb, typec)
-                print ("%3d    %-4s    %-4s    %-4s%s" % (i, anglea, angleb, anglec, types))
+                lines.append ("%3d    %-4s    %-4s    %-4s%s" % (i, anglea, angleb, anglec, types))
 
         if hasattr (self, "torsions"):
-            print ("*** Torsions ***")
+            lines.append ("*** Torsions ***")
             torsionTypes, torsionUnique, torsionGeneral = self._TorsionsToTypes ()
             for i, ((torsiona, torsionb, torsionc, torsiond), (typea, typeb, typec, typed)) in enumerate (zip (self.torsions, torsionTypes), 1):
                 types = ""
                 if writeTypes:
                     types = " " * 10 + "# %-4s    %-4s    %-4s    %-4s" % (typea, typeb, typec, typed)
-                print ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, torsiona, torsionb, torsionc, torsiond, types))
+                lines.append ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, torsiona, torsionb, torsionc, torsiond, types))
 
-            print ("*** General torsions ***")
+            lines.append ("*** General torsions ***")
             general      = []
             generalTypes = []
             for (torsiona, torsionb, torsionc, torsiond), (typea, typeb, typec, typed) in zip (self.torsions, torsionTypes):
@@ -570,31 +584,49 @@ class AminoComponent (object):
                 types = ""
                 if writeTypes:
                     types = " " * 10 + "# %-4s    %-4s    %-4s    %-4s" % ("@@", typeb, typec, "@@")
-                print ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, "@@", torsionb, torsionc, "@@", types))
+                lines.append ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, "@@", torsionb, torsionc, "@@", types))
+
+        if not filename:
+            for line in lines:
+                print line
+        else:
+            fo = open (filename, "w")
+            for line in lines:
+                fo.write (line + "\n")
+            fo.close ()
 
 
-    def WriteTypes (self):
+    def WriteTypes (self, filename=""):
         """Write object's types for bonds, angles and dihedrals."""
-        print ("*** Bond types ***")
+        lines = ["*** Bond types ***", ]
         bondTypes, bondUnique = self._BondsToTypes ()
         for i, (typea, typeb) in enumerate (bondUnique, 1):
-            print ("%3d    %-4s    %-4s" % (i, typea, typeb))
+            lines.append ("%3d    %-4s    %-4s" % (i, typea, typeb))
 
         if hasattr (self, "angles"):
-            print ("*** Angle types ***")
+            lines.append ("*** Angle types ***")
             angleTypes, angleUnique = self._AnglesToTypes ()
             for i, (typea, typeb, typec) in enumerate (angleUnique, 1):
-                print ("%3d    %-4s    %-4s    %-4s" % (i, typea, typeb, typec))
+                lines.append ("%3d    %-4s    %-4s    %-4s" % (i, typea, typeb, typec))
 
         if hasattr (self, "torsions"):
-            print ("*** Torsion types ***")
+            lines.append ("*** Torsion types ***")
             torsionTypes, torsionUnique, torsionGeneral = self._TorsionsToTypes ()
             for i, (typea, typeb, typec, typed) in enumerate (torsionUnique, 1):
-                print ("%3d    %-4s    %-4s    %-4s    %-4s" % (i, typea, typeb, typec, typed))
+                lines.append ("%3d    %-4s    %-4s    %-4s    %-4s" % (i, typea, typeb, typec, typed))
 
-            print ("*** General torsion types ***")
+            lines.append ("*** General torsion types ***")
             for i, (typeb, typec) in enumerate (torsionGeneral, 1):
-                print ("%3d    %-4s    %-4s    %-4s    %-4s" % (i, "@@", typeb, typec, "@@"))
+                lines.append ("%3d    %-4s    %-4s    %-4s    %-4s" % (i, "@@", typeb, typec, "@@"))
+
+        if not filename:
+            for line in lines:
+                print line
+        else:
+            fo = open (filename, "w")
+            for line in lines:
+                fo.write (line + "\n")
+            fo.close ()
 
 
 #===============================================================================

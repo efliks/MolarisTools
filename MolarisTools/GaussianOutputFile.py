@@ -215,9 +215,15 @@ class GaussianOutputFile (object):
                     atomsElectric  = []
                     for i in range (5):
                         next (lines)
-                    line = next (lines)
+                    line   = next (lines)
+                    positionIndex  = 0
                     while not line.count ("----"):
-                        tokens = TokenizeLine (line, converters=[float, float, float, float, None], reverse=True)
+                        # . A workaround for Ram
+                        try:
+                            tokens = TokenizeLine (line, converters=[float, float, float, float, None], reverse=True)
+                        except:
+                            (x, y, z) = positions[positionIndex]
+                            raise exceptions.StandardError ("Error reading electrostatic properties at coordinates (%.3f,  %.3f,  %.3f).\nUnreadable line:\n%s" % (x, y, z, line))
                         ez, ey, ex, potential = tokens[:4]
                         field  = (ex, ey, ez, potential)
                         if tokens[4] != "Atom":
@@ -227,6 +233,7 @@ class GaussianOutputFile (object):
                             # . Electrostatic potential and field on a nucleus
                             atomsElectric.append (field)
                         line   = next (lines)
+                        positionIndex += 1
                     self.atomsElectric = atomsElectric
 
                     # . Save point charges
