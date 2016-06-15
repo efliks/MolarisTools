@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #-------------------------------------------------------------------------------
 # . File      : caller_mopac.py
 # . Program   : MolarisTools
@@ -7,8 +7,7 @@
 #-------------------------------------------------------------------------------
 import sys, os
 
-# . Define a path to the MolarisTools library or comment this out and 
-# . place MolarisTools in the current directory
+# . Define a path to MolarisTools or comment this out and place it in the current directory
 sys.path.append (os.path.join (os.environ["HOME"], "devel", "MolarisTools"))
 
 

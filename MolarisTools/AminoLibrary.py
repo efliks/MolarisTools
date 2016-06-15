@@ -420,6 +420,8 @@ class AminoComponent (object):
                 print line
 
 
+    # . Bug alert:
+    # . In some cases, not all angles are generated - look this up
     def GenerateAngles (self, quiet=False):
         """Automatically generate a list of angles."""
         angles = []
@@ -443,7 +445,7 @@ class AminoComponent (object):
                             angles.append (angle)
         self.angles = angles
         if not quiet:
-            print ("# . Generated %d angles." % self.nangles)
+            print ("# . Generated %d angles" % self.nangles)
 
 
     def GenerateTorsions (self, quiet=False):
@@ -470,7 +472,7 @@ class AminoComponent (object):
                                 torsions.append (torsion)
             self.torsions = torsions
         if not quiet:
-            print ("# . Generated %d torsions." % self.ntorsions)
+            print ("# . Generated %d torsions" % self.ntorsions)
 
 
     def _BondsToTypes (self):

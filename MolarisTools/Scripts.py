@@ -5,13 +5,18 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from MolarisOutputFile      import MolarisOutputFile
-from AminoLibrary           import AminoLibrary
+from AminoLibrary           import AminoLibrary, AminoComponent, AminoGroup, AminoAtom
+from PDBFile                import PDBFile
 
-import os
+import os, math
 
 
-_DEFAULT_LIBRARY_FILE = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
-_DEFAULT_FORCE = 5.
+_DEFAULT_LIBRARY_FILE   = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
+_DEFAULT_FORCE          = 5.
+
+_DEFAULT_TOLERANCE      = 1.6
+_DEFAULT_TOLERANCE_LOW  = 0.85
+
 
 def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", )):
     """Generate a list of EVB atoms and bonds based on a Molaris output file."""
@@ -137,6 +142,118 @@ def DetermineBAT (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determin
                             if atom.label == torsion: break
                         serials.append (atom.serial)
                     print ("%4d    %4d    %4d    %4d    # %4s    %4s    %4s    %4s" % (serials[0], serials[1], serials[2], serials[3], torsiona, torsionb, torsionc, torsiond))
+
+
+def BondsFromDistances (atoms, tolerance=_DEFAULT_TOLERANCE, toleranceLow=_DEFAULT_TOLERANCE_LOW, logging=True):
+    """Generate a list of bonds based on distances between atoms."""
+    # . Construct a distance matrix
+    rows   = []
+    for i, (label, serial, x, y, z) in enumerate (atoms):
+        columns = []
+        for j, (otherLabel, otherSerial, otherX, otherY, otherZ) in enumerate (atoms):
+            if j < i:
+                distance = math.sqrt ((x - otherX) ** 2 + (y - otherY) ** 2 + (z - otherZ) ** 2)
+                columns.append (distance)
+            elif j == i:
+                columns.append (0.)
+            else:
+                break
+        rows.append (columns)
+    if logging:
+        print ("# . Distance matrix")
+        line = " " * 8
+        for atom in atoms:
+            line = "%s%6d" % (line, atom.serial)
+        print line
+        line = " " * 8
+        for atom in atoms:
+            line = "%s%6s" % (line, atom.label)
+        print line
+        for atom, row in zip (atoms, rows):
+            line = "%8s" % ("%3d %4s" % (atom.serial, atom.label))
+            for column in row:
+                line = "%s%6.2f" % (line, column)
+            print line
+    # . Search the distance matrix for bonds
+    # . TODO
+    # . Have a table of common bond lengths and replace tolerance by a percentage of
+    # . how much a bond can differ from its tabled value.
+    bonds = []
+    for i, row in enumerate (rows):
+        for j, column in enumerate (row):
+            if i != j:
+                if column <= tolerance:
+                    atoma = atoms[i]
+                    atomb = atoms[j]
+                    if column <= toleranceLow:
+                        if logging:
+                            print ("# . Warning: Atoms %s%d and %s%d are too close to each other." % (atoma.label, atoma.serial, atomb.label, atomb.serial))
+                    pair  = ((i, atoma.serial, atoma.label), (j, atomb.serial, atomb.label))
+                    bonds.append (pair)
+    if logging:
+        nbonds = len (bonds)
+        print ("# . Found %d bonds" % nbonds)
+        for i, ((indexa, seriala, labela), (indexb, serialb, labelb)) in enumerate (bonds, 1):
+            print ("%3d      %4s %3d    %4s %3d" % (i, labela, seriala, labelb, serialb))
+    return bonds
+
+
+def AminoComponents_FromPDB (filename, tolerance=_DEFAULT_TOLERANCE, toleranceLow=_DEFAULT_TOLERANCE_LOW, logging=True, verbose=True):
+    """Automatically generate components based on a PDB file."""
+    pdb        = PDBFile (filename)
+    components = []
+    for residue in pdb.residues:
+        if logging:
+            print ("*** Building component: %s %s %d ***" % (residue.chain, residue.label, residue.serial))
+        # . Generate unique atom labels
+        uniqueLabels = []
+        i = 1
+        for atom in residue.atoms:
+            label = atom.label
+            while label in uniqueLabels:
+                label = "%s%d" % (label, i)
+                i += 1
+            uniqueLabels.append (label)
+        # . Generate atoms
+        aminoAtoms = []
+        for atom, uniqueLabel in zip (residue.atoms, uniqueLabels):
+            atype = "%1s0" % atom.label[0]
+            aminoAtom = AminoAtom (
+                atomLabel  = uniqueLabel ,
+                atomType   = atype       ,
+                atomCharge = 0.          ,
+                )
+            aminoAtoms.append (aminoAtom)
+        # . Generate bonds
+        bonds       = BondsFromDistances (residue.atoms, logging=logging)
+        aminoBonds  = []
+        for (i, seriala, labela), (j, serialb, labelb) in bonds:
+            pair    = (uniqueLabels[i], uniqueLabels[j])
+            aminoBonds.append (pair)
+        # . Generate groups
+        natoms     = len (residue.atoms)
+        aminoGroup = AminoGroup (
+            natoms       =  natoms           ,
+            centralAtom  =  uniqueLabels[0]  ,
+            labels       =  uniqueLabels     ,
+            radius       =  3.               ,
+            symbol       =  "A"              ,
+            )
+        aminoGroups = [aminoGroup, ]
+        # . Finally, generate a component
+        component = AminoComponent (
+            serial  =   residue.serial  ,
+            name    =   residue.label   ,
+            atoms   =   aminoAtoms      ,
+            bonds   =   aminoBonds      ,
+            groups  =   aminoGroups     ,
+            connect =   ("", "")        ,
+            logging =   logging         ,
+            verbose =   verbose         ,
+            title   =   "Automatically generated from %s %s %d" % (residue.chain, residue.label, residue.serial) ,
+            )
+        components.append (component)
+    return components
 
 
 #===============================================================================
