@@ -420,8 +420,6 @@ class AminoComponent (object):
                 print line
 
 
-    # . Bug alert:
-    # . In some cases, not all angles are generated - look this up
     def GenerateAngles (self, quiet=False):
         """Automatically generate a list of angles."""
         angles = []
@@ -431,17 +429,26 @@ class AminoComponent (object):
             for j, (othera, otherb) in enumerate (self.bonds):
                 if i != j:
                     angle = None
-                    if   bonda == othera:
-                        angle = (bondb, bonda, otherb)
+                    #   (a, b)
+                    #      (c, d)
+                    if   bondb == othera:
+                        angle = (bonda, bondb, otherb)
+                    #      (a, b)
+                    #   (c, d)
                     elif bonda == otherb:
                         angle = (othera, bonda, bondb)
-                    elif bondb == othera:
-                        angle = (bonda, othera, otherb)
-                    elif bondb == othera:
+                    #   (a, b)
+                    #      (d, c)
+                    elif bondb == otherb:
                         angle = (bonda, bondb, othera)
+                    #      (a, b)
+                    #   (d, c)
+                    elif bonda == othera:
+                        angle = (otherb, bonda, bondb)
                     if angle:
                         (a, b, c) = angle
-                        if ((a, b, c) not in angles) and ((c, b, a) not in angles):
+                        elgna = (c, b, a)
+                        if (angle not in angles) and (elgna not in angles):
                             angles.append (angle)
         self.angles = angles
         if not quiet:
@@ -454,21 +461,30 @@ class AminoComponent (object):
             torsions = []
             # . Outer loop
             for i, (anglea, angleb, anglec) in enumerate (self.angles):
-                # . Inner loop: check the first pair of atoms
+                # . Inner loop
                 for j, (othera, otherb, otherc) in enumerate (self.angles):
                     if i != j:
-                        if (anglea == otherb) and (angleb == otherc):
-                            torsion      = (othera, anglea, angleb, anglec)
+                        torsion = None
+                        #   (a, b, c)
+                        #      (d, e, f)
+                        if   (angleb == othera) and (anglec == otherb):
+                            torsion = (anglea, angleb, anglec, otherc)
+                        #      (a, b, c)
+                        #   (d, e, f)
+                        elif (anglea == otherb) and (angleb == otherc):
+                            torsion = (othera, anglea, angleb, anglec)
+                        #   (a, b, c)
+                        #      (f, e, d)
+                        elif (angleb == otherc) and (anglec == otherb):
+                            torsion = (anglea, angleb, anglec, othera)
+                        #      (a, b, c)
+                        #   (f, e, d)
+                        elif (anglea == otherb) and (angleb == otherc):
+                            torsion = (otherc, anglea, angleb, anglec)
+                        if torsion:
                             (a, b, c, d) = torsion
-                            if ((a, b, c, d) not in torsions) and ((d, c, b, a) not in torsions):
-                                torsions.append (torsion)
-                # . Inner loop: check the second pair of atoms
-                for j, (othera, otherb, otherc) in enumerate (self.angles):
-                    if i != j:
-                        if (angleb == othera) and (anglec == otherb):
-                            torsion      = (anglea, angleb, anglec, otherc)
-                            (a, b, c, d) = torsion
-                            if ((a, b, c, d) not in torsions) and ((d, c, b, a) not in torsions):
+                            noisrot = (d, c, b, a)
+                            if (torsion not in torsions) and (noisrot not in torsions):
                                 torsions.append (torsion)
             self.torsions = torsions
         if not quiet:
