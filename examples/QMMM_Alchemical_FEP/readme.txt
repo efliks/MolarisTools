@@ -11,6 +11,6 @@ The reason for separating these files is that we want to take advantage of resta
 calculation of orbitals from a previous QM run. Since the two states differ in the 
 composition of atoms, use of the same checkpoint file would lead to a mess.
 
-Mikolaj Feliks
 --------------
-Wed Jun 15 15:38:33 PDT 2016
+Mikolaj Feliks
+Thu Jun 16 17:49:26 PDT 2016

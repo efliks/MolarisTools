@@ -11,4 +11,5 @@ export SOLVENT_OPT=${CUSTOM_PATH}/solvent.opt
 export PDB_CONECT=${CUSTOM_PATH}/pdb_dictionary
 #===================================================
 
-for f in evb_heat_*inp ; do molaris_hpc9.15 $f > `basename $f .inp`.out ; done
+f=fep.inp
+molaris_hpc9.15 $f > `basename $f .inp`.out

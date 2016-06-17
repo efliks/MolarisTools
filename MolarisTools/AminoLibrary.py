@@ -15,8 +15,9 @@
 #                     /       |      \
 #              AminoGroups  bonds  AminoAtoms
 
-from    Utilities import TokenizeLine
-import  collections, exceptions
+from    Utilities           import TokenizeLine
+from    ParametersLibrary   import ParametersLibrary
+import  collections, exceptions, os
 
 
 AminoAtom  = collections.namedtuple ("Atom"  , "atomLabel  atomType  atomCharge")
@@ -614,28 +615,63 @@ class AminoComponent (object):
             fo.close ()
 
 
-    def WriteTypes (self, filename=""):
+    def WriteTypes (self, filename="", parameters=None):
         """Write object's types for bonds, angles and dihedrals."""
+        includeParameters = isinstance (parameters, ParametersLibrary)
+
         lines = ["*** Bond types ***", ]
         bondTypes, bondUnique = self._BondsToTypes ()
         for i, (typea, typeb) in enumerate (bondUnique, 1):
-            lines.append ("%3d    %-4s    %-4s" % (i, typea, typeb))
+            par = ""
+            if includeParameters:
+                bond = parameters.GetBond (typea, typeb)
+                if bond:
+                    par = "    %6.1f    %6.2f" % (bond.k, bond.r0)
+            lines.append ("%3d    %-4s    %-4s%s" % (i, typea, typeb, par))
 
         if hasattr (self, "angles"):
             lines.append ("*** Angle types ***")
             angleTypes, angleUnique = self._AnglesToTypes ()
             for i, (typea, typeb, typec) in enumerate (angleUnique, 1):
-                lines.append ("%3d    %-4s    %-4s    %-4s" % (i, typea, typeb, typec))
+                par = ""
+                if includeParameters:
+                    angle = parameters.GetAngle (typea, typeb, typec)
+                    if angle:
+                        par = "    %6.1f    %6.2f" % (angle.k, angle.r0)
+                lines.append ("%3d    %-4s    %-4s    %-4s%s" % (i, typea, typeb, typec, par))
 
         if hasattr (self, "torsions"):
             lines.append ("*** Torsion types ***")
             torsionTypes, torsionUnique, torsionGeneral = self._TorsionsToTypes ()
             for i, (typea, typeb, typec, typed) in enumerate (torsionUnique, 1):
-                lines.append ("%3d    %-4s    %-4s    %-4s    %-4s" % (i, typea, typeb, typec, typed))
+                par = ""
+                if includeParameters:
+                    torsion = parameters.GetTorsion (typeb, typec)
+                    if torsion:
+                        par = "    %1d    %6.2f    %6.1f" % (torsion.periodicity, torsion.k, torsion.phase)
+                lines.append ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, typea, typeb, typec, typed, par))
 
             lines.append ("*** General torsion types ***")
             for i, (typeb, typec) in enumerate (torsionGeneral, 1):
-                lines.append ("%3d    %-4s    %-4s    %-4s    %-4s" % (i, "@@", typeb, typec, "@@"))
+                par = ""
+                if includeParameters:
+                    torsion = parameters.GetTorsion (typeb, typec)
+                    if torsion:
+                        par = "    %1d    %6.2f    %6.1f" % (torsion.periodicity, torsion.k, torsion.phase)
+                lines.append ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, "@@", typeb, typec, "@@", par))
+
+        lines.append ("*** Van der Waals and mass types ***")
+        atomUnique = []
+        for atom in self.atoms:
+            if atom.atomType not in atomUnique:
+                atomUnique.append (atom.atomType)
+        for i, atomType in enumerate (atomUnique, 1):
+            par = ""
+            if includeParameters:
+                vdw = parameters.GetVDW (atomType)
+                if vdw:
+                    par = "    %8.1f    %8.1f    %6.2f" % (vdw.repulsive, vdw.attractive, vdw.mass)
+            lines.append ("%3d    %-4s%s" % (i, atomType, par))
 
         if not filename:
             for line in lines:
@@ -648,10 +684,13 @@ class AminoComponent (object):
 
 
 #===============================================================================
+_DEFAULT_LIBRARY_FILE   = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
+
+
 class AminoLibrary (object):
     """A class to represent data from the Molaris amino98.lib file."""
 
-    def __init__ (self, filename="amino98_custom.lib", logging=True, reorder=True, unique=False, verbose=False):
+    def __init__ (self, filename=_DEFAULT_LIBRARY_FILE, logging=True, reorder=True, unique=False, verbose=False):
         """Constructor."""
         self.filename = filename
         self._Parse (logging=logging, reorder=reorder, unique=unique, verbose=verbose)
