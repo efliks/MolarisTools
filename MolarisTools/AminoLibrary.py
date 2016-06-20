@@ -735,8 +735,13 @@ class AminoLibrary (object):
         return None
 
 
+    def has_key (self, key):
+        """Checks for a component in the library."""
+        return self.__contains__ (key)
+
+
     def __contains__ (self, key):
-        """Check if a site is in the library."""
+        """Checks for a component in the library."""
         component = self._FindComponent (key)
         if component:
             return True
@@ -747,7 +752,7 @@ class AminoLibrary (object):
         """Find and return a component from the library."""
         component = self._FindComponent (key)
         if not component:
-            raise exceptions.StandardError ("Site %s not found in the library." % key)
+            raise exceptions.StandardError ("Component %s not found in the library." % key)
         return component
 
 
