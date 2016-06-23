@@ -35,7 +35,7 @@ class MolarisAtomsFile (object):
             print ("%2s    %16.10f    %16.10f    %16.10f    %16.10f" % (qm.label, qm.x, qm.y, qm.z, 332. * elpot))
 
 
-    def __init__ (self, filename="atoms.inp", replaceSymbols=None):
+    def __init__ (self, filename="mol.in", replaceSymbols=None):
         """Constructor."""
         self.inputfile      = filename
         self.replaceSymbols = replaceSymbols
@@ -71,30 +71,45 @@ class MolarisAtomsFile (object):
 
 
     def _Parse (self):
-        lines   = open (self.inputfile)
-        line    = next (lines)
-        # . Get step number and total energy
-        step, energy = TokenizeLine (line, converters=[int, float])
-        self.mdstep  = step
-        self.Etot    = energy
+        lines = open (self.inputfile)
         try:
             while True:
                 line = next (lines)
+                # . Read the header
+                if   line.count ("MD step"):
+                    line    = line[:line.find ("MD step")]
+                    tokens  = TokenizeLine (line)
+                    if len (tokens) != 9:
+                        # . Old format
+                        tokens       = TokenizeLine (line, converters=[int, float, float, float, float, float, float, int])
+                        step, energy = tokens[:2]
+                    else:
+                        # . New format
+                        tokens       = TokenizeLine (line, converters=[int, float, float, float, float, float, float, int, int])
+                        (step, energy), stateID = tokens[:2], tokens[-1]
+                        self.stateID = stateID
+                    self.mdstep  = step
+                    self.Etot    = energy
+
                 # . Read the QM section
-                if line.count ("# of qmmm atoms"):
+                elif line.count ("# of qmmm atoms"):
                     nquantum, nlink = TokenizeLine (line, converters=[int, int])
                     # . Read QM atoms proper
                     self.qatoms = self._ReadAtoms (lines, nquantum)
                     # . Read QM link atoms
                     self.latoms = self._ReadAtoms (lines, nlink)
+
                 elif line.count ("# of total frozen protein atoms, # of groups in Region I`"):
                     pass
+
                 elif line.count ("# of frozen water atoms in Region I`"):
                     pass
+
                 # . Read the protein section
                 elif line.count ("# of non-frozen protein atoms in Region II"):
                     nprot = TokenizeLine (line, converters=[int])[0]
                     self.patoms = self._ReadAtoms (lines, nprot, includeCharge=True)
+
                 # . Read the free water section
                 elif line.count ("# of non-frozen water atoms in the system"):
                     nwater = TokenizeLine (line, converters=[int])[0]

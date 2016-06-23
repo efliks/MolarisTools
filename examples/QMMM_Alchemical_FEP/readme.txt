@@ -1,4 +1,4 @@
-This example shows how to run a QM(ai)/MM alchemical mutagenesis.
+This example shows how to run QM(ai)/MM alchemical mutagenesis.
 
 On going from state I to state II, two hydrogen atoms are replaced by dummy atoms 
 and a carbon atom is replaced by an oxygen atom.
@@ -13,4 +13,4 @@ composition of atoms, use of the same checkpoint file would lead to a mess.
 
 --------------
 Mikolaj Feliks
-Thu Jun 16 17:49:26 PDT 2016
+Thu Jun 23 12:40:41 PDT 2016
