@@ -4,8 +4,7 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-from    AminoLibrary    import AminoLibrary
-import collections
+import  collections
 
 PDBChain   = collections.namedtuple ("PDBChain"   , "label  residues")
 PDBResidue = collections.namedtuple ("PDBResidue" , "label  serial  chain  atoms")
@@ -124,47 +123,46 @@ class PDBFile (object):
 
     def CheckForMissingAtoms (self, library, includeHydrogens=False):
         """Check all residues if they are missing any atoms."""
-        if isinstance (library, AminoLibrary):
-            for residue in self.residues:
-                if library.has_key (residue.label):
-                    # . Collect labels from the library
-                    component     = library[residue.label]
-                    libraryLabels = []
-                    for atom in component.atoms:
-                        libraryLabels.append (atom.atomLabel)
-                    # . Collect labels from PDB atoms
-                    pdbLabels     = []
-                    for atom in residue.atoms:
-                        pdbLabels.append (atom.label)
-                    # . Check if all labels are present in the PDB file
-                    missing   = []
-                    for libraryLabel in libraryLabels:
-                        if not includeHydrogens:
-                            if libraryLabel[0] == "H":
-                                continue
-                        if libraryLabel not in pdbLabels:
-                            missing.append (libraryLabel)
-                    if self.logLevel > 0:
-                        if missing:
-                            nmissing = len (missing)
-                            atoms    = " ".join (missing)
-                            print ("Residue %s %s %d has %d missing atom%s: %s" % (residue.chain, residue.label, residue.serial, nmissing, "s" if nmissing > 1 else "", atoms))
-                    # . Check for redundant labels in the PDB file
-                    redundant = []
-                    for pdbLabel in pdbLabels:
-                        if not includeHydrogens:
-                            if pdbLabel[0] == "H":
-                                continue
-                        if pdbLabel not in libraryLabels:
-                            redundant.append (pdbLabel)
-                    if self.logLevel > 0:
-                        if redundant:
-                            nredundant = len (redundant)
-                            atoms      = " ".join (redundant)
-                            print ("Residue %s %s %d has %d redundant atom%s: %s" % (residue.chain, residue.label, residue.serial, nredundant, "s" if nredundant > 1 else "", atoms))
-                else:
-                    if self.logLevel > 0:
-                        print ("Residue %s %s %d not found in the library." % (residue.chain, residue.label, residue.serial))
+        for residue in self.residues:
+            if library.has_key (residue.label):
+                # . Collect labels from the library
+                component     = library[residue.label]
+                libraryLabels = []
+                for atom in component.atoms:
+                    libraryLabels.append (atom.atomLabel)
+                # . Collect labels from PDB atoms
+                pdbLabels     = []
+                for atom in residue.atoms:
+                    pdbLabels.append (atom.label)
+                # . Check if all labels are present in the PDB file
+                missing   = []
+                for libraryLabel in libraryLabels:
+                    if not includeHydrogens:
+                        if libraryLabel[0] == "H":
+                            continue
+                    if libraryLabel not in pdbLabels:
+                        missing.append (libraryLabel)
+                if self.logLevel > 0:
+                    if missing:
+                        nmissing = len (missing)
+                        atoms    = " ".join (missing)
+                        print ("Residue %s %s %d has %d missing atom%s: %s" % (residue.chain, residue.label, residue.serial, nmissing, "s" if nmissing > 1 else "", atoms))
+                # . Check for redundant labels in the PDB file
+                redundant = []
+                for pdbLabel in pdbLabels:
+                    if not includeHydrogens:
+                        if pdbLabel[0] == "H":
+                            continue
+                    if pdbLabel not in libraryLabels:
+                        redundant.append (pdbLabel)
+                if self.logLevel > 0:
+                    if redundant:
+                        nredundant = len (redundant)
+                        atoms      = " ".join (redundant)
+                        print ("Residue %s %s %d has %d redundant atom%s: %s" % (residue.chain, residue.label, residue.serial, nredundant, "s" if nredundant > 1 else "", atoms))
+            else:
+                if self.logLevel > 0:
+                    print ("Residue %s %s %d not found in the library." % (residue.chain, residue.label, residue.serial))
 
 
     @property

@@ -1,0 +1,23 @@
+-----------------------------------------
+  1MLT  ! Automatically generated from   MLT 1
+    8  ! Number of atoms
+    1 PA     P0   0.81   ! A
+    2 O1A    O0  -0.84   ! A
+    3 O2A    O0  -0.84   ! A
+    4 O3A    O0  -0.83   ! A
+    5 CA     C0  -0.47   ! A
+    6 H1     H0   0.10   ! A
+    7 H2     H0   0.10   ! A
+    8 H3     H0  -0.03   ! A
+    3  ! Number of bonds
+    5    6    !   CA   H1
+    5    7    !   CA   H2
+    5    8    !   CA   H3
+    0    0  ! Connecting atoms
+    1  ! Number of electroneutral groups
+    8    5   5.0
+    1  2  3  4  5  6  7  8    ! Group A: -2.0000
+    0  ! Total charge: -2.0000
+-----------------------------------------
+    0
+-----------------------------------------

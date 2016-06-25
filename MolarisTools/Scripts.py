@@ -5,11 +5,11 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from MolarisOutputFile      import MolarisOutputFile
-from AminoLibrary           import AminoLibrary, AminoComponent, AminoGroup, AminoAtom
-from PDBFile                import PDBFile, PDBResidue
-from GaussianOutputFile     import GaussianOutputFile
+from AminoComponent         import AminoComponent, AminoGroup, AminoAtom
+from AminoLibrary           import AminoLibrary
+from PDBFile                import PDBFile
 
-import os, math, subprocess, exceptions
+import os, math
 
 
 _DEFAULT_LIBRARY_FILE   = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
@@ -17,11 +17,6 @@ _DEFAULT_FORCE          = 5.
 
 _DEFAULT_TOLERANCE      = 1.6
 _DEFAULT_TOLERANCE_LOW  = 0.85
-
-_DEFAULT_GAUSSIAN_PATH  =  os.path.join (os.environ["HOME"], "local", "opt", "g03", "g03")
-_DEFAULT_METHOD         =  "B3LYP/6-31G*"
-_DEFAULT_SCHEME         =  "MERZKOLLMAN"
-_DEFAULT_DIELECTRIC     =  78.4
 
 
 def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", )):
@@ -260,77 +255,6 @@ def AminoComponents_FromPDB (filename, tolerance=_DEFAULT_TOLERANCE, toleranceLo
             )
         components.append (component)
     return components
-
-
-# def AminoComponent_CalculateCharges (component, geometry, ncpu=1, charge=0, multiplicity=1, method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, cosmo=False, dielectric=_DEFAULT_DIELECTRIC, pathGaussian=_DEFAULT_GAUSSIAN_PATH):
-#     """Calculate quantum chemical charges in Gaussian."""
-#     if not isinstance (component, "AminoComponent"):
-#         raise exceptions.StandardError ("Not an amino component.")
-# 
-#     # . Prepare filenames
-#     fError       =  "job_%s.err" % component.label
-#     fInput       =  "job_%s.inp" % component.label
-#     fOutput      =  "job_%s.log" % component.label
-#     fCheckpoint  =  "job_%s.chk" % component.label
-# 
-#     # . Run when there is no output file    
-#     if not os.path.exists (fOutput):
-#         lines   = []
-#         if ncpu > 1:
-#             lines.append ("%%NProcShared=%d\n" % ncpu)
-#         
-#         # . Use 2 GB of memory per CPU
-#         memory  = ncpu * 2
-#         lines.append ("%%mem=%dgb\n" % memory)
-#         lines.append ("%%chk=%s\n"   % fCheckpoint)
-#         
-#         # . Set up a charge scheme
-#         convert = {
-#             "CHELPG"       :   "POP=CHELPG" ,
-#             "MULLIKEN"     :   ""           ,
-#             "MERZKOLLMAN"  :   "POP=MK"     , }
-#         if not convert.has_key (scheme):
-#             raise exceptions.StandardError ("Charge scheme %s is undefined." % scheme)
-#         chargeScheme = convert[scheme]
-#         
-#         # . Write header
-#         background = "SCRF=(Solvent=Water,Read)" if cosmo                        else ""
-#         restart    = "Guess=Read"                if os.path.exists (fCheckpoint) else ""
-#         keywords   = (method, "NoSymm", restart, background, chargeScheme)
-#         header     = " ".join (keywords)
-#         lines.append ("#P " + header + "\n\n")
-#        
-#         # . Write geometry
-#         if not isinstance (geometry, "PDBResidue"):
-#             raise exceptions.StandardError ("Not a PDB residue.")
-#        
-#         for atom in geometry.atoms:
-#             atomSymbol = atom.label[0]
-#             lines.append ("%2s    %16.10f    %16.10f    %16.10f\n" % (atomSymbol, atom.x, atom.y, atom.z))
-#         lines.append ("\n")
-#        
-#         # . If cosmo=True, write epsilon
-#         if cosmo:
-#             lines.append ("eps=%f\n\n" % dielectric)
-# 
-#         # . Run Gaussian
-#         fi = open (fInput, "w")
-#         for line in lines:
-#             fi.write (line)
-#         fi.close ()
-#         fe = open (fError, "w")
-#         subprocess.check_call ([pathGaussian, fInput], stdout=fe, stderr=fe)
-#         fe.close ()
-# 
-#     # . Read Gaussian putput file
-#     gaussian = GaussianOutputFile (fOutput)
-# 
-#     # . Assign charges to amino component
-#     convert = {
-#         "MULLIKEN"     :  gaussian.charges      ,
-#         "MERZKOLLMAN"  :  gaussian.espcharges   ,
-#         "CHELPG"       :  gaussian.espcharges   , }
-#     charges = convert[scheme]
 
 
 #===============================================================================

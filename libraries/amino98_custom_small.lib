@@ -806,5 +806,113 @@
     1  2  3    ! Group A: 0.0000
     0  ! Total charge: 0.0000
 -----------------------------------------
+564WAA  ! Less polar water
+    3  ! Number of atoms
+    1 OH     O2  -0.40   ! A
+    2 H1     H2   0.20   ! A
+    3 H2     H2   0.20   ! A
+    2  ! Number of bonds
+    1    2    !   OH   H1
+    1    3    !   OH   H2
+    0    0  ! Connecting atoms
+    1  ! Number of electroneutral groups
+    3    1   3.0
+    1  2  3    ! Group A: 0.0000
+    0  ! Total charge: 0.0000
+-----------------------------------------
+565MDL  ! Propane
+   11  ! Number of atoms
+    1 C1     CT  -0.30   ! A
+    2 H11    H4   0.10   ! A
+    3 H12    H4   0.10   ! A
+    4 H13    H4   0.10   ! A
+    5 C2     CT  -0.20      ! B
+    6 H21    H4   0.10      ! B
+    7 H22    H4   0.10      ! B
+    8 C3     CT  -0.30   ! C
+    9 H31    H4   0.10   ! C
+   10 H32    H4   0.10   ! C
+   11 H33    H4   0.10   ! C
+   10  ! Number of bonds
+    1    2    !   C1  H11
+    1    3    !   C1  H12
+    1    4    !   C1  H13
+    1    5    !   C1   C2
+    5    6    !   C2  H21
+    5    7    !   C2  H22
+    5    8    !   C2   C3
+    8    9    !   C3  H31
+    8   10    !   C3  H32
+    8   11    !   C3  H33
+    0    0  ! Connecting atoms
+    3  ! Number of electroneutral groups
+    4    1   2.0
+    1  2  3  4    ! Group A: 0.0000
+    3    5   2.0
+    5  6  7    ! Group B: 0.0000
+    4    8   2.0
+    8  9  10  11    ! Group C: 0.0000
+    0  ! Total charge: 0.0000
+-----------------------------------------
+566MLI  ! Ligand for testing alchemical QM/MM
+   11  ! Number of atoms
+    1 PA     P4   0.40   ! A
+    2 O1A    O3  -0.80   ! A
+    3 O2A    O3  -0.80   ! A
+    4 O3A    O3  -0.80   ! A
+    5 CA     CT  -0.20      ! B
+    6 H1A    H4   0.10      ! B
+    7 H2A    H4   0.10      ! B
+    8 CB     CT  -0.30   ! C
+    9 H1B    H4   0.10   ! C
+   10 H2B    H4   0.10   ! C
+   11 H3B    H4   0.10   ! C
+   10  ! Number of bonds
+    1    2    !   PA  O1A
+    1    3    !   PA  O2A
+    1    4    !   PA  O3A
+    1    5    !   PA   CA
+    5    6    !   CA  H1A
+    5    7    !   CA  H2A
+    5    8    !   CA   CB
+    8    9    !   CB  H1B
+    8   10    !   CB  H2B
+    8   11    !   CB  H3B
+    0    0  ! Connecting atoms
+    3  ! Number of electroneutral groups
+    4    1   2.0
+    1  2  3  4    ! Group A: -2.0000
+    3    5   1.5
+    5  6  7    ! Group B: 0.0000
+    4    8   2.0
+    8  9  10  11    ! Group C: 0.0000
+    0  ! Total charge: -2.0000
+-----------------------------------------
+567MLT  ! Smaller ligand for testing alchemical QM/MM
+    8  ! Number of atoms
+    1 PA     P4   0.40   ! A
+    2 O1A    O3  -0.80   ! A
+    3 O2A    O3  -0.80   ! A
+    4 O3A    O3  -0.80   ! A
+    5 CA     CT  -0.30      ! B
+    6 H1     H4   0.10      ! B
+    7 H2     H4   0.10      ! B
+    8 H3     H4   0.10      ! B
+    7  ! Number of bonds
+    1    2    !   PA  O1A
+    1    3    !   PA  O2A
+    1    4    !   PA  O3A
+    1    5    !   PA   CA
+    5    6    !   CA  H1A
+    5    7    !   CA  H2A
+    5    8    !   CA  H3A
+    0    0  ! Connecting atoms
+    2  ! Number of electroneutral groups
+    4    1   2.0
+    1  2  3  4    ! Group A: -2.0000
+    4    5   1.5
+    5  6  7  8    ! Group B: 0.0000
+    0  ! Total charge: -2.0000
+-----------------------------------------
     0
 -----------------------------------------

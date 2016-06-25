@@ -190,7 +190,7 @@ class GaussianOutputFile (object):
                     for i in range (3):
                         next (lines)
                     line = next (lines)
-                    while not line.count ("----"):
+                    while (line.startswith ("      Atomic Center") or line.startswith ("      Read-in Center")):
                         # . Fixed format!
                         x   =   float (line[32:42])
                         y   =   float (line[42:52])
@@ -213,27 +213,25 @@ class GaussianOutputFile (object):
                 elif line.count ("Electrostatic Properties (Atomic Units)"):
                     pointsElectric = []
                     atomsElectric  = []
-                    for i in range (5):
-                        next (lines)
-                    line   = next (lines)
-                    positionIndex  = 0
+                    for i in range (6):
+                        line = next (lines)
                     while not line.count ("----"):
-                        # . A workaround for Ram
-                        try:
-                            tokens = TokenizeLine (line, converters=[float, float, float, float, None], reverse=True)
-                        except:
-                            (x, y, z) = positions[positionIndex]
-                            raise exceptions.StandardError ("Error reading electrostatic properties at coordinates (%.3f,  %.3f,  %.3f).\nUnreadable line:\n%s" % (x, y, z, line))
-                        ez, ey, ex, potential = tokens[:4]
-                        field  = (ex, ey, ez, potential)
-                        if tokens[4] != "Atom":
-                            # . Electrostatic potential and field on a point charge
-                            pointsElectric.append (field)
+                        onNucleus = True if line.count ("Atom") else False
+                        line      = line.replace ("Atom", "")
+                        tokens    = TokenizeLine (line, converters=[int, float, float, float, float])
+                        if len (tokens) != 5:
+                            # . Electric field components may not always be there. In such cases, set all to zero.
+                            potential, (ex, ey, ez) = tokens[1], (0., 0., 0.)
                         else:
+                            potential, (ex, ey, ez) = tokens[1], tokens[2:]
+                        field  = (ex, ey, ez, potential)
+                        if onNucleus:
                             # . Electrostatic potential and field on a nucleus
                             atomsElectric.append (field)
+                        else:
+                            # . Electrostatic potential and field on a point charge
+                            pointsElectric.append (field)
                         line   = next (lines)
-                        positionIndex += 1
                     self.atomsElectric = atomsElectric
 
                     # . Save point charges

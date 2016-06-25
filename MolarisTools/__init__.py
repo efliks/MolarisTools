@@ -19,7 +19,7 @@ from DetermineAtoms      import DetermineAtoms
 from DistanceFile        import DistanceFile
 from FVXFile             import FVXFile
 from ParametersLibrary   import ParametersLibrary
-from AminoLibrary        import AminoAtom, AminoGroup, AminoComponent, AminoLibrary
+from AminoLibrary        import AminoLibrary
 from EVBLibrary          import EVBLibrary
 
 # . Handling of other files
@@ -33,4 +33,4 @@ from PDBFile             import PDBFile
 
 # . Miscellaneous
 from CHELPGCharges       import CHELPGCharges
-from Scripts             import GenerateEVBList, DetermineBAT, BondsFromDistances, AminoComponents_FromPDB  #, AminoComponent_CalculateCharges
+from Scripts             import GenerateEVBList, DetermineBAT, BondsFromDistances, AminoComponents_FromPDB
