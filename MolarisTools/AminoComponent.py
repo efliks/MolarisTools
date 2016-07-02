@@ -458,25 +458,25 @@ class AminoComponent (object):
             # . Outer loop
             for i, (anglea, angleb, anglec) in enumerate (self.angles):
                 # . Inner loop
-                for j, (othera, otherb, otherc) in enumerate (self.angles):
+                for j, (otherd, othere, otherf) in enumerate (self.angles):
                     if i != j:
                         torsion = None
                         #   (a, b, c)
                         #      (d, e, f)
-                        if   (angleb == othera) and (anglec == otherb):
-                            torsion = (anglea, angleb, anglec, otherc)
+                        if   (angleb == otherd) and (anglec == othere):
+                            torsion = (anglea, angleb, anglec, otherf)
                         #      (a, b, c)
                         #   (d, e, f)
-                        elif (anglea == otherb) and (angleb == otherc):
-                            torsion = (othera, anglea, angleb, anglec)
+                        elif (anglea == othere) and (angleb == otherf):
+                            torsion = (otherd, anglea, angleb, anglec)
                         #   (a, b, c)
                         #      (f, e, d)
-                        elif (angleb == otherc) and (anglec == otherb):
-                            torsion = (anglea, angleb, anglec, othera)
+                        elif (angleb == otherf) and (anglec == othere):
+                            torsion = (anglea, angleb, anglec, otherd)
                         #      (a, b, c)
                         #   (f, e, d)
-                        elif (anglea == otherb) and (angleb == otherc):
-                            torsion = (otherc, anglea, angleb, anglec)
+                        elif (anglea == othere) and (angleb == otherd):
+                            torsion = (otherf, anglea, angleb, anglec)
                         if torsion:
                             (a, b, c, d) = torsion
                             noisrot = (d, c, b, a)
@@ -678,7 +678,7 @@ class AminoComponent (object):
             fo.close ()
 
 
-    def CalculateCharges (self, pdbResidue, ncpu=1, charge=0, multiplicity=1, method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, cosmo=False, dielectric=_DEFAULT_DIELECTRIC, pathGaussian=_DEFAULT_GAUSSIAN_PATH, logging=True):
+    def CalculateCharges (self, pdbResidue, ncpu=1, memory=1, charge=0, multiplicity=1, method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, cosmo=False, dielectric=_DEFAULT_DIELECTRIC, pathGaussian=_DEFAULT_GAUSSIAN_PATH, logging=True):
         """Calculate quantum chemical charges in Gaussian."""
     
         # . Do some initial checks
@@ -711,8 +711,6 @@ class AminoComponent (object):
             lines   = []
             if ncpu > 1:
                 lines.append ("%%NProcShared=%d\n" % ncpu)
-            # . Use 2 GB of memory per CPU
-            memory  = ncpu * 2
             lines.append ("%%mem=%dgb\n" % memory)
             lines.append ("%%chk=%s\n"   % fCheckpoint)
             

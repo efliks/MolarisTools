@@ -4,7 +4,7 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-import exceptions
+import exceptions, cPickle
 
 
 def TokenizeLine (line, converters=None, separator=None, reverse=False):
@@ -42,10 +42,26 @@ def TokenizeLine (line, converters=None, separator=None, reverse=False):
                 tokens[i] = new
     return tokens
 
+
 def WriteData (data, filename, append=False):
-        output = open (filename, "a" if append else "w")
-        output.writelines (data)
-        output.close ()
+    outFile = open (filename, "a" if append else "w")
+    outFile.writelines (data)
+    outFile.close ()
+
+
+def Pickle (obj, filename):
+    """Pickle an object."""
+    outFile = open (filename, "w")
+    cPickle.dump (obj, outFile)
+    outFile.close ()
+
+
+def Unpickle (filename):
+    """Unpickle an object."""
+    inFile = open (filename, "r")
+    obj    = cPickle.load (inFile)
+    inFile.close ()
+    return obj
 
 
 #===============================================================================

@@ -4,15 +4,51 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-import  collections
+import  collections, exceptions
 
 PDBChain   = collections.namedtuple ("PDBChain"   , "label  residues")
-PDBResidue = collections.namedtuple ("PDBResidue" , "label  serial  chain  atoms")
 PDBAtom    = collections.namedtuple ("PDBAtom"    , "label  serial  x  y  z")
 
 _DEFAULT_LOG_LEVEL = 1
 
 
+class PDBResidue (object):
+    """A class to represent a PDB residue."""
+
+    # label  serial  chain  atoms  parent
+    def __init__ (self, **keywordArguments):
+        """Constructor."""
+        for (key, value) in keywordArguments.iteritems ():
+            setattr (self, key, value)
+
+
+    def GetBonds (self):
+        """Return a list of bonds for a residue."""
+        pairs = []
+        pdb   = self.parent
+        for (seriala, serialb) in pdb.bonds:
+            found = False
+            for i, atoma in enumerate (self.atoms):
+                if atoma.serial == seriala:
+                    found = True
+                    break
+            if not found:
+                continue
+            paira = (i, atoma.serial, atoma.label)
+            found = False
+            for j, atomb in enumerate (self.atoms):
+                if atomb.serial == serialb:
+                    found = True
+                    break
+            if not found:
+                continue
+            pairb = (j, atomb.serial, atomb.label)
+            pair  = (paira, pairb)
+            pairs.append (pair)
+        return pairs
+
+
+#===============================================================================
 class PDBFile (object):
     """A class to read a PDB file."""
 
@@ -26,6 +62,7 @@ class PDBFile (object):
     def _Parse (self):
         lines    = open (self.inputfile)
         # . Initialize
+        bonds          = []
         atoms          = []
         residues       = []
         prevResLabel   = ""
@@ -34,6 +71,7 @@ class PDBFile (object):
         try:
             while True:
                 line = next (lines)
+
                 # . Taken from: http://deposit.rcsb.org/adit/docs/pdb_atom_format.html
                 #    1 -  6        Record name     "ATOM  "
                 #    7 - 11        Integer         Atom serial number.
@@ -62,6 +100,7 @@ class PDBFile (object):
                                 serial  =   prevResSerial   ,
                                 chain   =   prevChainLabel  ,
                                 atoms   =   atoms           ,
+                                parent  =   self            ,
                                 )
                             residues.append (residue)
                             atoms = []
@@ -78,6 +117,59 @@ class PDBFile (object):
                     prevResLabel   = resLabel
                     prevChainLabel = chainLabel
                     prevResSerial  = resSerial
+
+
+                #  COLUMNS         DATA TYPE        FIELD           DEFINITION
+                #  ---------------------------------------------------------------------------------
+                #   1 -  6         Record name      "CONECT"
+                #  
+                #   7 - 11         Integer          serial          Atom serial number
+                #  
+                #  12 - 16         Integer          serial          Serial number of bonded atom
+                #  
+                #  17 - 21         Integer          serial          Serial number of bonded atom
+                #  
+                #  22 - 26         Integer          serial          Serial number of bonded atom
+                #  
+                #  27 - 31         Integer          serial          Serial number of bonded atom
+                #  
+                #  32 - 36         Integer          serial          Serial number of hydrogen bonded
+                #                                                   atom
+                #  
+                #  37 - 41         Integer          serial          Serial number of hydrogen bonded
+                #                                                   atom
+                #  
+                #  42 - 46         Integer          serial          Serial number of salt bridged
+                #                                                   atom
+                #  
+                #  47 - 51         Integer          serial          Serial number of hydrogen bonded
+                #                                                   atom
+                #  
+                #  52 - 56         Integer          serial          Serial number of hydrogen bonded
+                #                                                   atom
+                #  
+                #  57 - 61         Integer          serial          Serial number of salt bridged
+                #                                                   atom
+                elif line.startswith ("CONECT"):
+                    token   =  line[ 6:11]
+                    serial  =  int (token)
+                    tokens  =  line[11:16], line[16:21], line[21:26], line[26:31]
+                    serialsBonded = []
+                    for token in tokens:
+                        token = token.strip ()
+                        if token.isdigit ():
+                            serialsBonded.append (int (token))
+                    if len (serialsBonded) > 0:
+                        for serialBonded in serialsBonded:
+                            pair    = (serial       , serialBonded)
+                            pairRev = (serialBonded , serial      )
+                            if pair not in bonds:
+                                if pairRev not in bonds:
+                                    seriala, serialb = pair
+                                    if seriala > serialb:
+                                        seriala, serialb = serialb, seriala
+                                        pair = (seriala, serialb)
+                                    bonds.append (pair)
         except StopIteration:
             pass
         # . Close the file
@@ -89,6 +181,7 @@ class PDBFile (object):
                 serial  =   prevResSerial   ,
                 chain   =   prevChainLabel  ,
                 atoms   =   atoms           ,
+                parent  =   self            ,
                 )
             residues.append (residue)
             if self.logLevel > 1:
@@ -96,7 +189,10 @@ class PDBFile (object):
         if self.logLevel > 0:
             nresidues = len (residues)
             print ("# . PDBFile: Found %d residues" % nresidues)
+            nbonds    = len (bonds)
+            print ("# . PDBFile: Found %d bonds" % nbonds)
         self.residues = residues
+        self.bonds    = bonds
 
 
     def WriteResidue (self, resSerial, filename="residue.pdb", segLabel="PRTA"):
@@ -178,6 +274,12 @@ class PDBFile (object):
             for residue in self.residues:
                 natoms += len (residue.atoms)
             return natoms
+        return 0
+
+    @property
+    def nbonds (self):
+        if hasattr (self, "bonds"):
+            return len (self.bonds)
         return 0
 
 

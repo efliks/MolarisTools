@@ -8,6 +8,7 @@ from MolarisOutputFile      import MolarisOutputFile
 from AminoComponent         import AminoComponent, AminoGroup, AminoAtom
 from AminoLibrary           import AminoLibrary
 from PDBFile                import PDBFile
+from ParametersLibrary      import ParametersLibrary
 
 import os, math
 
@@ -98,13 +99,15 @@ def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="deter
                 print ("%s# constraint_post  %4d    %4.1f  %4.1f  %4.1f  %8.3f  %8.3f  %8.3f    add_to_qm_force    0   # %s" % (tabs, atom.serial, _DEFAULT_FORCE, _DEFAULT_FORCE, _DEFAULT_FORCE, atom.x, atom.y, atom.z, atom.label))
 
 
-def DetermineBAT (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", residueLabels=(), ):
+def DetermineBAT (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", residueLabels=(), fileParameters=""):
     """Determine bonds, angles and torsions to analyze their statistical distributions."""
 
     # . Load the log file
-    mof     = MolarisOutputFile (fileMolarisOutput)
+    mof        = MolarisOutputFile (fileMolarisOutput)
     # . Load the library
-    library = AminoLibrary (fileLibrary, logging=False)
+    library    = AminoLibrary (fileLibrary, logging=False)
+    # . Load Enzymix parameters
+    parameters = ParametersLibrary (fileParameters) if fileParameters else None
 
     if mof.nresidues > 0:
         for residue in mof.residues:
@@ -117,32 +120,54 @@ def DetermineBAT (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determin
                 component.GenerateAngles (quiet=True)
                 component.GenerateTorsions (quiet=True)
 
-                # . Write bond serials
-                for (bonda, bondb) in component.bonds:
+                # . Write bonds
+                bondTypes, bondUnique = component._BondsToTypes ()
+                for (bonda, bondb), (typea, typeb) in zip (component.bonds, bondTypes):
                     serials = []
                     for bond in (bonda, bondb):
                         for atom in residue.atoms:
                             if atom.label == bond: break
                         serials.append (atom.serial)
-                    print ("%4d    %4d    # %4s    %4s" % (serials[0], serials[1], bonda, bondb))
+                    if parameters:
+                        parBond = parameters.GetBond (typea, typeb)
+                        if parBond:
+                            print ("constraint_pair  %4d  %4d    %4.1f    %5.2f    add_to_qm_force    0    # %4s    %4s" % (serials[0], serials[1], _DEFAULT_FORCE, parBond.r0, bonda, bondb))
+                        else:
+                            print ("constraint_pair  %4d  %4d    %4.1f    XXXXX    add_to_qm_force    0    # %4s    %4s" % (serials[0], serials[1], _DEFAULT_FORCE,             bonda, bondb))
+                    else:
+                        print ("%4d    %4d    # %4s    %4s" % (serials[0], serials[1], bonda, bondb))
 
-                # . Write angle serials
-                for (anglea, angleb, anglec) in component.angles:
+                # . Write angles
+                angleTypes, angleUnique = component._AnglesToTypes ()
+                for (anglea, angleb, anglec), (typea, typeb, typec) in zip (component.angles, angleTypes):
                     serials = []
                     for angle in (anglea, angleb, anglec):
                         for atom in residue.atoms:
                             if atom.label == angle: break
                         serials.append (atom.serial)
-                    print ("%4d    %4d    %4d    # %4s    %4s    %4s" % (serials[0], serials[1], serials[2], anglea, angleb, anglec))
+                    if parameters:
+                        parAngle = parameters.GetAngle (typea, typeb, typec)
+                        if parAngle:
+                            print ("constraint_ang   %4d  %4d  %4d    %4.1f    %5.2f    add_to_qm_force    0    # %4s    %4s    %4s" % (serials[0], serials[1], serials[2], _DEFAULT_FORCE, parAngle.r0, anglea, angleb, anglec))
+                        else:
+                            print ("constraint_ang   %4d  %4d  %4d    %4.1f    XXXXX    add_to_qm_force    0    # %4s    %4s    %4s" % (serials[0], serials[1], serials[2], _DEFAULT_FORCE,              anglea, angleb, anglec))
+                    else:
+                        print ("%4d    %4d    %4d    # %4s    %4s    %4s" % (serials[0], serials[1], serials[2], anglea, angleb, anglec))
 
-                # . Write torsion serials
-                for (torsiona, torsionb, torsionc, torsiond) in component.torsions:
+                # . Write torsions
+                torsionTypes, torsionUnique, torsionGeneral = component._TorsionsToTypes ()
+                for (torsiona, torsionb, torsionc, torsiond), (typea, typeb, typec, typed) in zip (component.torsions, torsionTypes):
                     serials = []
                     for torsion in (torsiona, torsionb, torsionc, torsiond):
                         for atom in residue.atoms:
                             if atom.label == torsion: break
                         serials.append (atom.serial)
-                    print ("%4d    %4d    %4d    %4d    # %4s    %4s    %4s    %4s" % (serials[0], serials[1], serials[2], serials[3], torsiona, torsionb, torsionc, torsiond))
+                    if parameters:
+                        parTorsion = parameters.GetTorsion (typeb, typec)
+                        if parTorsion:
+                            pass
+                    else:
+                        print ("%4d    %4d    %4d    %4d    # %4s    %4s    %4s    %4s" % (serials[0], serials[1], serials[2], serials[3], torsiona, torsionb, torsionc, torsiond))
 
 
 def BondsFromDistances (atoms, tolerance=_DEFAULT_TOLERANCE, toleranceLow=_DEFAULT_TOLERANCE_LOW, logging=True):
@@ -170,10 +195,17 @@ def BondsFromDistances (atoms, tolerance=_DEFAULT_TOLERANCE, toleranceLow=_DEFAU
         for atom in atoms:
             line = "%s%6s" % (line, atom.label)
         print line
-        for atom, row in zip (atoms, rows):
+        for i, (atom, row) in enumerate (zip (atoms, rows)):
             line = "%8s" % ("%3d %4s" % (atom.serial, atom.label))
-            for column in row:
-                line = "%s%6.2f" % (line, column)
+            for j, column in enumerate (row):
+                mark = ""
+                if i != j:
+                    if column <= tolerance:
+                        if column <= toleranceLow:
+                            mark = "!"
+                        else:
+                            mark = "*"
+                line = "%s%6s" % (line, "%s%.2f" % (mark, column))
             print line
     # . Search the distance matrix for bonds
     # . TODO
@@ -225,8 +257,11 @@ def AminoComponents_FromPDB (filename, tolerance=_DEFAULT_TOLERANCE, toleranceLo
                 atomCharge = 0.          ,
                 )
             aminoAtoms.append (aminoAtom)
-        # . Generate bonds
-        bonds       = BondsFromDistances (residue.atoms, logging=logging)
+        # . Try to read bonds from the PDB file
+        bonds = residue.GetBonds ()
+        if not bonds:
+            # . Generate bonds
+            bonds = BondsFromDistances (residue.atoms, logging=logging, tolerance=tolerance, toleranceLow=toleranceLow)
         aminoBonds  = []
         for (i, seriala, labela), (j, serialb, labelb) in bonds:
             pair    = (uniqueLabels[i], uniqueLabels[j])
