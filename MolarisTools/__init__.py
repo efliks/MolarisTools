@@ -29,7 +29,7 @@ from ORCAOutputFile      import ORCAOutputFile, PCgradFile, EngradFile
 from MopacOutputFile     import MopacOutputFile
 from MopacInputFile      import MopacInputFile
 from XYZTrajectory       import XYZTrajectory
-from PDBFile             import PDBFile
+from PDBFile             import PDBFile, PDBAtom, PDBResidue, PDBChain
 
 # . Miscellaneous
 from CHELPGCharges       import CHELPGCharges

@@ -14,13 +14,14 @@ import os, math
 
 
 _DEFAULT_LIBRARY_FILE   = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
+_DEFAULT_PARAMETER_FILE = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "parm.lib")
 _DEFAULT_FORCE          = 5.
 
 _DEFAULT_TOLERANCE      = 1.6
 _DEFAULT_TOLERANCE_LOW  = 0.85
 
 
-def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", )):
+def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", "BR", ), constrainAll=False):
     """Generate a list of EVB atoms and bonds based on a Molaris output file."""
     library = AminoLibrary (fileLibrary, logging=False)
     
@@ -96,10 +97,13 @@ def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="deter
         print ("%s# . %s%d" % (tabs, residue.label, residue.serial))
         for atom in residue.atoms:
             if atom.serial in evbSerials:
+                if not constrainAll:
+                    if atom.label[0] == "H":
+                        continue
                 print ("%s# constraint_post  %4d    %4.1f  %4.1f  %4.1f  %8.3f  %8.3f  %8.3f    add_to_qm_force    0   # %s" % (tabs, atom.serial, _DEFAULT_FORCE, _DEFAULT_FORCE, _DEFAULT_FORCE, atom.x, atom.y, atom.z, atom.label))
 
 
-def DetermineBAT (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", residueLabels=(), fileParameters=""):
+def DetermineBAT (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", residueLabels=(), fileParameters=_DEFAULT_PARAMETER_FILE):
     """Determine bonds, angles and torsions to analyze their statistical distributions."""
 
     # . Load the log file

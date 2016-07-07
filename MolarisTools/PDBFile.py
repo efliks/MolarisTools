@@ -10,6 +10,7 @@ PDBChain   = collections.namedtuple ("PDBChain"   , "label  residues")
 PDBAtom    = collections.namedtuple ("PDBAtom"    , "label  serial  x  y  z")
 
 _DEFAULT_LOG_LEVEL = 1
+_PDB_FORMAT_ATOM   = "%-6s%5d %-4s %3s %1s%4s%1s   %8.3f%8.3f%8.3f%22s\n"
 
 
 class PDBResidue (object):
@@ -195,26 +196,39 @@ class PDBFile (object):
         self.bonds    = bonds
 
 
-    def WriteResidue (self, resSerial, filename="residue.pdb", segLabel="PRTA"):
-        """Write a residue to a separate PDB file."""
+    def Write (self, filename="protein.pdb"):
+        """Write all residues to one file."""
         output = []
         for residue in self.residues:
-            if residue.serial == resSerial:
-                for atom in residue.atoms:
-                    # . -3s replace by -4s and remove one heading space
-                    output.append ("%-6s%5d  %-3s%1s%3s %1s%4s%1s   %8.3f%8.3f%8.3f%22s\n" % (
-                        "ATOM", atom.serial, 
-                        atom.label, "", residue.label, 
-                        residue.chain, residue.serial, "", 
-                        atom.x, atom.y, atom.z, segLabel))
-                output.append ("TER\n")
-                output.append ("END\n")
-                break
+            output.extend (self.WriteResidue (residue.serial, filename=filename, terminate=False))
+        output.append ("TER\n")
+        output.append ("END\n")
         if output:
             fo = open (filename, "w")
             for line in output:
                 fo.write (line)
             fo.close ()
+
+
+    def WriteResidue (self, resSerial, filename="residue.pdb", segLabel="PRTA", terminate=True):
+        """Write a residue to a separate PDB file."""
+        output = []
+        for residue in self.residues:
+            if residue.serial == resSerial:
+                for atom in residue.atoms:
+                    atomLabel = atom.label if len (atom.label) > 3 else (" %s" % atom.label)
+                    output.append (_PDB_FORMAT_ATOM % ("ATOM", atom.serial, atomLabel, residue.label, residue.chain, residue.serial, "", atom.x, atom.y, atom.z, segLabel))
+                if terminate:
+                    output.append ("TER\n")
+                    output.append ("END\n")
+                break
+        if output:
+            if terminate:
+                fo = open (filename, "w")
+                for line in output:
+                    fo.write (line)
+                fo.close ()
+        return output
 
 
     def CheckForMissingAtoms (self, library, includeHydrogens=False):
