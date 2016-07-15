@@ -19,6 +19,7 @@ from    Utilities       import TokenizeLine
 from    AminoComponent  import AminoAtom, AminoGroup, AminoComponent
 import  exceptions, os
 
+_MODULE_LABEL    = "AminoLib"
 _GROUP_START     = "A"
 _DEFAULT_LIBRARY_FILE   = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
 
@@ -241,7 +242,7 @@ class AminoLibrary (object):
         data.close ()
         if logging:
             ncomponents = len (components)
-            print ("Found %d component%s." % (ncomponents, "s" if ncomponents > 1 else ""))
+            print ("# . %s> Found %d component%s" % (_MODULE_LABEL, ncomponents, "s" if ncomponents > 1 else ""))
         self.components = components
 
 

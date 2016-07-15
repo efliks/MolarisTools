@@ -9,6 +9,7 @@ import  collections, exceptions
 PDBChain   = collections.namedtuple ("PDBChain"   , "label  residues")
 PDBAtom    = collections.namedtuple ("PDBAtom"    , "label  serial  x  y  z")
 
+_MODULE_LABEL      = "PDBFile"
 _DEFAULT_LOG_LEVEL = 1
 _PDB_FORMAT_ATOM   = "%-6s%5d %-4s %3s %1s%4s%1s   %8.3f%8.3f%8.3f%22s\n"
 
@@ -106,7 +107,7 @@ class PDBFile (object):
                             residues.append (residue)
                             atoms = []
                             if self.logLevel > 1:
-                                print ("# . PDBFile: Added residue %s %s %d" % (prevChainLabel, prevResLabel, prevResSerial))
+                                print ("# . %s> Added residue %s %s %d" % (_MODULE_LABEL, prevChainLabel, prevResLabel, prevResSerial))
                     atom = PDBAtom (
                         label   =          line[12:16].strip () ,
                         serial  =     int (line[6 :11]) ,
@@ -186,21 +187,23 @@ class PDBFile (object):
                 )
             residues.append (residue)
             if self.logLevel > 1:
-                print ("# . PDBFile: Added residue %s %s %d" % (prevChainLabel, prevResLabel, prevResSerial))
+                print ("# . %s> Added residue %s %s %d" % (_MODULE_LABEL, prevChainLabel, prevResLabel, prevResSerial))
         if self.logLevel > 0:
             nresidues = len (residues)
-            print ("# . PDBFile: Found %d residues" % nresidues)
+            print ("# . %s> Found %d residues" % (_MODULE_LABEL, nresidues))
             nbonds    = len (bonds)
-            print ("# . PDBFile: Found %d bonds" % nbonds)
+            print ("# . %s> Found %d bonds" % (_MODULE_LABEL, nbonds))
         self.residues = residues
         self.bonds    = bonds
 
 
     def Write (self, filename="protein.pdb"):
         """Write all residues to one file."""
-        output = []
+        output     = []
+        atomSerial = 1
         for residue in self.residues:
-            output.extend (self.WriteResidue (residue.serial, filename=filename, terminate=False))
+            (atomSerial, lines) = self.WriteResidue (residue.serial, terminate=False, startSerial=atomSerial)
+            output.extend (lines)
         output.append ("TER\n")
         output.append ("END\n")
         if output:
@@ -210,14 +213,15 @@ class PDBFile (object):
             fo.close ()
 
 
-    def WriteResidue (self, resSerial, filename="residue.pdb", segLabel="PRTA", terminate=True):
+    def WriteResidue (self, resSerial, filename="residue.pdb", segLabel="PRTA", terminate=True, startSerial=1):
         """Write a residue to a separate PDB file."""
         output = []
         for residue in self.residues:
             if residue.serial == resSerial:
-                for atom in residue.atoms:
-                    atomLabel = atom.label if len (atom.label) > 3 else (" %s" % atom.label)
-                    output.append (_PDB_FORMAT_ATOM % ("ATOM", atom.serial, atomLabel, residue.label, residue.chain, residue.serial, "", atom.x, atom.y, atom.z, segLabel))
+                for iatom, atom in enumerate (residue.atoms):
+                    atomLabel  = atom.label if len (atom.label) > 3 else (" %s" % atom.label)
+                    atomSerial = iatom + startSerial
+                    output.append (_PDB_FORMAT_ATOM % ("ATOM", atomSerial, atomLabel, residue.label, residue.chain, residue.serial, "", atom.x, atom.y, atom.z, segLabel))
                 if terminate:
                     output.append ("TER\n")
                     output.append ("END\n")
@@ -228,7 +232,7 @@ class PDBFile (object):
                 for line in output:
                     fo.write (line)
                 fo.close ()
-        return output
+        return (atomSerial + 1, output)
 
 
     def CheckForMissingAtoms (self, library, includeHydrogens=False):

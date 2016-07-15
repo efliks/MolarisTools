@@ -84,214 +84,6 @@
     1
     0
 -----------------------------------------
-546NMH  ! Analogue CH2 (mini version)
-   19  ! Number of atoms
-    1 PG     P4   0.70   ! A
-    2 O1G    O3  -0.90   ! A
-    3 O2G    O3  -0.90   ! A
-    4 O3G    O3  -0.90   ! A
-    5 PB     P4   0.90      ! B
-    6 O1B    O3  -0.80      ! B
-    7 O2B    O3  -0.80      ! B
-    8 C3B    CT  -0.50      ! B
-    9 H1     H4   0.10      ! B
-   10 H2     H4   0.10      ! B
-   11 PA     P4   0.90   ! C
-   12 O1A    O3  -0.70   ! C
-   13 O2A    O3  -0.70   ! C
-   14 O3A    O4  -0.25   ! C
-   15 O5'    O4  -0.25   ! C
-   16 C5'    CT  -0.30      ! D
-   17 H5'1   H4   0.10      ! D
-   18 H5'2   H4   0.10      ! D
-   19 H5'3   H4   0.10      ! D
-   18  ! Number of bonds
-    1    2    !   PG  O1G
-    1    3    !   PG  O2G
-    1    4    !   PG  O3G
-    1    8    !   PG  C3B
-    5    8    !   PB  C3B
-    5    6    !   PB  O1B
-    5    7    !   PB  O2B
-    5   14    !   PB  O3A
-    8    9    !  C3B   H1
-    8   10    !  C3B   H2
-   11   12    !   PA  O1A
-   11   13    !   PA  O2A
-   11   14    !   PA  O3A
-   11   15    !   PA  O5'
-   15   16    !  O5'  C5'
-   16   17    !  C5' H5'1
-   16   18    !  C5' H5'2
-   16   19    !  C5' H5'3
-    0    0  ! Connecting atoms
-    4  ! Number of electroneutral groups
-    4    1   5.0
-    1  2  3  4    ! Group A: -2.0000
-    6    5   5.0
-    5  6  7  8  9  10    ! Group B: -1.0000
-    5   11   5.0
-    11  12  13  14  15    ! Group C: -1.0000
-    4   16   5.0
-    16  17  18  19    ! Group D: 0.0000
-    0
------------------------------------------
-547NMF  ! Analogue CF2  (mini version)
-   19  ! Number of atoms
-    1 PG     P4   0.70   ! A
-    2 O1G    O3  -0.90   ! A
-    3 O2G    O3  -0.90   ! A
-    4 O3G    O3  -0.90   ! A
-    5 PB     P4   0.90      ! B
-    6 O1B    O3  -0.80      ! B
-    7 O2B    O3  -0.80      ! B
-    8 C3B    CT   0.50      ! B
-    9 F1     F-  -0.40      ! B
-   10 F2     F-  -0.40      ! B
-   11 PA     P4   0.90   ! C
-   12 O1A    O3  -0.70   ! C
-   13 O2A    O3  -0.70   ! C
-   14 O3A    O4  -0.25   ! C
-   15 O5'    O4  -0.25   ! C
-   16 C5'    CT  -0.30      ! D
-   17 H5'1   H4   0.10      ! D
-   18 H5'2   H4   0.10      ! D
-   19 H5'3   H4   0.10      ! D
-   18  ! Number of bonds
-    1    2    !   PG  O1G
-    1    3    !   PG  O2G
-    1    4    !   PG  O3G
-    1    8    !   PG  C3B
-    5    8    !   PB  C3B
-    5    6    !   PB  O1B
-    5    7    !   PB  O2B
-    5   14    !   PB  O3A
-    8    9    !  C3B   F1
-    8   10    !  C3B   F2
-   11   12    !   PA  O1A
-   11   13    !   PA  O2A
-   11   14    !   PA  O3A
-   11   15    !   PA  O5'
-   15   16    !  O5'  C5'
-   16   17    !  C5' H5'1
-   16   18    !  C5' H5'2
-   16   19    !  C5' H5'3
-    0    0  ! Connecting atoms
-    4  ! Number of electroneutral groups
-    4    1   5.0
-    1  2  3  4    ! Group A: -2.0000
-    6    5   5.0
-    5  6  7  8  9  10    ! Group B: -1.0000
-    5   11   5.0
-    11  12  13  14  15    ! Group C: -1.0000
-    4   16   5.0
-    16  17  18  19    ! Group D: 0.0000
-    0  ! Total charge: -4.0000
------------------------------------------
-548NMC  ! Analogue CCl2 (mini version)
-   19  ! Number of atoms
-    1 PG     P4   0.70   ! A
-    2 O1G    O3  -0.90   ! A
-    3 O2G    O3  -0.90   ! A
-    4 O3G    O3  -0.90   ! A
-    5 PB     P4   0.90      ! B
-    6 O1B    O3  -0.80      ! B
-    7 O2B    O3  -0.80      ! B
-    8 C3B    CT   0.50      ! B
-    9 CL1    CL  -0.40      ! B
-   10 CL2    CL  -0.40      ! B
-   11 PA     P4   0.90   ! C
-   12 O1A    O3  -0.70   ! C
-   13 O2A    O3  -0.70   ! C
-   14 O3A    O4  -0.25   ! C
-   15 O5'    O4  -0.25   ! C
-   16 C5'    CT  -0.30      ! D
-   17 H5'1   H4   0.10      ! D
-   18 H5'2   H4   0.10      ! D
-   19 H5'3   H4   0.10      ! D
-   18  ! Number of bonds
-    1    2    !   PG  O1G
-    1    3    !   PG  O2G
-    1    4    !   PG  O3G
-    1    8    !   PG  C3B
-    5    8    !   PB  C3B
-    5    6    !   PB  O1B
-    5    7    !   PB  O2B
-    5   14    !   PB  O3A
-    8    9    !  C3B  CL1
-    8   10    !  C3B  CL2
-   11   12    !   PA  O1A
-   11   13    !   PA  O2A
-   11   14    !   PA  O3A
-   11   15    !   PA  O5'
-   15   16    !  O5'  C5'
-   16   17    !  C5' H5'1
-   16   18    !  C5' H5'2
-   16   19    !  C5' H5'3
-    0    0  ! Connecting atoms
-    4  ! Number of electroneutral groups
-    4    1   5.0
-    1  2  3  4    ! Group A: -2.0000
-    6    5   5.0
-    5  6  7  8  9  10    ! Group B: -1.0000
-    5   11   5.0
-    11  12  13  14  15    ! Group C: -1.0000
-    4   16   5.0
-    16  17  18  19    ! Group D: 0.0000
-    0  ! Total charge: -4.0000
------------------------------------------
-549NMB  ! Analogue CBr2 (mini version)
-   19  ! Number of atoms
-    1 PG     P4   0.70   ! A
-    2 O1G    O3  -0.90   ! A
-    3 O2G    O3  -0.90   ! A
-    4 O3G    O3  -0.90   ! A
-    5 PB     P4   0.90      ! B
-    6 O1B    O3  -0.80      ! B
-    7 O2B    O3  -0.80      ! B
-    8 C3B    CT   0.50      ! B
-    9 BR1    BR  -0.40      ! B
-   10 BR2    BR  -0.40      ! B
-   11 PA     P4   0.90   ! C
-   12 O1A    O3  -0.70   ! C
-   13 O2A    O3  -0.70   ! C
-   14 O3A    O4  -0.25   ! C
-   15 O5'    O4  -0.25   ! C
-   16 C5'    CT  -0.30      ! D
-   17 H5'1   H4   0.10      ! D
-   18 H5'2   H4   0.10      ! D
-   19 H5'3   H4   0.10      ! D
-   18  ! Number of bonds
-    1    2    !   PG  O1G
-    1    3    !   PG  O2G
-    1    4    !   PG  O3G
-    1    8    !   PG  C3B
-    5    8    !   PB  C3B
-    5    6    !   PB  O1B
-    5    7    !   PB  O2B
-    5   14    !   PB  O3A
-    8    9    !  C3B  BR1
-    8   10    !  C3B  BR2
-   11   12    !   PA  O1A
-   11   13    !   PA  O2A
-   11   14    !   PA  O3A
-   11   15    !   PA  O5'
-   15   16    !  O5'  C5'
-   16   17    !  C5' H5'1
-   16   18    !  C5' H5'2
-   16   19    !  C5' H5'3
-    0    0  ! Connecting atoms
-    4  ! Number of electroneutral groups
-    4    1   5.0
-    1  2  3  4    ! Group A: -2.0000
-    6    5   5.0
-    5  6  7  8  9  10    ! Group B: -1.0000
-    5   11   5.0
-    11  12  13  14  15    ! Group C: -1.0000
-    4   16   5.0
-    16  17  18  19    ! Group D: 0.0000
-    0  ! Total charge: -4.0000
------------------------------------------
 550PMH  ! Analogue CH2 (mini version; fully protonated)
    23  ! Number of atoms
     1 PG     P4   1.00   ! A
@@ -913,6 +705,448 @@
     4    5   1.5
     5  6  7  8    ! Group B: 0.0000
     0  ! Total charge: -2.0000
+-----------------------------------------
+568ETH  ! Automatically generated from   ETH 1
+    8  ! Number of atoms
+    1 C1     CT   0.06   ! A
+    2 H11    H4  -0.02   ! A
+    3 H12    H4  -0.02   ! A
+    4 H13    H4  -0.02   ! A
+    5 C2     CT   0.06      ! B
+    6 H21    H4  -0.02      ! B
+    7 H22    H4  -0.02      ! B
+    8 H23    H4  -0.02      ! B
+    7  ! Number of bonds
+    1    2    !   C1  H11
+    1    3    !   C1  H12
+    1    4    !   C1  H13
+    1    5    !   C1   C2
+    5    6    !   C2  H21
+    5    7    !   C2  H22
+    5    8    !   C2  H23
+    0    0  ! Connecting atoms
+    2  ! Number of electroneutral groups
+    4    1   5.0
+    1  2  3  4    ! Group A: -0.0000
+    4    5   5.0
+    5  6  7  8    ! Group B: -0.0000
+    0  ! Total charge: -0.0000
+-----------------------------------------
+600NMH  ! Analogue -CH2-  (mini version)
+   19  ! Number of atoms
+    1 PG     P4   0.70   ! A
+    2 O1G    O3  -0.90   ! A
+    3 O2G    O3  -0.90   ! A
+    4 O3G    O3  -0.90   ! A
+    5 PB     P4   0.90      ! B
+    6 O1B    O3  -0.80      ! B
+    7 O2B    O3  -0.80      ! B
+    8 C3B    CT  -0.50      ! B
+    9 H1     H4   0.10      ! B
+   10 H2     H4   0.10      ! B
+   11 PA     P4   0.90   ! C
+   12 O1A    O3  -0.70   ! C
+   13 O2A    O3  -0.70   ! C
+   14 O3A    O4  -0.25   ! C
+   15 O5'    O4  -0.25   ! C
+   16 C5'    CT  -0.30      ! D
+   17 H5'1   H4   0.10      ! D
+   18 H5'2   H4   0.10      ! D
+   19 H5'3   H4   0.10      ! D
+   18  ! Number of bonds
+    1    2    !   PG  O1G
+    1    3    !   PG  O2G
+    1    4    !   PG  O3G
+    1    8    !   PG  C3B
+    5    6    !   PB  O1B
+    5    7    !   PB  O2B
+    5    8    !   PB  C3B
+    5   14    !   PB  O3A
+    8    9    !  C3B   H1
+    8   10    !  C3B   H2
+   11   12    !   PA  O1A
+   11   13    !   PA  O2A
+   11   14    !   PA  O3A
+   11   15    !   PA  O5'
+   15   16    !  O5'  C5'
+   16   17    !  C5' H5'1
+   16   18    !  C5' H5'2
+   16   19    !  C5' H5'3
+    0    0  ! Connecting atoms
+    4  ! Number of electroneutral groups
+    4    1   5.0
+    1  2  3  4    ! Group A: -2.0000
+    6    5   5.0
+    5  6  7  8  9  10    ! Group B: -1.0000
+    5   11   5.0
+    11  12  13  14  15    ! Group C: -1.0000
+    4   16   5.0
+    16  17  18  19    ! Group D: 0.0000
+    0  ! Total charge: -4.0000
+-----------------------------------------
+601NMF  ! Analogue -CF2-  (mini version)
+   19  ! Number of atoms
+    1 PG     P4   0.70   ! A
+    2 O1G    O3  -0.90   ! A
+    3 O2G    O3  -0.90   ! A
+    4 O3G    O3  -0.90   ! A
+    5 PB     P4   0.90      ! B
+    6 O1B    O3  -0.80      ! B
+    7 O2B    O3  -0.80      ! B
+    8 C3B    CT   0.50      ! B
+    9 F1     F-  -0.40      ! B
+   10 F2     F-  -0.40      ! B
+   11 PA     P4   0.90   ! C
+   12 O1A    O3  -0.70   ! C
+   13 O2A    O3  -0.70   ! C
+   14 O3A    O4  -0.25   ! C
+   15 O5'    O4  -0.25   ! C
+   16 C5'    CT  -0.30      ! D
+   17 H5'1   H4   0.10      ! D
+   18 H5'2   H4   0.10      ! D
+   19 H5'3   H4   0.10      ! D
+   18  ! Number of bonds
+    1    2    !   PG  O1G
+    1    3    !   PG  O2G
+    1    4    !   PG  O3G
+    1    8    !   PG  C3B
+    5    6    !   PB  O1B
+    5    7    !   PB  O2B
+    5    8    !   PB  C3B
+    5   14    !   PB  O3A
+    8    9    !  C3B   F1
+    8   10    !  C3B   F2
+   11   12    !   PA  O1A
+   11   13    !   PA  O2A
+   11   14    !   PA  O3A
+   11   15    !   PA  O5'
+   15   16    !  O5'  C5'
+   16   17    !  C5' H5'1
+   16   18    !  C5' H5'2
+   16   19    !  C5' H5'3
+    0    0  ! Connecting atoms
+    4  ! Number of electroneutral groups
+    4    1   5.0
+    1  2  3  4    ! Group A: -2.0000
+    6    5   5.0
+    5  6  7  8  9  10    ! Group B: -1.0000
+    5   11   5.0
+    11  12  13  14  15    ! Group C: -1.0000
+    4   16   5.0
+    16  17  18  19    ! Group D: 0.0000
+    0  ! Total charge: -4.0000
+-----------------------------------------
+602NMB  ! Analogue -CBr2- (mini version)
+   19  ! Number of atoms
+    1 PG     P4   0.70   ! A
+    2 O1G    O3  -0.90   ! A
+    3 O2G    O3  -0.90   ! A
+    4 O3G    O3  -0.90   ! A
+    5 PB     P4   0.90      ! B
+    6 O1B    O3  -0.80      ! B
+    7 O2B    O3  -0.80      ! B
+    8 C3B    CT   0.50      ! B
+    9 BR1    BR  -0.40      ! B
+   10 BR2    BR  -0.40      ! B
+   11 PA     P4   0.90   ! C
+   12 O1A    O3  -0.70   ! C
+   13 O2A    O3  -0.70   ! C
+   14 O3A    O4  -0.25   ! C
+   15 O5'    O4  -0.25   ! C
+   16 C5'    CT  -0.30      ! D
+   17 H5'1   H4   0.10      ! D
+   18 H5'2   H4   0.10      ! D
+   19 H5'3   H4   0.10      ! D
+   18  ! Number of bonds
+    1    2    !   PG  O1G
+    1    3    !   PG  O2G
+    1    4    !   PG  O3G
+    1    8    !   PG  C3B
+    5    6    !   PB  O1B
+    5    7    !   PB  O2B
+    5    8    !   PB  C3B
+    5   14    !   PB  O3A
+    8    9    !  C3B  BR1
+    8   10    !  C3B  BR2
+   11   12    !   PA  O1A
+   11   13    !   PA  O2A
+   11   14    !   PA  O3A
+   11   15    !   PA  O5'
+   15   16    !  O5'  C5'
+   16   17    !  C5' H5'1
+   16   18    !  C5' H5'2
+   16   19    !  C5' H5'3
+    0    0  ! Connecting atoms
+    4  ! Number of electroneutral groups
+    4    1   5.0
+    1  2  3  4    ! Group A: -2.0000
+    6    5   5.0
+    5  6  7  8  9  10    ! Group B: -1.0000
+    5   11   5.0
+    11  12  13  14  15    ! Group C: -1.0000
+    4   16   5.0
+    16  17  18  19    ! Group D: 0.0000
+    0  ! Total charge: -4.0000
+-----------------------------------------
+603NMC  ! Analogue -CCl2- (mini version)
+   19  ! Number of atoms
+    1 PG     P4   0.70   ! A
+    2 O1G    O3  -0.90   ! A
+    3 O2G    O3  -0.90   ! A
+    4 O3G    O3  -0.90   ! A
+    5 PB     P4   0.90      ! B
+    6 O1B    O3  -0.80      ! B
+    7 O2B    O3  -0.80      ! B
+    8 C3B    CT   0.50      ! B
+    9 CL1    CL  -0.40      ! B
+   10 CL2    CL  -0.40      ! B
+   11 PA     P4   0.90   ! C
+   12 O1A    O3  -0.70   ! C
+   13 O2A    O3  -0.70   ! C
+   14 O3A    O4  -0.25   ! C
+   15 O5'    O4  -0.25   ! C
+   16 C5'    CT  -0.30      ! D
+   17 H5'1   H4   0.10      ! D
+   18 H5'2   H4   0.10      ! D
+   19 H5'3   H4   0.10      ! D
+   18  ! Number of bonds
+    1    2    !   PG  O1G
+    1    3    !   PG  O2G
+    1    4    !   PG  O3G
+    1    8    !   PG  C3B
+    5    6    !   PB  O1B
+    5    7    !   PB  O2B
+    5    8    !   PB  C3B
+    5   14    !   PB  O3A
+    8    9    !  C3B  CL1
+    8   10    !  C3B  CL2
+   11   12    !   PA  O1A
+   11   13    !   PA  O2A
+   11   14    !   PA  O3A
+   11   15    !   PA  O5'
+   15   16    !  O5'  C5'
+   16   17    !  C5' H5'1
+   16   18    !  C5' H5'2
+   16   19    !  C5' H5'3
+    0    0  ! Connecting atoms
+    4  ! Number of electroneutral groups
+    4    1   5.0
+    1  2  3  4    ! Group A: -2.0000
+    6    5   5.0
+    5  6  7  8  9  10    ! Group B: -1.0000
+    5   11   5.0
+    11  12  13  14  15    ! Group C: -1.0000
+    4   16   5.0
+    16  17  18  19    ! Group D: 0.0000
+    0  ! Total charge: -4.0000
+-----------------------------------------
+604NHF  ! Analogue -CHF-  (mini version)
+   19  ! Number of atoms
+    1 PG     P4   0.70   ! A
+    2 O1G    O3  -0.90   ! A
+    3 O2G    O3  -0.90   ! A
+    4 O3G    O3  -0.90   ! A
+    5 PB     P4   0.90      ! B
+    6 O1B    O3  -0.80      ! B
+    7 O2B    O3  -0.80      ! B
+    8 C3B    CT   0.20      ! B
+    9 F1     F-  -0.60      ! B
+   10 H2     H4   0.10      ! B
+   11 PA     P4   0.90   ! C
+   12 O1A    O3  -0.70   ! C
+   13 O2A    O3  -0.70   ! C
+   14 O3A    O4  -0.25   ! C
+   15 O5'    O4  -0.25   ! C
+   16 C5'    CT  -0.30      ! D
+   17 H5'1   H4   0.10      ! D
+   18 H5'2   H4   0.10      ! D
+   19 H5'3   H4   0.10      ! D
+   18  ! Number of bonds
+    1    2    !   PG  O1G
+    1    3    !   PG  O2G
+    1    4    !   PG  O3G
+    1    8    !   PG  C3B
+    5    6    !   PB  O1B
+    5    7    !   PB  O2B
+    5    8    !   PB  C3B
+    5   14    !   PB  O3A
+    8    9    !  C3B   F1
+    8   10    !  C3B   H2
+   11   12    !   PA  O1A
+   11   13    !   PA  O2A
+   11   14    !   PA  O3A
+   11   15    !   PA  O5'
+   15   16    !  O5'  C5'
+   16   17    !  C5' H5'1
+   16   18    !  C5' H5'2
+   16   19    !  C5' H5'3
+    0    0  ! Connecting atoms
+    4  ! Number of electroneutral groups
+    4    1   5.0
+    1  2  3  4    ! Group A: -2.0000
+    6    5   5.0
+    5  6  7  8  9  10    ! Group B: -1.0000
+    5   11   5.0
+    11  12  13  14  15    ! Group C: -1.0000
+    4   16   5.0
+    16  17  18  19    ! Group D: 0.0000
+    0  ! Total charge: -4.0000
+-----------------------------------------
+605NHC  ! Analogue -CHCl- (mini version)
+   19  ! Number of atoms
+    1 PG     P4   0.70   ! A
+    2 O1G    O3  -0.90   ! A
+    3 O2G    O3  -0.90   ! A
+    4 O3G    O3  -0.90   ! A
+    5 PB     P4   0.90      ! B
+    6 O1B    O3  -0.80      ! B
+    7 O2B    O3  -0.80      ! B
+    8 C3B    CT   0.20      ! B
+    9 CL1    CL  -0.60      ! B
+   10 H2     H4   0.10      ! B
+   11 PA     P4   0.90   ! C
+   12 O1A    O3  -0.70   ! C
+   13 O2A    O3  -0.70   ! C
+   14 O3A    O4  -0.25   ! C
+   15 O5'    O4  -0.25   ! C
+   16 C5'    CT  -0.30      ! D
+   17 H5'1   H4   0.10      ! D
+   18 H5'2   H4   0.10      ! D
+   19 H5'3   H4   0.10      ! D
+   18  ! Number of bonds
+    1    2    !   PG  O1G
+    1    3    !   PG  O2G
+    1    4    !   PG  O3G
+    1    8    !   PG  C3B
+    5    6    !   PB  O1B
+    5    7    !   PB  O2B
+    5    8    !   PB  C3B
+    5   14    !   PB  O3A
+    8    9    !  C3B  CL1
+    8   10    !  C3B   H2
+   11   12    !   PA  O1A
+   11   13    !   PA  O2A
+   11   14    !   PA  O3A
+   11   15    !   PA  O5'
+   15   16    !  O5'  C5'
+   16   17    !  C5' H5'1
+   16   18    !  C5' H5'2
+   16   19    !  C5' H5'3
+    0    0  ! Connecting atoms
+    4  ! Number of electroneutral groups
+    4    1   5.0
+    1  2  3  4    ! Group A: -2.0000
+    6    5   5.0
+    5  6  7  8  9  10    ! Group B: -1.0000
+    5   11   5.0
+    11  12  13  14  15    ! Group C: -1.0000
+    4   16   5.0
+    16  17  18  19    ! Group D: 0.0000
+    0  ! Total charge: -4.0000
+-----------------------------------------
+606NFC  ! Analogue -CFCl- (mini version)
+   19  ! Number of atoms
+    1 PG     P4   0.70   ! A
+    2 O1G    O3  -0.90   ! A
+    3 O2G    O3  -0.90   ! A
+    4 O3G    O3  -0.90   ! A
+    5 PB     P4   0.90      ! B
+    6 O1B    O3  -0.80      ! B
+    7 O2B    O3  -0.80      ! B
+    8 C3B    CT   0.50      ! B
+    9 F1     F-  -0.45      ! B
+   10 CL2    CL  -0.35      ! B
+   11 PA     P4   0.90   ! C
+   12 O1A    O3  -0.70   ! C
+   13 O2A    O3  -0.70   ! C
+   14 O3A    O4  -0.25   ! C
+   15 O5'    O4  -0.25   ! C
+   16 C5'    CT  -0.30      ! D
+   17 H5'1   H4   0.10      ! D
+   18 H5'2   H4   0.10      ! D
+   19 H5'3   H4   0.10      ! D
+   18  ! Number of bonds
+    1    2    !   PG  O1G
+    1    3    !   PG  O2G
+    1    4    !   PG  O3G
+    1    8    !   PG  C3B
+    5    6    !   PB  O1B
+    5    7    !   PB  O2B
+    5    8    !   PB  C3B
+    5   14    !   PB  O3A
+    8    9    !  C3B   F1
+    8   10    !  C3B  CL2
+   11   12    !   PA  O1A
+   11   13    !   PA  O2A
+   11   14    !   PA  O3A
+   11   15    !   PA  O5'
+   15   16    !  O5'  C5'
+   16   17    !  C5' H5'1
+   16   18    !  C5' H5'2
+   16   19    !  C5' H5'3
+    0    0  ! Connecting atoms
+    4  ! Number of electroneutral groups
+    4    1   5.0
+    1  2  3  4    ! Group A: -2.0000
+    6    5   5.0
+    5  6  7  8  9  10    ! Group B: -1.0000
+    5   11   5.0
+    11  12  13  14  15    ! Group C: -1.0000
+    4   16   5.0
+    16  17  18  19    ! Group D: 0.0000
+    0  ! Total charge: -4.0000
+-----------------------------------------
+607NHB  ! Analogue -CHBr- (mini version)
+   19  ! Number of atoms
+    1 PG     P4   0.70   ! A
+    2 O1G    O3  -0.90   ! A
+    3 O2G    O3  -0.90   ! A
+    4 O3G    O3  -0.90   ! A
+    5 PB     P4   0.90      ! B
+    6 O1B    O3  -0.80      ! B
+    7 O2B    O3  -0.80      ! B
+    8 C3B    CT   0.20      ! B
+    9 BR1    BR  -0.60      ! B
+   10 H2     H4   0.10      ! B
+   11 PA     P4   0.90   ! C
+   12 O1A    O3  -0.70   ! C
+   13 O2A    O3  -0.70   ! C
+   14 O3A    O4  -0.25   ! C
+   15 O5'    O4  -0.25   ! C
+   16 C5'    CT  -0.30      ! D
+   17 H5'1   H4   0.10      ! D
+   18 H5'2   H4   0.10      ! D
+   19 H5'3   H4   0.10      ! D
+   18  ! Number of bonds
+    1    2    !   PG  O1G
+    1    3    !   PG  O2G
+    1    4    !   PG  O3G
+    1    8    !   PG  C3B
+    5    6    !   PB  O1B
+    5    7    !   PB  O2B
+    5    8    !   PB  C3B
+    5   14    !   PB  O3A
+    8    9    !  C3B  BR1
+    8   10    !  C3B   H2
+   11   12    !   PA  O1A
+   11   13    !   PA  O2A
+   11   14    !   PA  O3A
+   11   15    !   PA  O5'
+   15   16    !  O5'  C5'
+   16   17    !  C5' H5'1
+   16   18    !  C5' H5'2
+   16   19    !  C5' H5'3
+    0    0  ! Connecting atoms
+    4  ! Number of electroneutral groups
+    4    1   5.0
+    1  2  3  4    ! Group A: -2.0000
+    6    5   5.0
+    5  6  7  8  9  10    ! Group B: -1.0000
+    5   11   5.0
+    11  12  13  14  15    ! Group C: -1.0000
+    4   16   5.0
+    16  17  18  19    ! Group D: 0.0000
+    0  ! Total charge: -4.0000
 -----------------------------------------
     0
 -----------------------------------------

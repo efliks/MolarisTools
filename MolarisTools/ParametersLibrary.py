@@ -15,8 +15,9 @@ Torsion     = collections.namedtuple ("Torsion"     , "typeb  typec  k  periodic
 Improper    = collections.namedtuple ("Improper"    , "atomType  k")
 VanDerWaals = collections.namedtuple ("VanDerWaals" , "atomType  attractive  repulsive  mass")
 
-
+_MODULE_LABEL     = "ParmLib"
 _DEFAULT_PARM_LIB = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "parm.lib")
+
 
 class ParametersLibrary (object):
     """A class to represent parameters of the ENZYMIX force field."""
@@ -53,7 +54,7 @@ class ParametersLibrary (object):
                                     b       =   b       , )
                                 hbonds.append (bond)
                             if logging:
-                                print ("# . ParmLib: Read %d h-bonds" % nhbonds)
+                                print ("# . %s> Read %d h-bonds" % (_MODULE_LABEL, nhbonds))
                             self.hbonds = hbonds
 
 
@@ -77,7 +78,7 @@ class ParametersLibrary (object):
                                     r0      =   r0      , )
                                 bonds.append (bond)
                             if logging:
-                                print ("# . ParmLib: Read %d bonds" % nbonds)
+                                print ("# . %s> Read %d bonds" % (_MODULE_LABEL, nbonds))
                             self.bonds = bonds
 
 
@@ -102,7 +103,7 @@ class ParametersLibrary (object):
                             r0      =   r0      , )
                         angles.append (angle)
                     if logging:
-                        print ("# . ParmLib: Read %d angles" % nangles)
+                        print ("# . %s> Read %d angles" % (_MODULE_LABEL, nangles))
                     self.angles = angles
 
 
@@ -129,7 +130,7 @@ class ParametersLibrary (object):
                             phase       =   phase        , )
                         torsions.append (torsion)
                     if logging:
-                        print ("# . ParmLib: Read %d torsions" % ntorsions)
+                        print ("# . %s> Read %d torsions" % (_MODULE_LABEL, ntorsions))
                     self.torsions = torsions
 
 
@@ -151,7 +152,7 @@ class ParametersLibrary (object):
                             k        = k         , )
                         impropers.append (improper)
                     if logging:
-                        print ("# . ParmLib: Read %d impropers" % nimpropers)
+                        print ("# . %s> Read %d impropers" % (_MODULE_LABEL, nimpropers))
                     self.impropers = impropers
 
 
@@ -175,7 +176,7 @@ class ParametersLibrary (object):
                             mass       = mass        , )
                         vdws.append (vdw)
                     if logging:
-                        print ("# . ParmLib: Read %d vdw and mass" % nparams)
+                        print ("# . %s> Read %d VDW and mass parameters" % (_MODULE_LABEL, nparams))
                     self.vdws = vdws
         except StopIteration:
             pass

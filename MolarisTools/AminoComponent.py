@@ -5,16 +5,20 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from    Utilities           import TokenizeLine
-from    PDBFile             import PDBResidue
+from    PDBFile             import PDBResidue, PDBAtom
+from    EVBLibrary          import EVBLibrary
 from    ParametersLibrary   import ParametersLibrary
 from    GaussianOutputFile  import GaussianOutputFile
-import  collections, exceptions, os, subprocess
+import  collections, exceptions, os, subprocess, math
 
 
 AminoAtom  = collections.namedtuple ("Atom"  , "atomLabel  atomType  atomCharge")
 AminoGroup = collections.namedtuple ("Group" , "natoms  centralAtom  radius  labels  symbol")
 
+_MODULE_LABEL    = "AminoComponent"
 _DEFAULT_DIVIDER = "-" * 41
+_ATOMIC_SYMBOLS  = ("MG", "CL", "BR", )
+_LINK_ATOM       = 1.09
 
 _DEFAULT_GAUSSIAN_PATH  =  os.path.join (os.environ["HOME"], "local", "opt", "g03", "g03")
 _DEFAULT_METHOD         =  "B3LYP/6-31G*"
@@ -416,7 +420,7 @@ class AminoComponent (object):
                 print line
 
 
-    def GenerateAngles (self, quiet=False):
+    def GenerateAngles (self, logging=True):
         """Automatically generate a list of angles."""
         angles = []
         # . Outer loop
@@ -447,11 +451,11 @@ class AminoComponent (object):
                         if (angle not in angles) and (elgna not in angles):
                             angles.append (angle)
         self.angles = angles
-        if not quiet:
-            print ("# . Generated %d angles" % self.nangles)
+        if logging:
+            print ("# . %s> Generated %d angles" % (_MODULE_LABEL, self.nangles))
 
 
-    def GenerateTorsions (self, quiet=False):
+    def GenerateTorsions (self, logging=True):
         """Automatically generate a list of torsions (=dihedral angles)."""
         if hasattr (self, "angles"):
             torsions = []
@@ -483,8 +487,8 @@ class AminoComponent (object):
                             if (torsion not in torsions) and (noisrot not in torsions):
                                 torsions.append (torsion)
             self.torsions = torsions
-        if not quiet:
-            print ("# . Generated %d torsions" % self.ntorsions)
+        if logging:
+            print ("# . %s> Generated %d torsions" % (_MODULE_LABEL, self.ntorsions))
 
 
     def _BondsToTypes (self):
@@ -610,9 +614,10 @@ class AminoComponent (object):
             fo.close ()
 
 
-    def WriteTypes (self, filename="", parameters=None):
+    def WriteTypes (self, filename="", parameters=None, evbParameters=None):
         """Write object's types for bonds, angles and dihedrals."""
-        includeParameters = isinstance (parameters, ParametersLibrary)
+        includeParameters    = isinstance (parameters,    ParametersLibrary)
+        includeEVBParameters = isinstance (evbParameters, EVBLibrary)
 
         lines = ["*** Bond types ***", ]
         bondTypes, bondUnique = self._BondsToTypes ()
@@ -622,6 +627,15 @@ class AminoComponent (object):
                 bond = parameters.GetBond (typea, typeb)
                 if bond:
                     par = "    %6.1f    %6.2f" % (bond.k, bond.r0)
+            if includeEVBParameters:
+                #
+                # . FIXME: Enzymix types are different than EVB types.
+                # . EVB type information must be somehow included in the amino library.
+                #
+                bond = evbParameters.GetBond (typea, typeb)
+                if bond:
+                    (morseD, r0) = bond
+                    par = "%s    %6.1f    %6.2f" % (par, morseD, r0)
             lines.append ("%3d    %-4s    %-4s%s" % (i, typea, typeb, par))
 
         if hasattr (self, "angles"):
@@ -633,6 +647,8 @@ class AminoComponent (object):
                     angle = parameters.GetAngle (typea, typeb, typec)
                     if angle:
                         par = "    %6.1f    %6.2f" % (angle.k, angle.r0)
+                if includeEVBParameters:
+                    pass
                 lines.append ("%3d    %-4s    %-4s    %-4s%s" % (i, typea, typeb, typec, par))
 
         if hasattr (self, "torsions"):
@@ -644,6 +660,8 @@ class AminoComponent (object):
                     torsion = parameters.GetTorsion (typeb, typec)
                     if torsion:
                         par = "    %1d    %6.2f    %6.1f" % (torsion.periodicity, torsion.k, torsion.phase)
+                if includeEVBParameters:
+                    pass
                 lines.append ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, typea, typeb, typec, typed, par))
 
             lines.append ("*** General torsion types ***")
@@ -653,6 +671,8 @@ class AminoComponent (object):
                     torsion = parameters.GetTorsion (typeb, typec)
                     if torsion:
                         par = "    %1d    %6.2f    %6.1f" % (torsion.periodicity, torsion.k, torsion.phase)
+                if includeEVBParameters:
+                    pass
                 lines.append ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, "@@", typeb, typec, "@@", par))
 
         lines.append ("*** Van der Waals and mass types ***")
@@ -666,6 +686,8 @@ class AminoComponent (object):
                 vdw = parameters.GetVDW (atomType)
                 if vdw:
                     par = "    %8.1f    %8.1f    %6.2f" % (vdw.repulsive, vdw.attractive, vdw.mass)
+            if includeEVBParameters:
+                pass
             lines.append ("%3d    %-4s%s" % (i, atomType, par))
 
         if not filename:
@@ -735,6 +757,10 @@ class AminoComponent (object):
             # . Write geometry
             for atom in coordinates:
                 atomSymbol = atom.label[0]
+                for symbol in _ATOMIC_SYMBOLS:
+                    if atom.label.startswith (symbol):
+                        atomSymbol = symbol
+                        break
                 lines.append ("%2s    %16.10f    %16.10f    %16.10f\n" % (atomSymbol, atom.x, atom.y, atom.z))
             lines.append ("\n")
            
@@ -744,7 +770,7 @@ class AminoComponent (object):
     
             # . Run Gaussian
             if logging:
-                print ("# . Now running charge calculation for %s ..." % self.label)
+                print ("# . %s> Now running charge calculation for %s ..." % (_MODULE_LABEL, self.label))
             fi = open (fInput, "w")
             for line in lines:
                 fi.write (line)
@@ -788,7 +814,181 @@ class AminoComponent (object):
 
         # . Finish up
         if logging:
-            print ("# . Setting quantum charges to %s complete" % self.label)
+            print ("# . %s> Setting quantum charges to %s complete" % (_MODULE_LABEL, self.label))
+
+
+    def CalculateChargesGroups (self, pdbResidue, ncpu=1, memory=1, method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, cosmo=False, dielectric=_DEFAULT_DIELECTRIC, pathGaussian=_DEFAULT_GAUSSIAN_PATH, logging=True):
+        """Correct charges in Gaussian while keeping charge groups unchanged."""
+    
+        # . Do some initial checks
+        if not isinstance (pdbResidue, PDBResidue):
+            raise exceptions.StandardError ("Not a PDB residue.")
+    
+        if len (pdbResidue.atoms) != self.natoms:
+            raise exceptions.StandardError ("Wrong number of atoms.")
+
+        # . Collect atomic coordinates
+        coordinates = []
+        for atom in self.atoms:
+            found = False
+            for atomPDB in pdbResidue.atoms:
+                if atom.atomLabel == atomPDB.label:
+                    found = True
+                    break
+            if not found:
+                raise exceptions.StandardError ("Atom %s not found in PDB file." % atom.atomLabel)
+            coordinates.append (atomPDB)
+
+        # . Iterate groups
+        results = []
+        for group in self.groups:
+            # . Prepare filenames
+            fError       =  "job_%s_%s.err" % (self.label, group.symbol)
+            fInput       =  "job_%s_%s.inp" % (self.label, group.symbol)
+            fOutput      =  "job_%s_%s.log" % (self.label, group.symbol)
+            fCheckpoint  =  "job_%s_%s.chk" % (self.label, group.symbol)
+
+            # . Calculate the charge of the group
+            charge       = self.CalculateGroup (group)
+            if logging:
+                print ("# . %s> Group %s in component %s has a charge of %.1f" % (_MODULE_LABEL, group.symbol, self.label, charge))
+            groupCharge  = int (round (charge))
+
+            lines   = []
+            if ncpu > 1:
+                lines.append ("%%NProcShared=%d\n" % ncpu)
+            lines.append ("%%mem=%dgb\n" % memory)
+            lines.append ("%%chk=%s\n"   % fCheckpoint)
+            
+            # . Set up a charge scheme
+            convert = {
+                "CHELPG"       :   "POP=CHELPG" ,
+                "MULLIKEN"     :   ""           ,
+                "MERZKOLLMAN"  :   "POP=MK"     , }
+            if not convert.has_key (scheme):
+                raise exceptions.StandardError ("Charge scheme %s is undefined." % scheme)
+            chargeScheme = convert[scheme]
+            
+            # . Write header
+            background   = "SCRF=(Solvent=Water,Read)" if cosmo                        else ""
+            restart      = "Guess=Read"                if os.path.exists (fCheckpoint) else ""
+            keywords     = (method, "NoSymm", restart, background, chargeScheme)
+            header       = " ".join (keywords)
+            lines.append ("#P " + header + "\n\n")
+            lines.append ("Input file generated by MolarisTools.\n\n")
+            multiplicity = 1
+            lines.append ("%d %d\n" % (groupCharge, multiplicity))
+    
+            # . Write geometry
+            for atom in coordinates:
+                if atom.label in group.labels:
+                    atomSymbol = atom.label[0]
+                    for symbol in _ATOMIC_SYMBOLS:
+                        if atom.label.startswith (symbol):
+                            atomSymbol = symbol
+                            break
+                    lines.append ("%2s    %16.10f    %16.10f    %16.10f\n" % (atomSymbol, atom.x, atom.y, atom.z))
+
+            # . Determine and add "link" atoms
+            links = []
+            for (labela, labelb) in self.bonds:
+                linkFound = False
+                flip      = False
+                if   (labela     in group.labels) and (labelb not in group.labels):
+                    linkFound = True
+                elif (labela not in group.labels) and (labelb     in group.labels):
+                    linkFound = True
+                    flip      = True
+                if linkFound:
+                    # . Make atom "b" always the one that sticks out from the group
+                    if flip:
+                        labela, labelb = labelb, labela
+                    for atomPDB in coordinates:
+                        if   atomPDB.label == labela:
+                            atoma = atomPDB
+                        elif atomPDB.label == labelb:
+                            atomb = atomPDB
+                    vx  = atomb.x - atoma.x
+                    vy  = atomb.y - atoma.y
+                    vz  = atomb.z - atoma.z
+                    vl  = math.sqrt (vx ** 2 + vy ** 2 + vz ** 2)
+                    vx /= vl
+                    vy /= vl
+                    vz /= vl
+                    linkAtom = PDBAtom (
+                        label   =   "H" ,
+                        serial  =   0   ,
+                        x       =   atoma.x + vx * _LINK_ATOM   ,
+                        y       =   atoma.y + vy * _LINK_ATOM   , 
+                        z       =   atoma.z + vz * _LINK_ATOM   , )
+                    links.append (linkAtom)
+            for atom in links:
+                lines.append ("%2s    %16.10f    %16.10f    %16.10f\n" % (atom.label, atom.x, atom.y, atom.z))
+            lines.append ("\n")
+            
+            # . If cosmo=True, write epsilon
+            if cosmo:
+                lines.append ("eps=%f\n\n" % dielectric)
+        
+            # . Run when there is no output file    
+            if not os.path.exists (fOutput):
+                if logging:
+                    print ("# . %s> Now running charge calculation for %s, group %s, group charge=%d ..." % (_MODULE_LABEL, self.label, group.symbol, groupCharge))
+                fi = open (fInput, "w")
+                for line in lines:
+                    fi.write (line)
+                fi.close ()
+                fe = open (fError, "w")
+                subprocess.check_call ([pathGaussian, fInput], stdout=fe, stderr=fe)
+                fe.close ()
+
+            # . Read Gaussian putput file
+            gaussian = GaussianOutputFile (fOutput)
+
+            # . Collect charges from Gaussian
+            convert = {
+                "MULLIKEN"     :  gaussian.charges      ,
+                "MERZKOLLMAN"  :  gaussian.espcharges   ,
+                "CHELPG"       :  gaussian.espcharges   , }
+            charges = convert[scheme]
+
+            # . Add the charges of link atoms to non-link atoms
+            nlinks   = len (links)
+            natoms   = len (group.labels)
+            correct  = 0.
+            if nlinks > 0:
+                correct = sum (charges[natoms:])
+            correct /= natoms
+            corrCharges = []
+            for charge in charges[:natoms]:
+                corrCharges.append (charge + correct)
+            if logging:
+                total = sum (charges[:natoms])
+                totalLink = sum (charges[natoms:])
+                print ("# . %s> Component %s, group %s charge %f, link atom correction %f" % (_MODULE_LABEL, self.label, group.symbol, total, totalLink))
+
+            # . Save and go to a next group
+            results.append (corrCharges)
+
+        # . Finally, assign calculated charges to atoms
+        newAtoms = []
+        for atom in self.atoms:
+            for (group, charges) in zip (self.groups, results):
+                if atom.atomLabel in group.labels:
+                    index = group.labels.index (atom.atomLabel)
+                    break
+            charge  = charges[index]
+            newAtom = AminoAtom (
+                atomLabel   =   atom.atomLabel  ,
+                atomType    =   atom.atomType   ,
+                atomCharge  =   charge          ,
+                )
+            newAtoms.append (newAtom)
+        self.atoms = newAtoms
+
+        # . Print a summary
+        if logging:
+            print ("# . %s> Setting quantum charges to %s complete" % (_MODULE_LABEL, self.label))
 
 
 #===============================================================================

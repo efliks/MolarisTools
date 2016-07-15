@@ -5,7 +5,9 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from    Utilities import TokenizeLine
-import  collections, exceptions
+import  collections, exceptions, math
+
+# . Warning: This module does not read all EVB parameters (for now).
 
 
 EVBMorsePair = collections.namedtuple ("EVBMorsePair"  ,  "typea  typeb  morseAB  rab  beta  forceHarmonic  radiusHarmonic")
@@ -15,6 +17,7 @@ EVBTorsion   = collections.namedtuple ("EVBTorsion"    ,  "typea  typeb  force  
 EVBImproper  = collections.namedtuple ("EVBImproper"   ,  "evbType  force  periodicity  angle0")
 EVBvdw       = collections.namedtuple ("EVBvdw"        ,  "evbType  repulsive  attractive")
 
+_MODULE_LABEL     = "EVBLib"
 
 
 class EVBLibrary (object):
@@ -60,6 +63,9 @@ class EVBLibrary (object):
                             radius   = radius   , )
                         self.morse.append (atom)
                         line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nmorse = len (self.morse)
+                        print ("# . %s> Read %d Morse types" % (_MODULE_LABEL, nmorse))
 
 
                 # EVBMorsePair = collections.namedtuple ("EVBMorsePair"  ,  "typea  typeb  morseAB  rab  beta  fHarmonic  rHarmonic")
@@ -82,6 +88,9 @@ class EVBLibrary (object):
                             radiusHarmonic  =  radiusHarmonic , )
                         self.pairs.append (pair)
                         line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        npairs = len (self.pairs)
+                        print ("# . %s> Read %d More pairs" % (_MODULE_LABEL, npairs))
 
 
                 #                  EVB
@@ -103,6 +112,9 @@ class EVBLibrary (object):
                             bar      =  bar      , )
                         self.angles.append (angle)
                         line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nangles = len (self.angles)
+                        print ("# . %s> Read %d angles" % (_MODULE_LABEL, nangles))
 
 
                 #                  EVB---EVB
@@ -124,6 +136,9 @@ class EVBLibrary (object):
                             phase        =  phase       , )
                         self.torsions.append (torsion)
                         line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        ntorsions = len (self.torsions)
+                        print ("# . %s> Read %d torsions" % (_MODULE_LABEL, ntorsions))
 
 
                 #                EVB
@@ -146,6 +161,9 @@ class EVBLibrary (object):
                             angle0       =  angle0      , )
                         self.impropers.append (improper)
                         line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nimpropers = len (self.impropers)
+                        print ("# . %s> Read %d impropers" % (_MODULE_LABEL, nimpropers))
 
 
                 # . Read EVB...EVB nonbonded parameters
@@ -163,6 +181,9 @@ class EVBLibrary (object):
                             attractive = attractive  , )
                         self.vdwevb.append (vdw)
                         line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nvdws = len (self.vdwevb)
+                        print ("# . %s> Read %d EVB...EVB VDW parameters" % (_MODULE_LABEL, nvdws))
 
 
                 # . Read EVB...solvent nonbonded parameters
@@ -180,6 +201,9 @@ class EVBLibrary (object):
                             attractive = attractive  , )
                         self.vdwsol.append (vdw)
                         line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nvdws = len (self.vdwsol)
+                        print ("# . %s> Read %d EVB...solvent VDW parameters" % (_MODULE_LABEL, nvdws))
         except StopIteration:
             pass
         # . Close the file
@@ -216,6 +240,62 @@ class EVBLibrary (object):
         for vdw in self.vdwsol:
             if vdw.evbType in types:
                 print ("%2s    %10.3f    %10.3f" % (vdw.evbType, vdw.repulsive, vdw.attractive))
+
+
+    def GetSolVDW (self, atomType):
+        if hasattr (self, "vdwsol"):
+            for vdw in self.vdwsol:
+                if vdw.evbType == atomType:
+                    return (vdw.repulsive, vdw.attractive)
+        return None
+
+
+    def GetEvbVDW (self, atomType):
+        if hasattr (self, "vdwevb"):
+            for vdw in self.vdwevb:
+                if vdw.evbType == atomType:
+                    return (vdw.repulsive, vdw.attractive)
+        return None
+
+
+    def GetBond (self, typea, typeb):
+        # . Parameters for Morse pairs take precedence
+        if hasattr (self, "pairs"):
+            for pair in self.pairs:
+                if (pair.typea == typea and pair.typeb == typeb) or (pair.typea == typeb and pair.typeb == typea):
+                    (morseD, r0) = pair.morseAB, pair.rab
+                    return (morseD, r0)
+        # . No pairs found, search one-atom parameters
+        if hasattr (self, "morse"):
+            morsea = None
+            morseb = None
+            for morse in self.morse:
+                if   morse.evbType == typea:
+                    morsea = morse
+                elif morse.evbType == typeb:
+                    morseb = morse
+            if morsea and morseb:
+                # . Apply combination rules
+                morseD = math.sqrt (morsea.morseD * morseb.morseD)
+                r0     = morsea.radius + morseb.radius
+                return (morseD, r0)
+        return None
+
+
+    def GetAngle (self, typea, typeb, typec):
+        if hasattr (self, "angles"):
+            for angle in self.angles:
+                if (angle.typeb == typeb):
+                    return (angle.force, angle.angle0)
+        return None
+
+
+    def GetTorsion (self, typeb, typec):
+        if hasattr (self, "torsions"):
+            for torsion in self.torsions:
+                if (torsion.typea == typeb and torsion.typeb == typec) or (torsion.typea == typec and torsion.typeb == typeb):
+                    return (torsion.force, torsion.periodicity, torsion.phase)
+        return None
 
 
 #===============================================================================
