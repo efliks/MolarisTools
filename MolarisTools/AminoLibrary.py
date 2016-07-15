@@ -128,7 +128,7 @@ class AminoLibrary (object):
         return (text, comment)
 
 
-    def _Parse (self, logging, reorder, unique, verbose=False):
+    def _Parse (self, logging, reorder, unique, verbose):
         components = []
         names      = []
         data       = open (self.filename)
@@ -234,7 +234,11 @@ class AminoLibrary (object):
                         except:
                             pass
                     # . Create a component and add it to the list
-                    component = AminoComponent (serial=componentSerial, name=name, atoms=atoms, bonds=bonds, groups=groups, connect=(connecta, connectb), logging=logging, title=title, verbose=verbose)
+                    logFlag = False
+                    if logging:
+                        if verbose:
+                            logFlag = True
+                    component = AminoComponent (serial=componentSerial, name=name, atoms=atoms, bonds=bonds, groups=groups, connect=(connecta, connectb), logging=logFlag, title=title)
                     components.append (component)
         except StopIteration:
             pass
