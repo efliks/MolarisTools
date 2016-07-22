@@ -96,8 +96,7 @@ class AminoComponent (object):
 
     @label.setter
     def label (self, new):
-        if hasattr (self, "name"):
-            self.name = new
+        self.name = new
 
 
     def CalculateGroup (self, group):

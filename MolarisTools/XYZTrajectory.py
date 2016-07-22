@@ -211,13 +211,17 @@ class XYZTrajectory (object):
                 bins[iboundary] += 1
             atomData.append (bins)
         # . Finish up
-        info = (natoms, minc, maxc, spread, nbins, sampling)
-        return (boundaries, atomData, info)
+        self.binsInfo = (natoms, minc, maxc, spread, nbins, sampling)
+        self.bins     = (boundaries, atomData)
 
 
-    def BinCharges_ToFile (self, filename="histogram.dat", rangeAtoms=(0, _MAX_ATOMS), rangeSteps=(0, _MAX_STEPS), sampling=0.1, limits=None):
+    def BinsWrite (self, filename="histogram.dat"):
         """Write histogram data to a file in a format suitable for Gnuplot."""
-        boundaries, atomData, (natoms, minc, maxc, spread, nbins, sampling) = self.BinCharges (rangeAtoms=rangeAtoms, rangeSteps=rangeSteps, sampling=sampling, limits=limits)
+        if hasattr (self, "bins"):
+            (boundaries, atomData) = self.bins
+            (natoms, minc, maxc, spread, nbins, sampling) = self.binsInfo
+        else:
+            raise exceptions.StandardError ("First calculate bins.")
         # . Write header
         message = "natoms=%d, minc=%.3f, maxc=%.3f, spread=%.3f, nbins=%d, sampling=%f" % (natoms, minc, maxc, spread, nbins, sampling)
         lines   = ["# %s" % message, ]
@@ -240,6 +244,58 @@ class XYZTrajectory (object):
         for line in lines:
             fo.write (line + "\n")
         fo.close ()
+
+
+    def BinsAssign (self):
+        """For each atom, get a charge from the most populous bin."""
+        if hasattr (self, "bins"):
+            (boundaries, atomData) = self.bins
+            (natoms, minc, maxc, spread, nbins, sampling) = self.binsInfo
+        else:
+            raise exceptions.StandardError ("First calculate bins.")
+        # . Iterate atoms
+        for atomSerial, (ad, atom) in enumerate (zip (atomData, self.steps[0].atoms), 1):
+            maxCount = 0
+            for (i, count) in enumerate (ad):
+                if count > maxCount:
+                    maxCount = count
+                    maxi     = i
+            (left, right) = boundaries[maxi]
+            charge = (left + right) / 2.
+            print ("%3d  %4s    %5.2f" % (atomSerial, atom.label, charge))
+
+
+    def AverageCharges (self):
+        """For each atom, calculate its average charge from the trajectory."""
+        nsteps = len (self.steps)
+        if nsteps > 0:
+            natoms   = len (self.steps[0].atoms)
+            averages = []
+            for i in range (natoms):
+                collect = []
+                for step in self.steps:
+                    atom = step.atoms[i]
+                    collect.append (atom.charge)
+                averages.append (sum (collect) / nsteps)
+            self.averageCharges = averages
+
+
+    def AverageChargesWrite (self, filename=""):
+        """Write average charges."""
+        if hasattr (self, "averageCharges"):
+            toFile = False
+            if filename != "":
+                output = open (filename, "w")
+                toFile = True
+            step   = self.steps[0]
+            for atomSerial, (atom, averageCharge) in enumerate (zip (step.atoms, self.averageCharges), 1):
+                line = "%3d  %4s    %5.2f" % (atomSerial, atom.label, averageCharge)
+                if toFile:
+                    output.write (line + "\n")
+                else:
+                    print (line)
+            if toFile:
+                output.close ()
 
 
 #===============================================================================

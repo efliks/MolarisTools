@@ -21,16 +21,26 @@ import  exceptions, os
 
 _MODULE_LABEL    = "AminoLib"
 _GROUP_START     = "A"
-_DEFAULT_LIBRARY_FILE   = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
+_DEFAULT_LIBRARY_FILE    = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
+_DEFAULT_TOPOLOGY_FORMAT = "Molaris"
 
 
 class AminoLibrary (object):
-    """A class to represent data from the Molaris amino98.lib file."""
+    """A class to represent data from the Molaris amino98.lib file.
 
-    def __init__ (self, filename=_DEFAULT_LIBRARY_FILE, logging=True, reorder=True, unique=False, verbose=False):
+    Can also read CHARMM topology files."""
+
+    def __init__ (self, filename=_DEFAULT_LIBRARY_FILE, logging=True, reorder=True, unique=False, verbose=False, topologyFormat=_DEFAULT_TOPOLOGY_FORMAT, cutType=True):
         """Constructor."""
         self.filename = filename
-        self._Parse (logging=logging, reorder=reorder, unique=unique, verbose=verbose)
+        if   topologyFormat == "Molaris":
+            self._Parse (logging=logging, reorder=reorder, unique=unique, verbose=verbose)
+        elif topologyFormat == "CHARMM":
+            self._ParseCHARMM (logging=logging, cutType=cutType)
+        else:
+            raise exceptions.StandardError ("Unknown topology format.")
+        if logging:
+            print ("# . %s> Found %d component%s" % (_MODULE_LABEL, self.ncomponents, "s" if self.ncomponents != 1 else ""))
         self._i = 0
 
 
@@ -126,6 +136,117 @@ class AminoLibrary (object):
             text      = line
             comment   = ""
         return (text, comment)
+
+
+    def _ParseCHARMM (self, logging, cutType):
+        data       = open (self.filename)
+        # . Initialize
+        bonds      = []
+        group      = []
+        groups     = []
+        components = []
+        try:
+            while True:
+                line = self._GetCleanLine (data)
+                #  RESI ASP         -1.00
+                #  GROUP
+                #  ATOM N    NH1    -0.47
+                #  ATOM H    H       0.31
+                #  ATOM CA   CT1     0.07
+                #  ATOM HA   HB      0.09
+                #  GROUP
+                #  ATOM CB   CT2    -0.28
+                #   (...)
+                #  BOND CB CA  CG CB  OD2 CG
+                #   (...)
+                #  DOUBLE  O   C   CG  OD1
+                if line.startswith ("RESI"):
+                    if group:
+                        groups.append (group)
+                        # . Create a temporary component
+                        component = (componentLabel, componentCharge, groups, bonds)
+                        components.append (component)
+                    # . Component begins
+                    tokens    = TokenizeLine (line, converters=[None, None, float])
+                    (componentLabel, componentCharge) = tokens[1:]
+                    # . Reinitialize
+                    bonds     = []
+                    group     = []
+                    groups    = []
+                elif line.startswith ("GROUP"):
+                    if group:
+                        groups.append (group)
+                        group = []
+                elif line.startswith ("ATOM" ):
+                    tokens  = TokenizeLine (line, converters=[None, None, None, float])
+                    newAtom = AminoAtom (
+                        # . Molaris only uses 2-character atom types
+                        atomType    =    tokens[2][:2] if cutType else tokens[2] ,
+                        atomLabel   =    tokens[1]  ,
+                        atomCharge  =    tokens[3]  ,
+                        )
+                    group.append (newAtom)
+                elif line.startswith ("BOND" ) or line.startswith ("DOUBLE"):
+                    tokens   = line.split ()
+                    labels   = tokens[1:]
+                    nlabels  = len (labels)
+                    if (nlabels % 2) != 0:
+                        raise exceptions.StandardError ("Incorrect BOND entry in component %s." % componentLabel)
+                    for i in range (0, nlabels, 2):
+                        labela, labelb = labels[i], labels[i + 1]
+                        # . Ignore bonds involving atoms from other residues
+                        checks = []
+                        for label in (labela, labelb):
+                            checks.extend ( [label[ 0] != "+", label[-1] != "-", not label[ 0].isdigit ()] )
+                        if all (checks):
+                            pair = (labela, labelb)
+                            bonds.append (pair)
+        except StopIteration:
+            pass
+        # . Finish up
+        data.close ()
+        if group:
+            groups.append (group)
+            component = (componentLabel, componentCharge, groups, bonds)
+            components.append (component)
+        # . Set up actual amino components from temporary components
+        aminoComponents = []
+        for componentSerial, (componentLabel, componentCharge, groups, bonds) in enumerate (components, 1):
+            # . Merge atoms
+            aminoAtoms  = []
+            for group in groups:
+                for atom in group:
+                    aminoAtoms.append (atom)
+            aminoGroups = []
+            # . Iterate temporary groups
+            for igroup, group in enumerate (groups):
+                # . Merge atom labels
+                labels = []
+                for atom in group:
+                    labels.append (atom.atomLabel)
+                # . Create a group
+                natoms = len (group) 
+                aminoGroup = AminoGroup (
+                    radius      =   5.       ,
+                    natoms      =   natoms   ,
+                    labels      =   labels   ,
+                    symbol      =   chr (ord (_GROUP_START) + igroup) ,
+                    centralAtom =   group[natoms / 2].atomLabel       ,
+                    )
+                aminoGroups.append (aminoGroup)
+            # . Create a component
+            component = AminoComponent (
+                serial  =   componentSerial ,
+                label   =   componentLabel  ,
+                groups  =   aminoGroups     ,
+                atoms   =   aminoAtoms      ,
+                bonds   =   bonds           ,
+                connect =   ("",    "")     ,
+                logging =   logging         ,
+                title   =   "Generated from CHARMM topology"  ,
+                )
+            aminoComponents.append (component)
+        self.components = aminoComponents
 
 
     def _Parse (self, logging, reorder, unique, verbose):
@@ -244,9 +365,6 @@ class AminoLibrary (object):
             pass
         # . Finish up
         data.close ()
-        if logging:
-            ncomponents = len (components)
-            print ("# . %s> Found %d component%s" % (_MODULE_LABEL, ncomponents, "s" if ncomponents > 1 else ""))
         self.components = components
 
 
@@ -263,4 +381,9 @@ class AminoLibrary (object):
 #===============================================================================
 # . Main program
 #===============================================================================
-if __name__ == "__main__": pass
+if __name__ == "__main__":
+    filename = os.path.join (os.environ["HOME"], "devel", "pcetk", "tests", "lysozyme", "toppar", "top_all27_prot_na.inp")
+    library  = AminoLibrary (filename=filename, logging=True, topologyFormat="CHARMM")
+
+    component = library["ARG"]
+    component.Write (showGroups=True, showLabels=True, sortGroups=True, terminate=True)
