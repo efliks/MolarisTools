@@ -4,6 +4,9 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
+#
+# . This module needs a clean-up
+#
 from   Units     import *
 from   Utilities import TokenizeLine
 
@@ -28,6 +31,8 @@ MolarisAtom = collections.namedtuple ("molarisAtom", "resSerial resName atomSeri
 Atom      = collections.namedtuple ("Atom"    ,   "label  atype  serial  charge  bonds  x  y  z")
 Residue   = collections.namedtuple ("Residue" ,   "label  serial  atoms")
 
+EVBComponents = collections.namedtuple ("EVBComponents", "density  Etotal  Egas  Ebond  Eangle  Etorsion  Eqmu  Eind  Evdw  Ebulk")
+QMMMComponents = collections.namedtuple ("QMMMComponents", "Eevb  Eclassical  Equantum  Eqmmm")
 
 
 class MDStep (object):
@@ -177,14 +182,15 @@ class MolarisOutputFile (object):
                             pass
                         #  classic - epot     :  -6518.24 equantum :   -199.94
                         #
-                        elif line.startswith ( " classic"  ):
-                            toka     = line.split (":")
-                            tokb     = toka[1].split ()
-                            tokc     = toka[2].split ()
-                            energies = Classic (
-                                    classic = float ( tokb[0] ) ,
-                                    quantum = float ( tokc[0] ) ,)
-                            currentMDStep.classic = energies
+# FIXME
+#                        elif line.startswith ( " classic"  ):
+#                            toka     = line.split (":")
+#                            tokb     = toka[1].split ()
+#                            tokc     = toka[2].split ()
+#                            energies = Classic (
+#                                    classic = float ( tokb[0] ) ,
+#                                    quantum = float ( tokc[0] ) ,)
+#                            currentMDStep.classic = energies
 
 
                         #  system  - epot     :  -6718.18 ekin     :   2140.90 etot     :  -4577.28
@@ -209,6 +215,95 @@ class MolarisOutputFile (object):
                         nfep = len (fepSteps)
                         print ("# Read FEP step %d." % nfep)
 
+
+                #  EVB Total Energies -- Hamiltonian Breakdown
+                # 
+                #   State    Total    Egas    Bond   Angle  Torsion   Eqmu   Eind     Vdw    Bulk
+                #  -------  ------   ------  -----  ------- -------  ------ ------  ------- ------
+                #  1(0.00) -1543.0     0.0    18.7    19.2     2.5  -1504.6    0.0    -30.2  -48.6
+                #  2(1.00) -1543.0     0.0    18.7    19.2     2.5  -1504.6    0.0    -30.2  -48.6
+                # (...)
+                elif line.count ("EVB Total Energies -- Hamiltonian Breakdown"):
+                    for i in range (4):
+                        line = next (lines)
+                    # . Read energies of state I
+                    tokens  = TokenizeLine (line, converters=([None, ] + [float, ] * 9))
+                    components = EVBComponents (
+                        density   =  float (tokens[0][2:6])  , 
+                        Etotal    =  tokens[1]   , 
+                        Egas      =  tokens[2]   , 
+                        Ebond     =  tokens[3]   , 
+                        Eangle    =  tokens[4]   , 
+                        Etorsion  =  tokens[5]   , 
+                        Eqmu      =  tokens[6]   , 
+                        Eind      =  tokens[7]   , 
+                        Evdw      =  tokens[8]   , 
+                        Ebulk     =  tokens[9]   , 
+                        )
+                    if not hasattr (self, "evbComponentsI"):
+                        self.evbComponentsI = []
+                    self.evbComponentsI.append (components)
+
+                    # . Read energies of state II
+                    line    = next (lines)
+                    tokens  = TokenizeLine (line, converters=([None, ] + [float, ] * 9))
+                    components = EVBComponents (
+                        density   =  float (tokens[0][2:6])  , 
+                        Etotal    =  tokens[1]   , 
+                        Egas      =  tokens[2]   , 
+                        Ebond     =  tokens[3]   , 
+                        Eangle    =  tokens[4]   , 
+                        Etorsion  =  tokens[5]   , 
+                        Eqmu      =  tokens[6]   , 
+                        Eind      =  tokens[7]   , 
+                        Evdw      =  tokens[8]   , 
+                        Ebulk     =  tokens[9]   , 
+                        )
+                    if not hasattr (self, "evbComponentsII"):
+                        self.evbComponentsII = []
+                    self.evbComponentsII.append (components)
+
+ 
+                # Now running quantum program ..., with the script on evb state:  2
+                #
+                # (...)
+                #
+                #  E_evb(eminus)=     -1016.25
+                #  E_classical  = E_tot-E_evb-evdw_12 =     -6235.77
+                #  Equantum =  -1595163.80
+                #  e_qmmm = E_tot-E_evb+Equantum =  -1601411.16
+                elif line.startswith (" Now running quantum program ..."):
+                    tokens = TokenizeLine (line, converters=[int, ], reverse=True)
+                    state  = tokens[0]
+                    while True:
+                        line = next (lines)
+                        if   line.startswith (" E_evb(eminus)="):
+                            tokens     = TokenizeLine (line, converters=[float, ], reverse=True)
+                            Eevb       = tokens[0]
+                        elif line.startswith (" E_classical"):
+                            tokens     = TokenizeLine (line, converters=[float, ], reverse=True)
+                            Eclassical = tokens[0]
+                        elif line.startswith (" Equantum"):
+                            tokens     = TokenizeLine (line, converters=[float, ], reverse=True)
+                            Equantum   = tokens[0]
+                        elif line.startswith (" e_qmmm"):
+                            tokens     = TokenizeLine (line, converters=[float, ], reverse=True)
+                            Eqmmm      = tokens[0]
+                            break
+                    components = QMMMComponents (
+                        Eevb        =   Eevb        ,
+                        Eqmmm       =   Eqmmm       ,
+                        Equantum    =   Equantum    ,
+                        Eclassical  =   Eclassical  ,
+                        )
+                    if state == 1:
+                        if not hasattr (self, "qmmmComponentsI"):
+                            self.qmmmComponentsI = []
+                        self.qmmmComponentsI.append (components)
+                    else:
+                        if not hasattr (self, "qmmmComponentsII"):
+                            self.qmmmComponentsII = []
+                        self.qmmmComponentsII.append (components)
 
 
                 # atom list for residue:     2_WAT,    # of atoms in this residue:   3
@@ -456,6 +551,82 @@ class MolarisOutputFile2 (object):
                 atom = self._FindAtom (resName, resSerial, atomName)
                 found.append (atom)
             print ("constraint_ang  %4d   %4d   %4d   %4.1f   %8.1f   # %4s %4s %4s" % (found[0].atomSerial, found[1].atomSerial, found[2].atomSerial, force, equilAngle, found[0].atomName, found[1].atomName, found[2].atomName))
+
+
+#-------------------------------------------------------------------------------
+class MolarisOutputFile3 (object):
+    """Simplified reader to extract energies for LRA calculations."""
+
+    def __init__ (self, filename, logging=False):
+        """Constructor."""
+        self.filename = filename
+        self.logging  = logging
+        self._Parse ()
+
+
+    def _Parse (self):
+        lines  = open (self.filename)
+        fileOK = False
+        try:
+            while True:
+                line = next (lines)
+                if line.startswith ("  NORMAL TERMINATION OF MOLARIS"):
+                    fileOK = True
+                elif line.startswith (" Energies for the system at step"):
+                    while True:
+                        line = next (lines)
+                        if line.startswith (" EVB Total Energies -- Hamiltonian Breakdown"):
+                            # . State I
+                            for i in range (4):
+                                line = next (lines)
+                            tokens  = TokenizeLine (line, converters=([None, ] + [float, ] * 9))
+                            Eevb    = tokens[1]
+                            if not hasattr (self, "Eevba"):
+                                self.Eevba = []
+                            self.Eevba.append (Eevb)
+                            # . State II
+                            line    = next (lines)
+                            tokens  = TokenizeLine (line, converters=([None, ] + [float, ] * 9))
+                            Eevb    = tokens[1]
+                            if not hasattr (self, "Eevbb"):
+                                self.Eevbb = []
+                            self.Eevbb.append (Eevb)
+
+                        elif line.startswith (" Now running quantum program ..."):
+                            tokens = TokenizeLine (line, converters=[int, ], reverse=True)
+                            state  = tokens[0]
+                            while True:
+                                line = next (lines)
+                                if   line.startswith (" E_evb(eminus)="):
+                                    pass
+                                elif line.startswith (" E_classical"):
+                                    pass
+                                elif line.startswith (" Equantum"):
+                                    pass
+                                elif line.startswith (" e_qmmm"):
+                                    tokens     = TokenizeLine (line, converters=[float, ], reverse=True)
+                                    Eqmmm      = tokens[0]
+                                    break
+                            if state < 2:
+                                if not hasattr (self, "Eqmmma"):
+                                    self.Eqmmma = []
+                                self.Eqmmma.append (Eqmmm)
+                            else:
+                                if not hasattr (self, "Eqmmmb"):
+                                    self.Eqmmmb = []
+                                self.Eqmmmb.append (Eqmmm)
+                            # . Exit MD step
+                            break
+
+                        elif line.startswith (" Average energies"):
+                            # . Last step does not report QMMM energies (bug in Molaris?)
+                            break
+        except StopIteration:
+            pass
+        # . Finalize
+        lines.close ()
+        if not fileOK:
+            raise exceptions.StandardError ("Abnormal termination of file %s" % self.filename)
 
 
 #===============================================================================

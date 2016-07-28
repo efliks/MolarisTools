@@ -5,7 +5,7 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from    Utilities import TokenizeLine
-import  collections, exceptions, math
+import  collections, exceptions, math, os
 
 # . Warning: This module does not read all EVB parameters (for now).
 
@@ -18,12 +18,13 @@ EVBImproper  = collections.namedtuple ("EVBImproper"   ,  "evbType  force  perio
 EVBvdw       = collections.namedtuple ("EVBvdw"        ,  "evbType  repulsive  attractive")
 
 _MODULE_LABEL     = "EVBLib"
+_DEFAULT_EVB_LIB  = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "evb_poll_clean.lib")
 
 
 class EVBLibrary (object):
     """A class to represent a collection of EVB paramters."""
 
-    def __init__ (self, filename="evb_poll_clean.lib", logging=True):
+    def __init__ (self, filename=_DEFAULT_EVB_LIB, logging=True):
         """Constructor."""
         self.filename = filename
         self._Parse (logging=logging)

@@ -14,7 +14,7 @@ from QMCallerGaussian    import QMCallerGaussian
 from MolarisResidue      import MolarisResidue
 from MolarisAtomsFile    import MolarisAtomsFile
 from MolarisInputFile    import MolarisInputFile
-from MolarisOutputFile   import MolarisOutputFile, MolarisOutputFile2
+from MolarisOutputFile   import MolarisOutputFile, MolarisOutputFile2, MolarisOutputFile3
 from DetermineAtoms      import DetermineAtoms
 from DistanceFile        import DistanceFile
 from FVXFile             import FVXFile

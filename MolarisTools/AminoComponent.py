@@ -6,7 +6,6 @@
 #-------------------------------------------------------------------------------
 from    Utilities           import TokenizeLine
 from    PDBFile             import PDBResidue, PDBAtom
-from    EVBLibrary          import EVBLibrary
 from    ParametersLibrary   import ParametersLibrary
 from    GaussianOutputFile  import GaussianOutputFile
 import  collections, exceptions, os, subprocess, math
@@ -613,10 +612,9 @@ class AminoComponent (object):
             fo.close ()
 
 
-    def WriteTypes (self, filename="", parameters=None, evbParameters=None):
+    def WriteTypes (self, filename="", parameters=None):
         """Write object's types for bonds, angles and dihedrals."""
         includeParameters    = isinstance (parameters,    ParametersLibrary)
-        includeEVBParameters = isinstance (evbParameters, EVBLibrary)
 
         lines = ["*** Bond types ***", ]
         bondTypes, bondUnique = self._BondsToTypes ()
@@ -626,15 +624,6 @@ class AminoComponent (object):
                 bond = parameters.GetBond (typea, typeb)
                 if bond:
                     par = "    %6.1f    %6.2f" % (bond.k, bond.r0)
-            if includeEVBParameters:
-                #
-                # . FIXME: Enzymix types are different than EVB types.
-                # . EVB type information must be somehow included in the amino library.
-                #
-                bond = evbParameters.GetBond (typea, typeb)
-                if bond:
-                    (morseD, r0) = bond
-                    par = "%s    %6.1f    %6.2f" % (par, morseD, r0)
             lines.append ("%3d    %-4s    %-4s%s" % (i, typea, typeb, par))
 
         if hasattr (self, "angles"):
@@ -646,8 +635,6 @@ class AminoComponent (object):
                     angle = parameters.GetAngle (typea, typeb, typec)
                     if angle:
                         par = "    %6.1f    %6.2f" % (angle.k, angle.r0)
-                if includeEVBParameters:
-                    pass
                 lines.append ("%3d    %-4s    %-4s    %-4s%s" % (i, typea, typeb, typec, par))
 
         if hasattr (self, "torsions"):
@@ -659,8 +646,6 @@ class AminoComponent (object):
                     torsion = parameters.GetTorsion (typeb, typec)
                     if torsion:
                         par = "    %1d    %6.2f    %6.1f" % (torsion.periodicity, torsion.k, torsion.phase)
-                if includeEVBParameters:
-                    pass
                 lines.append ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, typea, typeb, typec, typed, par))
 
             lines.append ("*** General torsion types ***")
@@ -670,8 +655,6 @@ class AminoComponent (object):
                     torsion = parameters.GetTorsion (typeb, typec)
                     if torsion:
                         par = "    %1d    %6.2f    %6.1f" % (torsion.periodicity, torsion.k, torsion.phase)
-                if includeEVBParameters:
-                    pass
                 lines.append ("%3d    %-4s    %-4s    %-4s    %-4s%s" % (i, "@@", typeb, typec, "@@", par))
 
         lines.append ("*** Van der Waals and mass types ***")
@@ -685,8 +668,6 @@ class AminoComponent (object):
                 vdw = parameters.GetVDW (atomType)
                 if vdw:
                     par = "    %8.1f    %8.1f    %6.2f" % (vdw.repulsive, vdw.attractive, vdw.mass)
-            if includeEVBParameters:
-                pass
             lines.append ("%3d    %-4s%s" % (i, atomType, par))
 
         if not filename:
