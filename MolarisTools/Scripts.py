@@ -9,19 +9,21 @@ from AminoComponent         import AminoComponent, AminoGroup, AminoAtom
 from AminoLibrary           import AminoLibrary
 from PDBFile                import PDBFile
 from ParametersLibrary      import ParametersLibrary
+from EVBLibrary             import EVBLibrary
+from MolarisInputFile       import MolarisInputFile
+from Units                  import DEFAULT_AMINO_LIB, DEFAULT_PARM_LIB, DEFAULT_EVB_LIB, typicalBonds
 
 import os, math
 
-
-_DEFAULT_LIBRARY_FILE   = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
-_DEFAULT_PARAMETER_FILE = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "parm.lib")
 _DEFAULT_FORCE          = 5.
-
 _DEFAULT_TOLERANCE      = 1.6
 _DEFAULT_TOLERANCE_LOW  = 0.85
 
+# . Generally typical bond lengths seem to work better if slightly streched
+_SCALE_TOLERANCE        = 1.2
 
-def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", "BR", ), constrainAll=False):
+
+def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", "BR", ), constrainAll=False):
     """Generate a list of EVB atoms and bonds based on a Molaris output file."""
     library = AminoLibrary (fileLibrary, logging=False)
     
@@ -103,7 +105,7 @@ def GenerateEVBList (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="deter
                 print ("%s# constraint_post  %4d    %4.1f  %4.1f  %4.1f  %8.3f  %8.3f  %8.3f    add_to_qm_force    0   # %s" % (tabs, atom.serial, _DEFAULT_FORCE, _DEFAULT_FORCE, _DEFAULT_FORCE, atom.x, atom.y, atom.z, atom.label))
 
 
-def DetermineBAT (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determine_atoms.out", residueLabels=(), fileParameters=_DEFAULT_PARAMETER_FILE):
+def DetermineBAT (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_atoms.out", residueLabels=(), fileParameters=DEFAULT_PARM_LIB):
     """Determine bonds, angles and torsions to analyze their statistical distributions."""
 
     # . Load the log file
@@ -174,6 +176,32 @@ def DetermineBAT (fileLibrary=_DEFAULT_LIBRARY_FILE, fileMolarisOutput="determin
                         print ("%4d    %4d    %4d    %4d    # %4s    %4s    %4s    %4s" % (serials[0], serials[1], serials[2], serials[3], torsiona, torsionb, torsionc, torsiond))
 
 
+def _GetBondTolerance (atoma, atomb, defaultTolerance, labels=("CL", "BR", ), logging=True):
+    """Get a typical bond length between two atoms."""
+    templ = atoma.label.upper ()[:2]
+    if templ in labels:
+        labela = templ
+    else:
+        labela = templ[:1]
+    templ = atomb.label.upper ()[:2]
+    if templ in labels:
+        labelb = templ
+    else:
+        labelb = templ[:1]
+    key = (labela, labelb)
+    if typicalBonds.has_key (key):
+        tolerance = typicalBonds[key]
+    else:
+        yek = (labelb, labela)
+        if typicalBonds.has_key (yek):
+            tolerance = typicalBonds[yek]
+        else:
+            tolerance = defaultTolerance / _SCALE_TOLERANCE
+            if logging:
+                print ("# . Warning: Using default tolerance for atom pair (%s, %s)" % (atoma.label, atomb.label))
+    return (tolerance * _SCALE_TOLERANCE)
+
+
 def BondsFromDistances (atoms, tolerance=_DEFAULT_TOLERANCE, toleranceLow=_DEFAULT_TOLERANCE_LOW, logging=True):
     """Generate a list of bonds based on distances between atoms."""
     # . Construct a distance matrix
@@ -204,7 +232,7 @@ def BondsFromDistances (atoms, tolerance=_DEFAULT_TOLERANCE, toleranceLow=_DEFAU
             for j, column in enumerate (row):
                 mark = ""
                 if i != j:
-                    if column <= tolerance:
+                    if column <= _GetBondTolerance (atoms[i], atoms[j], tolerance, logging=False):
                         if column <= toleranceLow:
                             mark = "!"
                         else:
@@ -212,19 +240,15 @@ def BondsFromDistances (atoms, tolerance=_DEFAULT_TOLERANCE, toleranceLow=_DEFAU
                 line = "%s%6s" % (line, "%s%.2f" % (mark, column))
             print line
     # . Search the distance matrix for bonds
-    # . TODO
-    # . Have a table of common bond lengths and replace tolerance by a percentage of
-    # . how much a bond can differ from its tabled value.
     bonds = []
     for i, row in enumerate (rows):
         for j, column in enumerate (row):
             if i != j:
-                if column <= tolerance:
-                    atoma = atoms[i]
-                    atomb = atoms[j]
+                if column <= _GetBondTolerance (atoms[i], atoms[j], tolerance, logging=logging):
                     if column <= toleranceLow:
                         if logging:
-                            print ("# . Warning: Atoms %s%d and %s%d are too close to each other." % (atoma.label, atoma.serial, atomb.label, atomb.serial))
+                            print ("# . Warning: Atoms (%s, %s) are too close to each other" % (atoma.label, atomb.label))
+                    (atoma, atomb) = (atoms[i], atoms[j])
                     pair  = ((i, atoma.serial, atoma.label), (j, atomb.serial, atomb.label))
                     bonds.append (pair)
     if logging:
@@ -294,6 +318,19 @@ def AminoComponents_FromPDB (filename, tolerance=_DEFAULT_TOLERANCE, toleranceLo
             )
         components.append (component)
     return components
+
+
+def MolarisInput_ToEVBParameters (filename, evbLibrary=DEFAULT_EVB_LIB):
+    """Write a list of EVB parameters for a given Molaris input file."""
+    molarisInput = MolarisInputFile (filename)
+    library      = EVBLibrary (evbLibrary)
+    states       = molarisInput.types
+    types        = []
+    for state in states:
+        for evbType in state:
+            if evbType not in types:
+                types.append (evbType)
+    library.List (types=types)
 
 
 #===============================================================================

@@ -30,6 +30,8 @@ class ParametersLibrary (object):
 
     def _Parse (self, logging):
         lines = open (self.filename)
+        if logging:
+            print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, self.filename))
         try:
             while True:
                 line = next (lines)

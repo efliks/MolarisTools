@@ -33,5 +33,5 @@ from PDBFile             import PDBFile, PDBAtom, PDBResidue, PDBChain
 
 # . Miscellaneous
 from CHELPGCharges       import CHELPGCharges
-from Scripts             import GenerateEVBList, DetermineBAT, BondsFromDistances, AminoComponents_FromPDB
+from Scripts             import GenerateEVBList, DetermineBAT, BondsFromDistances, AminoComponents_FromPDB, MolarisInput_ToEVBParameters
 from Utilities           import Pickle, Unpickle

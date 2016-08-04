@@ -17,11 +17,11 @@
 
 from    Utilities       import TokenizeLine
 from    AminoComponent  import AminoAtom, AminoGroup, AminoComponent
+from    Units           import DEFAULT_AMINO_LIB
 import  exceptions, os
 
 _MODULE_LABEL    = "AminoLib"
 _GROUP_START     = "A"
-_DEFAULT_LIBRARY_FILE    = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
 _DEFAULT_TOPOLOGY_FORMAT = "Molaris"
 
 
@@ -30,7 +30,7 @@ class AminoLibrary (object):
 
     Can also read CHARMM topology files."""
 
-    def __init__ (self, filename=_DEFAULT_LIBRARY_FILE, logging=True, reorder=True, unique=False, verbose=False, topologyFormat=_DEFAULT_TOPOLOGY_FORMAT, cutType=True):
+    def __init__ (self, filename=DEFAULT_AMINO_LIB, logging=True, reorder=True, unique=False, verbose=False, topologyFormat=_DEFAULT_TOPOLOGY_FORMAT, cutType=True):
         """Constructor."""
         self.filename = filename
         if   topologyFormat == "Molaris":
@@ -140,6 +140,8 @@ class AminoLibrary (object):
 
     def _ParseCHARMM (self, logging, cutType):
         data       = open (self.filename)
+        if logging:
+            print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, self.filename))
         # . Initialize
         bonds      = []
         group      = []
@@ -253,6 +255,8 @@ class AminoLibrary (object):
         components = []
         names      = []
         data       = open (self.filename)
+        if logging:
+            print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, self.filename))
         try:
             while True:
                 line = self._GetCleanLine (data)

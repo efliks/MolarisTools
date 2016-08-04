@@ -4,8 +4,14 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-# http://users.mccammon.ucsd.edu/~dzhang/energy-unit-conv-table.html
+import os
 
+DEFAULT_AMINO_LIB  = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "amino98_custom_small.lib")
+DEFAULT_PARM_LIB   = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "parm.lib")
+DEFAULT_EVB_LIB    = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "evb_poll_clean.lib")
+
+
+# . http://users.mccammon.ucsd.edu/~dzhang/energy-unit-conv-table.html
 HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM = 627.509469 / 0.529177       # 1185.8215096272136
 HARTREE_TO_KCAL_MOL               = 627.509469
 GRADIENT_TO_FORCE                 =  -1.
@@ -13,6 +19,40 @@ EV_TO_KCAL_MOL                    =  23.0609
 
 BOHR_TO_ANGSTROM                  =   0.529177
 ANGSTROM_TO_BOHR                  =   1. / BOHR_TO_ANGSTROM
+
+
+# . Typical bond lengths
+# . http://www.wiredchemist.com/chemistry/data/bond_energies_lengths.html
+typicalBonds = {
+    ("H"   ,  "H" )    :   0.74  ,
+    ("H"   ,  "F" )    :   0.92  ,
+    ("H"   ,  "O" )    :   0.96  ,
+    ("H"   ,  "N" )    :   1.01  ,
+    ("H"   ,  "C" )    :   1.09  ,
+    ("H"   ,  "CL")    :   1.27  ,
+    ("C"   ,  "F" )    :   1.35  ,
+    ("H"   ,  "BR")    :   1.41  ,
+    ("F"   ,  "F" )    :   1.42  ,
+    ("C"   ,  "O" )    :   1.43  ,
+    ("N"   ,  "N" )    :   1.45  ,
+    ("C"   ,  "N" )    :   1.47  ,
+    ("O"   ,  "O" )    :   1.48  ,
+    ("C"   ,  "C" )    :   1.54  ,
+    ("P"   ,  "F" )    :   1.54  ,
+    ("H"   ,  "I" )    :   1.61  ,
+    ("P"   ,  "O" )    :   1.63  ,
+    ("C"   ,  "CL")    :   1.77  ,
+    ("C"   ,  "S" )    :   1.82  ,
+    ("P"   ,  "C" )    :   1.84  ,
+    ("P"   ,  "S" )    :   1.86  ,
+    ("C"   ,  "BR")    :   1.94  ,
+    ("CL"  ,  "CL")    :   1.99  ,
+    ("P"   ,  "CL")    :   2.03  ,
+    ("C"   ,  "I" )    :   2.14  ,
+    ("P"   ,  "P" )    :   2.21  ,
+    ("BR"  ,  "BR")    :   2.28  ,
+    ("I"   ,  "I" )    :   2.67  ,
+}
 
 
 atomicNumberToSymbol = {
@@ -136,8 +176,6 @@ atomicNumberToSymbol = {
  118   :  "UUO" ,   #  Ununoctium
     }
 
-
-# . Dictionary comprehension does not work in Python 2.6
 symbolToAtomicNumber = {}
-for number, symbol in atomicNumberToSymbol.iteritems ():
+for (number, symbol) in atomicNumberToSymbol.iteritems ():
     symbolToAtomicNumber[symbol] = number

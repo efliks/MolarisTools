@@ -130,6 +130,8 @@ class MolarisInputFile (object):
 
     def _Parse (self, logging):
         lines       = open (self.filename)
+        if logging:
+            print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, self.filename))
         stateI      = []
         stateII     = []
         self.bonds  = []

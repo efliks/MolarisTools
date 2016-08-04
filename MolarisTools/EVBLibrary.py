@@ -5,6 +5,7 @@
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from    Utilities import TokenizeLine
+from    Units     import DEFAULT_EVB_LIB
 import  collections, exceptions, math, os
 
 # . Warning: This module does not read all EVB parameters (for now).
@@ -18,13 +19,12 @@ EVBImproper  = collections.namedtuple ("EVBImproper"   ,  "evbType  force  perio
 EVBvdw       = collections.namedtuple ("EVBvdw"        ,  "evbType  repulsive  attractive")
 
 _MODULE_LABEL     = "EVBLib"
-_DEFAULT_EVB_LIB  = os.path.join (os.environ["HOME"], "DNA_polymerase", "libs", "evb_poll_clean.lib")
 
 
 class EVBLibrary (object):
     """A class to represent a collection of EVB paramters."""
 
-    def __init__ (self, filename=_DEFAULT_EVB_LIB, logging=True):
+    def __init__ (self, filename=DEFAULT_EVB_LIB, logging=True):
         """Constructor."""
         self.filename = filename
         self._Parse (logging=logging)
@@ -46,6 +46,8 @@ class EVBLibrary (object):
 
     def _Parse (self, logging):
         data = open (self.filename)
+        if logging:
+            print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, self.filename))
         try:
             while True:
                 line, comment = self._GetLineWithComment (data)
@@ -211,35 +213,63 @@ class EVBLibrary (object):
         data.close ()
 
 
-    def List (self, types=["C0", ]):
-        """List all energy terms containing a particular atom type."""
-        print ("# . Morse atoms")
+    def List (self, types=[]):
+        """List energy terms related to a particular atom type or all atom types."""
+        print ("# . Morse types")#    morse_type     morse_d    radius
         for bond in self.morse:
-            if bond.evbType in types:
+            write = True
+            if types:
+                if not (bond.evbType in types):
+                    write = False
+            if write:
                 print ("%2s    %5.1f    %7.2f" % (bond.evbType, bond.morseD, bond.radius))
-        print ("# . Morse pairs")
+        print ("# . Morse pairs")#    m_pair         morse_ab    r_ab      beta     f_harmonic   r0_harmonic
         for pair in self.pairs:
-            if pair.typea in types or pair.typeb in types:
+            write = True
+            if types:
+                if not (pair.typea in types or pair.typeb in types):
+                    write = False
+            if write:
                 print ("%2s    %2s    %5.1f    %7.2f    %5.1f    %7.1f    %5.1f" % (pair.typea, pair.typeb, pair.morseAB, pair.rab, pair.beta, pair.forceHarmonic, pair.radiusHarmonic))
-        print ("# . Angles")
+        print ("# . Angles")#    angle_type     force      angle0
         for angle in self.angles:
-            if angle.evbType in types:
+            write = True
+            if types:
+                if not (angle.evbType in types):
+                    write = False
+            if write:
                 print ("%2s    %5.1f    %7.2f" % (angle.evbType, angle.force, angle.angle0))
-        print ("# . Torsions")
+        print ("# . Torsions")#    torsion_type   force      periodicity  phase_angle
         for torsion in self.torsions:
-            if torsion.typea in types or torsion.typeb in types:
+            write = True
+            if types:
+                if not (torsion.typea in types or torsion.typeb in types):
+                    write = False
+            if write:
                 print ("%2s    %2s    %7.1f    %7.1f    %7.1f" % (torsion.typea, torsion.typeb, torsion.force, torsion.periodicity, torsion.phase))
-        print ("# . Impropers")
+        print ("# . Impropers")#    itorsion_type  force      periodicity  itorsion_angle0
         for improper in self.impropers:
-            if improper.evbType in types:
+            write = True
+            if types:
+                if not (improper.evbType in types):
+                    write = False
+            if write:
                 print ("%2s    %7.1f    %7.1f    %7.1f" % (improper.evbType, improper.force, improper.periodicity, improper.angle0))
-        print ("# . vdw EVB...EVB")
+        print ("# . vdw EVB...EVB")#    vdwevb              vdwa      vdwb
         for vdw in self.vdwevb:
-            if vdw.evbType in types:
+            write = True
+            if types:
+                if not (vdw.evbType in types):
+                    write = False
+            if write:
                 print ("%2s    %10.3f    %10.3f" % (vdw.evbType, vdw.repulsive, vdw.attractive))
-        print ("# . vdw EVB...solvent")
+        print ("# . vdw EVB...solvent")#    solvdw              vdwa      vdwb
         for vdw in self.vdwsol:
-            if vdw.evbType in types:
+            write = True
+            if types:
+                if not (vdw.evbType in types):
+                    write = False
+            if write:
                 print ("%2s    %10.3f    %10.3f" % (vdw.evbType, vdw.repulsive, vdw.attractive))
 
 
@@ -302,4 +332,6 @@ class EVBLibrary (object):
 #===============================================================================
 # . Main program
 #===============================================================================
-if __name__ == "__main__": pass
+if __name__ == "__main__":
+    library  = EVBLibrary (logging=True)
+    library.List ()
