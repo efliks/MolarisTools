@@ -6,11 +6,18 @@
 #-------------------------------------------------------------------------------
 from   Units     import *
 from   Utilities import TokenizeLine, WriteData
-import collections
+import collections, exceptions
+
 
 Atom     = collections.namedtuple ("Atom"     , "symbol x y z charge")
 Force    = collections.namedtuple ("Force"    , "x y z")
 ScanStep = collections.namedtuple ("ScanStep" , "Efinal atoms forces mcharges charges")
+
+# . If any of these lines is encountered, parsing of a file must stop
+_ERROR_LINES = ("A FAILURE HAS OCCURRED, TREAT RESULTS WITH CAUTION" ,
+    "UNABLE TO ACHIEVE SELF-CONSISTENCE" ,
+    "FAILED TO ACHIEVE SCF" ,
+    "FOR SOME REASON THE SCF CALCULATION FAILED" , )
 
 
 class MopacOutputFile (object):
@@ -29,10 +36,17 @@ class MopacOutputFile (object):
         return gradient
 
 
+    def _CheckLine (self, line, patterns):
+        """Check line against multiple patterns."""
+        for pattern in patterns:
+            if line.count (pattern):
+                return True
+        return False
+
+
     def _Parse (self):
         lines = open (self.inputfile)
-        # . Assume the job is failed until finding a "MOPAC DONE" statement
-        jobOK = False
+        jobOK = True
         try:
             while True:
                 line = next (lines)
@@ -114,8 +128,8 @@ class MopacOutputFile (object):
                     self.atoms = atoms
 
                 # . Check for a failed job
-                elif line.startswith (" == MOPAC DONE =="):
-                    jobOK = True
+                elif self._CheckLine (line, _ERROR_LINES):
+                    jobOK = False
         except StopIteration:
             pass
         # . Close the file

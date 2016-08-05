@@ -55,16 +55,10 @@ class QMCaller (object):
                 setattr (self, key, value)
             else:
                 raise exceptions.StandardError ("Unknown option %s." % key)
-
         # . Check for conflicting attributes
         if self.cosmo and self.qmmm:
             raise exceptions.StandardError ("Both cosmo and qmmm options cannot be enabled.")
 
-        # . Preparatory step
-        self._Prepare ()
-
-
-    def _Prepare (self):
         # . Read mol.in file from Molaris
         self.molaris = MolarisAtomsFile (filename=self.fileAtoms, replaceSymbols=self.replaceSymbols)
 
