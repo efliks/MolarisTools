@@ -21,6 +21,7 @@ from FVXFile             import FVXFile
 from ParametersLibrary   import ParametersLibrary
 from AminoLibrary        import AminoLibrary
 from EVBLibrary          import EVBLibrary
+from GapFile             import GapFile
 
 # . Handling of other files
 from GaussianOutputFile  import GaussianOutputFile
@@ -33,5 +34,5 @@ from PDBFile             import PDBFile, PDBAtom, PDBResidue, PDBChain
 
 # . Miscellaneous
 from CHELPGCharges       import CHELPGCharges
-from Scripts             import GenerateEVBList, DetermineBAT, BondsFromDistances, AminoComponents_FromPDB, MolarisInput_ToEVBParameters
+from Scripts             import GenerateEVBList, DetermineBAT, BondsFromDistances, AminoComponents_FromPDB, MolarisInput_ToEVBParameters, CalculateLRA
 from Utilities           import Pickle, Unpickle

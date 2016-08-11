@@ -11,9 +11,10 @@ from PDBFile                import PDBFile
 from ParametersLibrary      import ParametersLibrary
 from EVBLibrary             import EVBLibrary
 from MolarisInputFile       import MolarisInputFile
+from GapFile                import GapFile
 from Units                  import DEFAULT_AMINO_LIB, DEFAULT_PARM_LIB, DEFAULT_EVB_LIB, typicalBonds
 
-import os, math
+import os, math, glob
 
 _DEFAULT_FORCE          = 5.
 _DEFAULT_TOLERANCE      = 1.6
@@ -331,6 +332,50 @@ def MolarisInput_ToEVBParameters (filename, evbLibrary=DEFAULT_EVB_LIB):
             if evbType not in types:
                 types.append (evbType)
     library.List (types=types)
+
+
+def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None):
+    """Calculate LRA for two endpoint simulations."""
+    points = []
+    for path in (patha, pathb):
+        logs     = glob.glob (os.path.join (path, "evb_equil_*out"))
+        gapfiles = []
+        for log in logs:
+            (logfile, logext) = os.path.splitext (log)
+            gapfile = os.path.join (logfile, "gap.out")
+            gapfiles.append (gapfile)
+        if logging:
+            ngap = len (gapfiles)
+            print ("# . Found %d gap files at location %s" % (ngap, path))
+        points.append (gapfiles)
+    (filesa, filesb) = points
+    lena, lenb = map (len, points)
+    ngap = lena
+    if lena > lenb:
+        ngap = lenb
+    if logging:
+        print ("# . Using %d gap files" % ngap)
+    points = []
+    for gapfiles in (filesa, filesb):
+        gap = GapFile (gapfiles[0], logging=False)
+        for nextfile in gapfiles[1:ngap]:
+            gap.Extend (nextfile)
+        points.append (gap)
+    (gapa, gapb) = points
+    if logging:
+        print ("# . Number of steps in each endpoint is (%d, %d)" % (gapa.nsteps, gapb.nsteps))
+        if   isinstance (skip, int):
+            print ("# . Skipping first %d configurations" % skip)
+        elif isinstance (skip, float):
+            percent  = int (skip * 100.)
+            (na, nb) = int (gapa.nsteps * skip), int (gapb.nsteps * skip)
+            print ("# . Skipping first %d%% (%d, %d) of configurations" % (percent, na, nb))
+    a = gapa.CalculateLRATerm (skip=skip)
+    b = gapb.CalculateLRATerm (skip=skip)
+    lra = .5 * (a + b)
+    if logging:
+        print ("# . Calculated LRA = %f" % lra)
+    return lra
 
 
 #===============================================================================
