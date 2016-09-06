@@ -47,7 +47,7 @@ class GapFile (object):
             nskip = int (self.nsteps * skip)
             if self.logging:
                 percent = int (skip * 100.)
-                print ("# . %s> Skipping first %d%% (%d) configurations" % (_MODULE_LABEL, percent, nskip))
+                print ("# . %s> Skipping first %d%% (%d) of configurations" % (_MODULE_LABEL, percent, nskip))
             steps = self.steps[nskip:]
         else:
             steps = self.steps

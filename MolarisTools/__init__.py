@@ -36,3 +36,4 @@ from PDBFile             import PDBFile, PDBAtom, PDBResidue, PDBChain
 from CHELPGCharges       import CHELPGCharges
 from Scripts             import GenerateEVBList, DetermineBAT, BondsFromDistances, AminoComponents_FromPDB, MolarisInput_ToEVBParameters, CalculateLRA
 from Utilities           import Pickle, Unpickle
+from AminoComponent      import AminoComponent, AminoGroup, AminoAtom

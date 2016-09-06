@@ -103,7 +103,7 @@ def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine
                 if not constrainAll:
                     if atom.label[0] == "H":
                         continue
-                print ("%s# constraint_post  %4d    %4.1f  %4.1f  %4.1f  %8.3f  %8.3f  %8.3f    add_to_qm_force    0   # %s" % (tabs, atom.serial, _DEFAULT_FORCE, _DEFAULT_FORCE, _DEFAULT_FORCE, atom.x, atom.y, atom.z, atom.label))
+                print ("%s# constraint_post  %4d    %4.1f  %4.1f  %4.1f  %8.3f  %8.3f  %8.3f   # %s" % (tabs, atom.serial, _DEFAULT_FORCE, _DEFAULT_FORCE, _DEFAULT_FORCE, atom.x, atom.y, atom.z, atom.label))
 
 
 def DetermineBAT (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_atoms.out", residueLabels=(), fileParameters=DEFAULT_PARM_LIB):
@@ -124,8 +124,8 @@ def DetermineBAT (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_at
                     include = False
             if include:
                 component = library[residue.label]
-                component.GenerateAngles (quiet=True)
-                component.GenerateTorsions (quiet=True)
+                component.GenerateAngles (logging=False)
+                component.GenerateTorsions (logging=False)
 
                 # . Write bonds
                 bondTypes, bondUnique = component._BondsToTypes ()
@@ -138,9 +138,9 @@ def DetermineBAT (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_at
                     if parameters:
                         parBond = parameters.GetBond (typea, typeb)
                         if parBond:
-                            print ("constraint_pair  %4d  %4d    %4.1f    %5.2f    add_to_qm_force    0    # %4s    %4s" % (serials[0], serials[1], _DEFAULT_FORCE, parBond.r0, bonda, bondb))
+                            print ("constraint_pair  %4d  %4d    %4.1f    %5.2f    # %4s    %4s" % (serials[0], serials[1], _DEFAULT_FORCE, parBond.r0, bonda, bondb))
                         else:
-                            print ("constraint_pair  %4d  %4d    %4.1f    XXXXX    add_to_qm_force    0    # %4s    %4s" % (serials[0], serials[1], _DEFAULT_FORCE,             bonda, bondb))
+                            print ("constraint_pair  %4d  %4d    %4.1f    XXXXX    # %4s    %4s" % (serials[0], serials[1], _DEFAULT_FORCE,             bonda, bondb))
                     else:
                         print ("%4d    %4d    # %4s    %4s" % (serials[0], serials[1], bonda, bondb))
 
@@ -155,9 +155,9 @@ def DetermineBAT (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_at
                     if parameters:
                         parAngle = parameters.GetAngle (typea, typeb, typec)
                         if parAngle:
-                            print ("constraint_ang   %4d  %4d  %4d    %4.1f    %5.2f    add_to_qm_force    0    # %4s    %4s    %4s" % (serials[0], serials[1], serials[2], _DEFAULT_FORCE, parAngle.r0, anglea, angleb, anglec))
+                            print ("constraint_ang   %4d  %4d  %4d    %4.1f    %5.2f    # %4s    %4s    %4s" % (serials[0], serials[1], serials[2], _DEFAULT_FORCE, parAngle.r0, anglea, angleb, anglec))
                         else:
-                            print ("constraint_ang   %4d  %4d  %4d    %4.1f    XXXXX    add_to_qm_force    0    # %4s    %4s    %4s" % (serials[0], serials[1], serials[2], _DEFAULT_FORCE,              anglea, angleb, anglec))
+                            print ("constraint_ang   %4d  %4d  %4d    %4.1f    XXXXX    # %4s    %4s    %4s" % (serials[0], serials[1], serials[2], _DEFAULT_FORCE,              anglea, angleb, anglec))
                     else:
                         print ("%4d    %4d    %4d    # %4s    %4s    %4s" % (serials[0], serials[1], serials[2], anglea, angleb, anglec))
 

@@ -162,7 +162,7 @@ class AminoComponent (object):
         print ("}")
 
 
-    def Write (self, filename=None, title=None, showGroups=False, showLabels=False, sortGroups=False, terminate=True):
+    def Write (self, filename=None, title=None, showGroups=False, showLabels=False, sortGroups=False, terminate=True, append=False):
         """Write component in a format understandable by Molaris."""
         output = []
         output.append (_DEFAULT_DIVIDER)
@@ -264,7 +264,7 @@ class AminoComponent (object):
             output.append (_DEFAULT_DIVIDER)
         # . Write to a file or terminal
         if filename:
-            fo = open (filename, "w")
+            fo = open (filename, "a" if append else "w")
             for line in output:
                 fo.write ("%s\n" % line)
             fo.close ()
@@ -980,6 +980,24 @@ class AminoComponent (object):
         # . Print a summary
         if logging:
             print ("# . %s> Setting quantum charges to %s complete" % (_MODULE_LABEL, self.label))
+
+
+    def RoundCharges (self, n=2, atomIndex=0, logging=True):
+        """Round up charges to n (default: 2) digits."""
+        if logging:
+            print ("# . %s> Total charge of %s is %f" % (_MODULE_LABEL, self.label, self.charge))
+        correction = round (self.charge, n) - self.charge
+        if logging:
+            print ("# . %s> Adding correction of %f to atom %s of component %s" % (_MODULE_LABEL, correction, atomIndex, self.label))
+        atom    = self.atoms[atomIndex]
+        atomNew = AminoAtom (
+            atomLabel   =   atom.atomLabel  ,
+            atomType    =   atom.atomType   ,
+            atomCharge  =   (atom.atomCharge + correction)  ,
+            )
+        self.atoms[atomIndex] = atomNew
+        if logging:
+            print ("# . %s> Total charge of %s after correction is %f" % (_MODULE_LABEL, self.label, self.charge))
 
 
 #===============================================================================

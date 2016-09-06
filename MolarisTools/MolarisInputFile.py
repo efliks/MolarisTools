@@ -9,10 +9,28 @@ from   Utilities import TokenizeLine
 import  collections, exceptions
 
 
-EVBAtom  = collections.namedtuple ("EVBAtom"  , "serial  atype  charge  comment")
 EVBBond  = collections.namedtuple ("EVBBond"  , "states  seriala  serialb  comment")
 
 _MODULE_LABEL = "MolarisInput"
+
+
+class EVBAtom (object):
+    """A class representing an EVB atom."""
+
+    # serial  atype  charge  comment
+    def __init__ (self, logging=True, **keywordArguments):
+        """Constructor."""
+        for (key, value) in keywordArguments.iteritems ():
+            setattr (self, key, value)
+
+    def SplitComment (self):
+        """Return tokens of atom's comment."""
+        try:
+            (charge, atype, label, group) = TokenizeLine (self.comment, converters=[float, None, None, None])
+            return (charge, atype, label, group)
+        except:
+            pass
+        return (0., "", "", "")
 
 
 class MolarisInputFile (object):
