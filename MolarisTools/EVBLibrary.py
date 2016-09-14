@@ -70,9 +70,9 @@ class EVBLibrary (object):
             "induct"            :   "# . %s> Read %d inductive interactions by atom type"               ,
             "a_induct"          :   "# . %s> Read %d inductive interactions by atom pair"               ,
             "elect"             :   "# . %s> Read %d electrostatic screening corrections by atom type"  ,
-            "a_elect"           :   "# . %s> Read %d electrostatic screening corrections by atom pair"  ,
-            }
+            "a_elect"           :   "# . %s> Read %d electrostatic screening corrections by atom pair"  , }
         data = open (self.filename)
+        npar = 0
         if logging:
             print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, self.filename))
         try:
@@ -95,6 +95,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nmorse = len (self.morse)
+                        npar += nmorse
                         print (messages["morse_type"] % (_MODULE_LABEL, nmorse))
 
 
@@ -120,6 +121,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         npairs = len (self.pairs)
+                        npar += npairs
                         print (messages["m_pair"] % (_MODULE_LABEL, npairs))
 
 
@@ -144,6 +146,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nangles = len (self.angles)
+                        npar += nangles
                         print (messages["angle_type"] % (_MODULE_LABEL, nangles))
 
 
@@ -168,6 +171,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         ntorsions = len (self.torsions)
+                        npar += ntorsions
                         print (messages["torsion_type"] % (_MODULE_LABEL, ntorsions))
 
 
@@ -193,6 +197,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nimpropers = len (self.impropers)
+                        npar += nimpropers
                         print (messages["itorsion_type"] % (_MODULE_LABEL, nimpropers))
 
 
@@ -213,6 +218,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nvdw = len (self.vdwevb)
+                        npar += nvdw
                         print (messages["vdwevb"] % (_MODULE_LABEL, nvdw))
 
 
@@ -233,6 +239,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nvdw = len (self.solvdw)
+                        npar += nvdw
                         print (messages["solvdw"] % (_MODULE_LABEL, nvdw))
 
 
@@ -255,6 +262,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nexnb = len (self.exnonbond)
+                        npar += nexnb
                         print (messages["exnonbond_type"] % (_MODULE_LABEL, nexnb))
 
 
@@ -278,6 +286,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nxpair = len (self.xpairs)
+                        npar += nxpair
                         print (messages["x_pair"] % (_MODULE_LABEL, nxpair))
 
 
@@ -297,6 +306,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nvpair = len (self.vpairs)
+                        npar += nvpair
                         print (messages["v_pair"] % (_MODULE_LABEL, nvpair))
 
 
@@ -317,6 +327,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         ninductive = len (self.inductive)
+                        npar += ninductive
                         print (messages["induct"] % (_MODULE_LABEL, ninductive))
 
 
@@ -337,6 +348,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nipair = len (self.ipairs)
+                        npar += nipair
                         print (messages["a_induct"] % (_MODULE_LABEL, nipair))
 
 
@@ -356,6 +368,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nscreen = len (self.screen)
+                        npar += nscreen
                         print (messages["elect"] % (_MODULE_LABEL, nscreen))
 
 
@@ -376,11 +389,14 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nspair = len (self.spairs)
+                        npar += nspair
                         print (messages["a_elect"] % (_MODULE_LABEL, nspair))
         except StopIteration:
             pass
         # . Close the file
         data.close ()
+        if logging:
+            print ("# . %s> TOTAL %d parameters read" % (_MODULE_LABEL, npar))
 
 
     def PurgeTypes (self, types):
@@ -471,78 +487,96 @@ class EVBLibrary (object):
             self.spairs = spairs
 
 
-    def WriteLibrary (self, filename=""):
+    def WriteLibrary (self, filename="", digits=1):
         """Write library to a file or stdout."""
+        template = {
+            "pairs"      :   "'%s'  '%s'   %X.Yf    %X.Yf    %X.Yf    %X.Yf    %X.Yf"  ,
+            "morse"      :   "'%s'         %X.Yf    %X.Yf"  ,
+            "angles"     :   "'%s'         %X.Yf    %X.Yf    %X.Yf    %X.Yf"  ,
+            "torsions"   :   "'%s'  '%s'   %X.Yf    %X.Yf    %X.Yf"  ,
+            "impropers"  :   "'%s'         %X.Yf    %X.Yf    %X.Yf"  ,
+            "exnonbond"  :   "'%s'         %X.Yf    %X.Yf    %X.Yf    %X.Yf"  ,
+            "xpairs"     :   "'%s'  '%s'   %X.Yf    %X.Yf    %X.Yf    %X.Yf"  ,
+            "vdwevb"     :   "'%s'         %X.Yf    %X.Yf"  ,
+            "vpairs"     :   "'%s'  '%s'   %X.Yf    %X.Yf"  ,
+            "solvdw"     :   "'%s'         %X.Yf    %X.Yf"  ,
+            "inductive"  :   "'%s'         %X.Yf    %X.Yf"  ,
+            "ipairs"     :   "'%s'  '%s'   %X.Yf"   ,
+            "screen"     :   "'%s'         %X.Yf"   ,
+            "spairs"     :   "'%s'  '%s'   %X.Yf"   , }
+        formats = {}
+        for (key, string) in template.iteritems ():
+            formats[key] = string.replace ("X", "%d" % (6 + digits)).replace ("Y", "%d" % digits)
         lines = []
         if hasattr (self, "pairs"):
             lines.append ("m_pair         morse_ab    r_ab      beta     f_harmonic   r0_harmonic")
             for pair in self.pairs:
-                lines.append ("'%s'    '%s'      %5.1f      %7.2f      %5.1f      %7.1f      %5.1f" % (pair.typea, pair.typeb, pair.morseAB, pair.rab, pair.beta, pair.forceHarmonic, pair.radiusHarmonic))
+                lines.append (formats["pairs"] % (pair.typea, pair.typeb, pair.morseAB, pair.rab, pair.beta, pair.forceHarmonic, pair.radiusHarmonic))
             lines.append ("")
         if hasattr (self, "morse"):
             lines.append ("morse_type     morse_d    radius")
             for bond in self.morse:
-                lines.append ("'%s'        %5.1f        %7.2f" % (bond.evbType, bond.morseD, bond.radius))
+                lines.append (formats["morse"] % (bond.evbType, bond.morseD, bond.radius))
             lines.append ("")
         if hasattr (self, "angles"):
             lines.append ("angle_type     force      angle0")
             for angle in self.angles:
-                lines.append ("'%s'        %5.1f        %7.1f        %7.1f        %7.1f" % (angle.evbType, angle.force, angle.angle0, angle.foo, angle.bar))
+                lines.append (formats["angles"] % (angle.evbType, angle.force, angle.angle0, angle.foo, angle.bar))
             lines.append ("")
         if hasattr (self, "torsions"):
             lines.append ("torsion_type   force      periodicity  phase_angle")
             for torsion in self.torsions:
-                lines.append ("'%s'    '%s'    %7.1f    %7.1f    %7.1f" % (torsion.typea, torsion.typeb, torsion.force, torsion.periodicity, torsion.phase))
+                lines.append (formats["torsions"] % (torsion.typea, torsion.typeb, torsion.force, torsion.periodicity, torsion.phase))
             lines.append ("")
         if hasattr (self, "impropers"):
             lines.append ("itorsion_type  force      periodicity  itorsion_angle0")
             for improper in self.impropers:
-                lines.append ("'%s'      %7.1f      %7.1f      %7.1f" % (improper.evbType, improper.force, improper.periodicity, improper.angle0))
+                lines.append (formats["impropers"] % (improper.evbType, improper.force, improper.periodicity, improper.angle0))
             lines.append ("")
         if hasattr (self, "exnonbond"):
             lines.append ("exnonbond_type  ex_repl   beta     q_vdwa    q_vdwb")
             for nonbond in self.exnonbond:
-                lines.append ("'%s'      %7.1f      %7.1f      %7.1f      %7.1f" % (nonbond.evbType, nonbond.exRepulsive, nonbond.beta, nonbond.qvdwa, nonbond.qvdwb))
+                lines.append (formats["exnonbond"] % (nonbond.evbType, nonbond.exRepulsive, nonbond.beta, nonbond.qvdwa, nonbond.qvdwb))
             lines.append ("")
         if hasattr (self, "xpairs"):
             lines.append ("x_pair          ex_repl    beta     q_vdwa    q_vdwb")
             for pair in self.xpairs:
-                lines.append ("'%s'   '%s'      %7.1f      %7.1f      %7.1f      %7.1f" % (pair.typea, pair.typeb, pair.exRepulsive, pair.beta, pair.qvdwa, pair.qvdwb))
+                lines.append (formats["xpairs"] % (pair.typea, pair.typeb, pair.exRepulsive, pair.beta, pair.qvdwa, pair.qvdwb))
             lines.append ("")
         if hasattr (self, "vdwevb"):
             lines.append ("vdwevb              vdwa      vdwb")
             for vdw in self.vdwevb:
-                lines.append ("'%s'   %7.1f      %7.1f" % (vdw.evbType, vdw.repulsive, vdw.attractive))
+                lines.append (formats["vdwevb"] % (vdw.evbType, vdw.repulsive, vdw.attractive))
             lines.append ("")
         if hasattr (self, "vpairs"):
             lines.append ("v_pair              vdwa      vdwb")
             for pair in self.vpairs:
-                lines.append ("'%s'   '%s'      %7.1f      %7.1f" % (pair.typea, pair.typeb, pair.repulsive, pair.attractive))
+                lines.append (formats["vpairs"] % (pair.typea, pair.typeb, pair.repulsive, pair.attractive))
             lines.append ("")
         if hasattr (self, "solvdw"):
             lines.append ("solvdw              vdwa      vdwb")
             for vdw in self.solvdw:
-                lines.append ("'%s'   %7.1f      %7.1f" % (vdw.evbType, vdw.repulsive, vdw.attractive))
+                lines.append (formats["solvdw"] % (vdw.evbType, vdw.repulsive, vdw.attractive))
             lines.append ("")
         if hasattr (self, "inductive"):
             lines.append ("induct  alph   screen")
             for inductive in self.inductive:
-                lines.append ("'%s'   %7.1f      %7.1f" % (inductive.evbType, inductive.alpha, inductive.screen))
+                lines.append (formats["inductive"] % (inductive.evbType, inductive.alpha, inductive.screen))
             lines.append ("")
         if hasattr (self, "ipairs"):
             lines.append ("a_induct   alph")
             for ipair in self.ipairs:
-                lines.append ("'%s'   '%s'      %7.1f" % (ipair.typea, ipair.typeb, ipair.alpha))
+                lines.append (formats["ipairs"] % (ipair.typea, ipair.typeb, ipair.alpha))
             lines.append ("")
         if hasattr (self, "screen"):
             lines.append ("elect   mu_s")
             for screen in self.screen:
-                lines.append ("'%s'     %7.1f" % (screen.evbType, screen.mus))
+                lines.append (formats["screen"] % (screen.evbType, screen.mus))
             lines.append ("")
         if hasattr (self, "spairs"):
             lines.append ("a_elect     mu_s")
             for spair in self.spairs:
-                lines.append ("'%s'     '%s'     %7.1f" % (spair.typea, spair.typeb, spair.mus))
+                lines.append (formats["spairs"] % (spair.typea, spair.typeb, spair.mus))
             lines.append ("")
         if filename != "":
             fo = open (filename, "w")
@@ -552,66 +586,6 @@ class EVBLibrary (object):
         else:
             for line in lines:
                 print line
-
-
-    def List (self, types=[]):
-        """List energy terms related to a particular atom type or all atom types."""
-        print ("# . Morse types")#    morse_type     morse_d    radius
-        for bond in self.morse:
-            write = True
-            if types:
-                if not (bond.evbType in types):
-                    write = False
-            if write:
-                print ("%2s    %5.1f    %7.2f" % (bond.evbType, bond.morseD, bond.radius))
-        print ("# . Morse pairs")#    m_pair         morse_ab    r_ab      beta     f_harmonic   r0_harmonic
-        for pair in self.pairs:
-            write = True
-            if types:
-                if not (pair.typea in types or pair.typeb in types):
-                    write = False
-            if write:
-                print ("%2s    %2s    %5.1f    %7.2f    %5.1f    %7.1f    %5.1f" % (pair.typea, pair.typeb, pair.morseAB, pair.rab, pair.beta, pair.forceHarmonic, pair.radiusHarmonic))
-        print ("# . Angles")#    angle_type     force      angle0
-        for angle in self.angles:
-            write = True
-            if types:
-                if not (angle.evbType in types):
-                    write = False
-            if write:
-                print ("%2s    %5.1f    %7.2f" % (angle.evbType, angle.force, angle.angle0))
-        print ("# . Torsions")#    torsion_type   force      periodicity  phase_angle
-        for torsion in self.torsions:
-            write = True
-            if types:
-                if not (torsion.typea in types or torsion.typeb in types):
-                    write = False
-            if write:
-                print ("%2s    %2s    %7.1f    %7.1f    %7.1f" % (torsion.typea, torsion.typeb, torsion.force, torsion.periodicity, torsion.phase))
-        print ("# . Impropers")#    itorsion_type  force      periodicity  itorsion_angle0
-        for improper in self.impropers:
-            write = True
-            if types:
-                if not (improper.evbType in types):
-                    write = False
-            if write:
-                print ("%2s    %7.1f    %7.1f    %7.1f" % (improper.evbType, improper.force, improper.periodicity, improper.angle0))
-        print ("# . vdw EVB...EVB")#    vdwevb              vdwa      vdwb
-        for vdw in self.vdwevb:
-            write = True
-            if types:
-                if not (vdw.evbType in types):
-                    write = False
-            if write:
-                print ("%2s    %10.3f    %10.3f" % (vdw.evbType, vdw.repulsive, vdw.attractive))
-        print ("# . vdw EVB...solvent")#    solvdw              vdwa      vdwb
-        for vdw in self.solvdw:
-            write = True
-            if types:
-                if not (vdw.evbType in types):
-                    write = False
-            if write:
-                print ("%2s    %10.3f    %10.3f" % (vdw.evbType, vdw.repulsive, vdw.attractive))
 
 
     def GetSolVDW (self, atomType):
