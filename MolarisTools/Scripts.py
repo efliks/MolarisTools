@@ -321,7 +321,7 @@ def AminoComponents_FromPDB (filename, tolerance=_DEFAULT_TOLERANCE, toleranceLo
     return components
 
 
-def MolarisInput_ToEVBParameters (filename, evbLibrary=DEFAULT_EVB_LIB):
+def MolarisInput_ToEVBParameters (filename, evbLibrary=DEFAULT_EVB_LIB, logging=True):
     """Write a list of EVB parameters for a given Molaris input file."""
     molarisInput = MolarisInputFile (filename)
     library      = EVBLibrary (evbLibrary)
@@ -331,7 +331,10 @@ def MolarisInput_ToEVBParameters (filename, evbLibrary=DEFAULT_EVB_LIB):
         for evbType in state:
             if evbType not in types:
                 types.append (evbType)
-    library.List (types=types)
+    if logging:
+        library.PurgeTypes (types)
+        library.WriteLibrary ()
+    return types
 
 
 def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None):

@@ -8,17 +8,22 @@ from    Utilities import TokenizeLine
 from    Units     import DEFAULT_EVB_LIB
 import  collections, exceptions, math, os
 
-# . Warning: This module does not read all EVB parameters (for now).
 
-
-EVBMorsePair = collections.namedtuple ("EVBMorsePair"  ,  "typea  typeb  morseAB  rab  beta  forceHarmonic  radiusHarmonic")
-EVBMorseAtom = collections.namedtuple ("EVBMorseAtom"  ,  "evbType  morseD  radius")
-EVBAngle     = collections.namedtuple ("EVBAngle"      ,  "evbType  force  angle0  foo  bar")
-EVBTorsion   = collections.namedtuple ("EVBTorsion"    ,  "typea  typeb  force  periodicity  phase")
-EVBImproper  = collections.namedtuple ("EVBImproper"   ,  "evbType  force  periodicity  angle0")
-EVBvdw       = collections.namedtuple ("EVBvdw"        ,  "evbType  repulsive  attractive")
+EVBMorsePair  = collections.namedtuple ("EVBMorsePair"  ,  "typea  typeb  morseAB  rab  beta  forceHarmonic  radiusHarmonic")
+EVBMorseAtom  = collections.namedtuple ("EVBMorseAtom"  ,  "evbType  morseD  radius")
+EVBAngle      = collections.namedtuple ("EVBAngle"      ,  "evbType  force  angle0  foo  bar")
+EVBTorsion    = collections.namedtuple ("EVBTorsion"    ,  "typea  typeb  force  periodicity  phase")
+EVBImproper   = collections.namedtuple ("EVBImproper"   ,  "evbType  force  periodicity  angle0")
+EVBvdw        = collections.namedtuple ("EVBvdw"        ,  "evbType  repulsive  attractive")
+EVBNonBond    = collections.namedtuple ("EVBNonBond"    ,  "evbType  exRepulsive  beta  qvdwa  qvdwb")
+EVBPair       = collections.namedtuple ("EVBPair"       ,  "typea  typeb  exRepulsive  beta  qvdwa  qvdwb")
+EVBInductive  = collections.namedtuple ("EVBInductive"  ,  "evbType  alpha  screen")
+EVBIndPair    = collections.namedtuple ("EVBIndPair"    ,  "typea  typeb  alpha")
+EVBScreen     = collections.namedtuple ("EVBScreen"     ,  "evbType  mus")
+EVBScreenPair = collections.namedtuple ("EVBScreenPair" ,  "typea  typeb  mus")
 
 _MODULE_LABEL     = "EVBLib"
+_COMMENT_CHARS    = ("!", "#")
 
 
 class EVBLibrary (object):
@@ -31,9 +36,15 @@ class EVBLibrary (object):
 
 
     def _GetLineWithComment (self, data):
-        line      = data.next ()
-        position  = line.find ("!")
-        if position > -1:
+        line      = next (data)
+        positions = []
+        for char in _COMMENT_CHARS:
+            position = line.find (char)
+            if position >= 0:
+                positions.append (position)
+        if positions:
+            positions.sort ()
+            position  = positions[0]
             text      = line[             : position]
             comment   = line[position + 1 :         ]
         else:
@@ -45,6 +56,22 @@ class EVBLibrary (object):
 
 
     def _Parse (self, logging):
+        messages = {
+            "morse_type"        :   "# . %s> Read %d Morse types"   ,
+            "m_pair"            :   "# . %s> Read %d Morse pairs"   ,
+            "angle_type"        :   "# . %s> Read %d angles"        ,
+            "torsion_type"      :   "# . %s> Read %d torsions"      ,
+            "itorsion_type"     :   "# . %s> Read %d impropers"     ,
+            "vdwevb"            :   "# . %s> Read %d EVB...EVB VDW parameters"      ,
+            "solvdw"            :   "# . %s> Read %d EVB...solvent VDW parameters"  ,
+            "exnonbond_type"    :   "# . %s> Read %d nonbonded EVB...EVB parameters for atom types"     ,
+            "x_pair"            :   "# . %s> Read %d nonbonded EVB...EVB parameters for atom pairs"     ,
+            "v_pair"            :   "# . %s> Read %d nonbonded EVB...EVB parameters for atom types (never bonded)"  ,
+            "induct"            :   "# . %s> Read %d inductive interactions by atom type"               ,
+            "a_induct"          :   "# . %s> Read %d inductive interactions by atom pair"               ,
+            "elect"             :   "# . %s> Read %d electrostatic screening corrections by atom type"  ,
+            "a_elect"           :   "# . %s> Read %d electrostatic screening corrections by atom pair"  ,
+            }
         data = open (self.filename)
         if logging:
             print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, self.filename))
@@ -68,7 +95,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nmorse = len (self.morse)
-                        print ("# . %s> Read %d Morse types" % (_MODULE_LABEL, nmorse))
+                        print (messages["morse_type"] % (_MODULE_LABEL, nmorse))
 
 
                 # EVBMorsePair = collections.namedtuple ("EVBMorsePair"  ,  "typea  typeb  morseAB  rab  beta  fHarmonic  rHarmonic")
@@ -93,7 +120,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         npairs = len (self.pairs)
-                        print ("# . %s> Read %d More pairs" % (_MODULE_LABEL, npairs))
+                        print (messages["m_pair"] % (_MODULE_LABEL, npairs))
 
 
                 #                  EVB
@@ -117,7 +144,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nangles = len (self.angles)
-                        print ("# . %s> Read %d angles" % (_MODULE_LABEL, nangles))
+                        print (messages["angle_type"] % (_MODULE_LABEL, nangles))
 
 
                 #                  EVB---EVB
@@ -141,7 +168,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         ntorsions = len (self.torsions)
-                        print ("# . %s> Read %d torsions" % (_MODULE_LABEL, ntorsions))
+                        print (messages["torsion_type"] % (_MODULE_LABEL, ntorsions))
 
 
                 #                EVB
@@ -166,7 +193,7 @@ class EVBLibrary (object):
                         line, comment = self._GetLineWithComment (data)
                     if logging:
                         nimpropers = len (self.impropers)
-                        print ("# . %s> Read %d impropers" % (_MODULE_LABEL, nimpropers))
+                        print (messages["itorsion_type"] % (_MODULE_LABEL, nimpropers))
 
 
                 # . Read EVB...EVB nonbonded parameters
@@ -185,8 +212,8 @@ class EVBLibrary (object):
                         self.vdwevb.append (vdw)
                         line, comment = self._GetLineWithComment (data)
                     if logging:
-                        nvdws = len (self.vdwevb)
-                        print ("# . %s> Read %d EVB...EVB VDW parameters" % (_MODULE_LABEL, nvdws))
+                        nvdw = len (self.vdwevb)
+                        print (messages["vdwevb"] % (_MODULE_LABEL, nvdw))
 
 
                 # . Read EVB...solvent nonbonded parameters
@@ -194,7 +221,7 @@ class EVBLibrary (object):
                 # 'H0'                5.00      0.00
                 #   (...)
                 elif line.startswith ("solvdw"):
-                    self.vdwsol = []
+                    self.solvdw = []
                     line, comment = self._GetLineWithComment (data)
                     while line != "":
                         evbType, repulsive, attractive = TokenizeLine (line, converters=[lambda convert: convert.replace ("'", ""), float, float])
@@ -202,15 +229,329 @@ class EVBLibrary (object):
                             evbType    = evbType     ,
                             repulsive  = repulsive   ,
                             attractive = attractive  , )
-                        self.vdwsol.append (vdw)
+                        self.solvdw.append (vdw)
                         line, comment = self._GetLineWithComment (data)
                     if logging:
-                        nvdws = len (self.vdwsol)
-                        print ("# . %s> Read %d EVB...solvent VDW parameters" % (_MODULE_LABEL, nvdws))
+                        nvdw = len (self.solvdw)
+                        print (messages["solvdw"] % (_MODULE_LABEL, nvdw))
+
+
+                # . Nonbonded EVB...EVB interaction (by atom type)
+                # exnonbond_type  ex_repl   beta     q_vdwa    q_vdwb
+                # 'H0'            5.00      2.50 	  0.00000     0.000
+                # (...)
+                elif line.startswith ("exnonbond_type"):
+                    self.exnonbond = []
+                    line, comment = self._GetLineWithComment (data)
+                    while line != "":
+                        evbType, exRepulsive, beta, qvdwa, qvdwb = TokenizeLine (line, converters=[lambda convert: convert.replace ("'", ""), float, float, float, float])
+                        exnonbond = EVBNonBond (
+                            evbType     = evbType      ,
+                            exRepulsive = exRepulsive  ,
+                            beta        = beta         ,
+                            qvdwa       = qvdwa        ,
+                            qvdwb       = qvdwb        , )
+                        self.exnonbond.append (exnonbond)
+                        line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nexnb = len (self.exnonbond)
+                        print (messages["exnonbond_type"] % (_MODULE_LABEL, nexnb))
+
+
+                # . Nonbonded EVB...EVB interaction (by atom pair)
+                # x_pair          ex_repl    beta     q_vdwa    q_vdwb
+                # 'L0' 'C0'        69999.0      4.00     0.     0.
+                # (...)
+                elif line.startswith ("x_pair"):
+                    self.xpairs = []
+                    line, comment = self._GetLineWithComment (data)
+                    while line != "":
+                        typea, typeb, exRepulsive, beta, qvdwa, qvdwb = TokenizeLine (line, converters=[lambda convert: convert.replace ("'", ""), lambda convert: convert.replace ("'", ""), float, float, float, float])
+                        xpair = EVBPair (
+                            typea       = typea        ,
+                            typeb       = typeb        ,
+                            exRepulsive = exRepulsive  ,
+                            beta        = beta         ,
+                            qvdwa       = qvdwa        ,
+                            qvdwb       = qvdwb        , )
+                        self.xpairs.append (xpair)
+                        line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nxpair = len (self.xpairs)
+                        print (messages["x_pair"] % (_MODULE_LABEL, nxpair))
+
+
+                # . Nonbonded EVB...EVB interaction for never bonded atoms
+                # v_pair              vdwa      vdwb
+                # (...)
+                elif line.startswith ("v_pair"):
+                    self.vpairs = []
+                    line, comment = self._GetLineWithComment (data)
+                    while line != "":
+                        evbType, repulsive, attractive = TokenizeLine (line, converters=[lambda convert: convert.replace ("'", ""), float, float])
+                        vpair = EVBvdw (
+                            evbType    = evbType     ,
+                            repulsive  = repulsive   ,
+                            attractive = attractive  , )
+                        self.vpairs.append (vpair)
+                        line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nvpair = len (self.vpairs)
+                        print (messages["v_pair"] % (_MODULE_LABEL, nvpair))
+
+
+                # . Inductive interactions by atom type
+                # induct  alph   screen
+                # 'H0'    0.0      1.0
+                # (...)
+                elif line.startswith ("induct"):
+                    self.inductive = []
+                    line, comment = self._GetLineWithComment (data)
+                    while line != "":
+                        evbType, alpha, screen = TokenizeLine (line, converters=[lambda convert: convert.replace ("'", ""), float, float])
+                        inductive = EVBInductive (
+                            evbType     = evbType   ,
+                            alpha       = alpha     ,
+                            screen      = screen    , )
+                        self.inductive.append (inductive)
+                        line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        ninductive = len (self.inductive)
+                        print (messages["induct"] % (_MODULE_LABEL, ninductive))
+
+
+                # . Inductive interactions by atom pair
+                # a_induct   alph
+                # 'C0' 'L-' 0.60
+                # (...)
+                elif line.startswith ("a_induct"):
+                    self.ipairs = []
+                    line, comment = self._GetLineWithComment (data)
+                    while line != "":
+                        typea, typeb, alpha = TokenizeLine (line, converters=[lambda convert: convert.replace ("'", ""), lambda convert: convert.replace ("'", ""), float])
+                        ipair = EVBIndPair (
+                            typea   =   typea   ,
+                            typeb   =   typeb   ,
+                            alpha   =   alpha   , )
+                        self.ipairs.append (ipair)
+                        line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nipair = len (self.ipairs)
+                        print (messages["a_induct"] % (_MODULE_LABEL, nipair))
+
+
+                # . Electrostatic screening corrections by atom type
+                # elect   mu_s
+                # 'H0'    2.00
+                # (...)
+                elif line.startswith ("elect"):
+                    self.screen = []
+                    line, comment = self._GetLineWithComment (data)
+                    while line != "":
+                        evbType, mus = TokenizeLine (line, converters=[lambda convert: convert.replace ("'", ""), float])
+                        screen = EVBScreen (
+                            evbType     =   evbType ,
+                            mus         =   mus     , )
+                        self.screen.append (screen)
+                        line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nscreen = len (self.screen)
+                        print (messages["elect"] % (_MODULE_LABEL, nscreen))
+
+
+                # . Electrostatic screening corrections by atom pair
+                # a_elect     mu_s
+                # 'H0'  'H0'  4.00
+                # (...)
+                elif line.startswith ("a_elect"):
+                    self.spairs = []
+                    line, comment = self._GetLineWithComment (data)
+                    while line != "":
+                        typea, typeb, mus = TokenizeLine (line, converters=[lambda convert: convert.replace ("'", ""), lambda convert: convert.replace ("'", ""), float])
+                        spair = EVBScreenPair (
+                            typea       =   typea   ,
+                            typeb       =   typeb   ,
+                            mus         =   mus     , )
+                        self.spairs.append (spair)
+                        line, comment = self._GetLineWithComment (data)
+                    if logging:
+                        nspair = len (self.spairs)
+                        print (messages["a_elect"] % (_MODULE_LABEL, nspair))
         except StopIteration:
             pass
         # . Close the file
         data.close ()
+
+
+    def PurgeTypes (self, types):
+        """Purge library leaving only selected atom types."""
+        if hasattr (self, "pairs"):
+            pairs = []
+            for pair in self.pairs:
+                if (pair.typea in types) and (pair.typeb in types):
+                    pairs.append (pair)
+            self.pairs = pairs
+        if hasattr (self, "morse"):
+            morse = []
+            for bond in self.morse:
+                if bond.evbType in types:
+                    morse.append (bond)
+            self.morse = morse
+        if hasattr (self, "angles"):
+            angles = []
+            for angle in self.angles:
+                if angle.evbType in types:
+                    angles.append (angle)
+            self.angles = angles
+        if hasattr (self, "torsions"):
+            torsions = []
+            for torsion in self.torsions:
+                if (torsion.typea in types) and (torsion.typeb in types):
+                    torsions.append (torsion)
+            self.torsions = torsions
+        if hasattr (self, "impropers"):
+            impropers = []
+            for improper in self.impropers:
+                if improper.evbType in types:
+                    impropers.append (improper)
+            self.impropers = impropers
+        if hasattr (self, "exnonbond"):
+            exnonbond = []
+            for nonbond in self.exnonbond:
+                if nonbond.evbType in types:
+                    exnonbond.append (nonbond)
+            self.exnonbond = exnonbond
+        if hasattr (self, "xpairs"):
+            xpairs = []
+            for pair in self.xpairs:
+                if (pair.typea in types) and (pair.typeb in types):
+                    xpairs.append (pair)
+            self.xpairs = xpairs
+        if hasattr (self, "vdwevb"):
+            vdwevb = []
+            for vdw in self.vdwevb:
+                if vdw.evbType in types:
+                    vdwevb.append (vdw)
+            self.vdwevb = vdwevb
+        if hasattr (self, "vpairs"):
+            vpairs = []
+            for pair in self.vpairs:
+                if (pair.typea in types) and (pair.typeb in types):
+                    vpairs.append (pair)
+            self.vpairs = vpairs
+        if hasattr (self, "solvdw"):
+            solvdw = []
+            for vdw in self.solvdw:
+                if vdw.evbType in types:
+                    solvdw.append (vdw)
+            self.solvdw = solvdw
+        if hasattr (self, "inductive"):
+            inductives = []
+            for inductive in self.inductive:
+                if inductive.evbType in types:
+                    inductives.append (inductive)
+            self.inductive = inductives
+        if hasattr (self, "ipairs"):
+            ipairs = []
+            for ipair in self.ipairs:
+                if (ipair.typea in types) and (ipair.typeb in types):
+                    ipairs.append (ipair)
+            self.ipairs = ipairs
+        if hasattr (self, "screen"):
+            screens = []
+            for screen in self.screen:
+                if screen.evbType in types:
+                    screens.append (screen)
+            self.screen = screens
+        if hasattr (self, "spairs"):
+            spairs = []
+            for spair in self.spairs:
+                if (spair.typea in types) and (spair.typeb in types):
+                    spairs.append (spair)
+            self.spairs = spairs
+
+
+    def WriteLibrary (self, filename=""):
+        """Write library to a file or stdout."""
+        lines = []
+        if hasattr (self, "pairs"):
+            lines.append ("m_pair         morse_ab    r_ab      beta     f_harmonic   r0_harmonic")
+            for pair in self.pairs:
+                lines.append ("'%s'    '%s'      %5.1f      %7.2f      %5.1f      %7.1f      %5.1f" % (pair.typea, pair.typeb, pair.morseAB, pair.rab, pair.beta, pair.forceHarmonic, pair.radiusHarmonic))
+            lines.append ("")
+        if hasattr (self, "morse"):
+            lines.append ("morse_type     morse_d    radius")
+            for bond in self.morse:
+                lines.append ("'%s'        %5.1f        %7.2f" % (bond.evbType, bond.morseD, bond.radius))
+            lines.append ("")
+        if hasattr (self, "angles"):
+            lines.append ("angle_type     force      angle0")
+            for angle in self.angles:
+                lines.append ("'%s'        %5.1f        %7.1f        %7.1f        %7.1f" % (angle.evbType, angle.force, angle.angle0, angle.foo, angle.bar))
+            lines.append ("")
+        if hasattr (self, "torsions"):
+            lines.append ("torsion_type   force      periodicity  phase_angle")
+            for torsion in self.torsions:
+                lines.append ("'%s'    '%s'    %7.1f    %7.1f    %7.1f" % (torsion.typea, torsion.typeb, torsion.force, torsion.periodicity, torsion.phase))
+            lines.append ("")
+        if hasattr (self, "impropers"):
+            lines.append ("itorsion_type  force      periodicity  itorsion_angle0")
+            for improper in self.impropers:
+                lines.append ("'%s'      %7.1f      %7.1f      %7.1f" % (improper.evbType, improper.force, improper.periodicity, improper.angle0))
+            lines.append ("")
+        if hasattr (self, "exnonbond"):
+            lines.append ("exnonbond_type  ex_repl   beta     q_vdwa    q_vdwb")
+            for nonbond in self.exnonbond:
+                lines.append ("'%s'      %7.1f      %7.1f      %7.1f      %7.1f" % (nonbond.evbType, nonbond.exRepulsive, nonbond.beta, nonbond.qvdwa, nonbond.qvdwb))
+            lines.append ("")
+        if hasattr (self, "xpairs"):
+            lines.append ("x_pair          ex_repl    beta     q_vdwa    q_vdwb")
+            for pair in self.xpairs:
+                lines.append ("'%s'   '%s'      %7.1f      %7.1f      %7.1f      %7.1f" % (pair.typea, pair.typeb, pair.exRepulsive, pair.beta, pair.qvdwa, pair.qvdwb))
+            lines.append ("")
+        if hasattr (self, "vdwevb"):
+            lines.append ("vdwevb              vdwa      vdwb")
+            for vdw in self.vdwevb:
+                lines.append ("'%s'   %7.1f      %7.1f" % (vdw.evbType, vdw.repulsive, vdw.attractive))
+            lines.append ("")
+        if hasattr (self, "vpairs"):
+            lines.append ("v_pair              vdwa      vdwb")
+            for pair in self.vpairs:
+                lines.append ("'%s'   '%s'      %7.1f      %7.1f" % (pair.typea, pair.typeb, pair.repulsive, pair.attractive))
+            lines.append ("")
+        if hasattr (self, "solvdw"):
+            lines.append ("solvdw              vdwa      vdwb")
+            for vdw in self.solvdw:
+                lines.append ("'%s'   %7.1f      %7.1f" % (vdw.evbType, vdw.repulsive, vdw.attractive))
+            lines.append ("")
+        if hasattr (self, "inductive"):
+            lines.append ("induct  alph   screen")
+            for inductive in self.inductive:
+                lines.append ("'%s'   %7.1f      %7.1f" % (inductive.evbType, inductive.alpha, inductive.screen))
+            lines.append ("")
+        if hasattr (self, "ipairs"):
+            lines.append ("a_induct   alph")
+            for ipair in self.ipairs:
+                lines.append ("'%s'   '%s'      %7.1f" % (ipair.typea, ipair.typeb, ipair.alpha))
+            lines.append ("")
+        if hasattr (self, "screen"):
+            lines.append ("elect   mu_s")
+            for screen in self.screen:
+                lines.append ("'%s'     %7.1f" % (screen.evbType, screen.mus))
+            lines.append ("")
+        if hasattr (self, "spairs"):
+            lines.append ("a_elect     mu_s")
+            for spair in self.spairs:
+                lines.append ("'%s'     '%s'     %7.1f" % (spair.typea, spair.typeb, spair.mus))
+            lines.append ("")
+        if filename != "":
+            fo = open (filename, "w")
+            for line in lines:
+                fo.write ("%s\n" % line)
+            fo.close ()
+        else:
+            for line in lines:
+                print line
 
 
     def List (self, types=[]):
@@ -264,7 +605,7 @@ class EVBLibrary (object):
             if write:
                 print ("%2s    %10.3f    %10.3f" % (vdw.evbType, vdw.repulsive, vdw.attractive))
         print ("# . vdw EVB...solvent")#    solvdw              vdwa      vdwb
-        for vdw in self.vdwsol:
+        for vdw in self.solvdw:
             write = True
             if types:
                 if not (vdw.evbType in types):
@@ -274,8 +615,8 @@ class EVBLibrary (object):
 
 
     def GetSolVDW (self, atomType):
-        if hasattr (self, "vdwsol"):
-            for vdw in self.vdwsol:
+        if hasattr (self, "solvdw"):
+            for vdw in self.solvdw:
                 if vdw.evbType == atomType:
                     return (vdw.repulsive, vdw.attractive)
         return None
@@ -334,4 +675,4 @@ class EVBLibrary (object):
 #===============================================================================
 if __name__ == "__main__":
     library  = EVBLibrary (logging=True)
-    library.List ()
+    library.WriteLibrary ()
