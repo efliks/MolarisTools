@@ -35,22 +35,30 @@ class GapFile (object):
         self._Parse (filename)
 
 
-    def CalculateLRATerm (self, skip=None):
+    def CalculateLRATerm (self, skip=None, trim=None):
         """Calculate an LRA term, eg. <Eqmmm - Eevb>qmmm  or  <Eqmmm - Eevb>evb.
 
-        Skip can be either the number (absolute) or the fraction (relative) of initial configurations to exclude from the calculation."""
-        if   isinstance (skip, int  ):
-            if self.logging:
-                print ("# . %s> Skipping first %d configurations" % (_MODULE_LABEL, skip))
-            steps = self.steps[skip:]
-        elif isinstance (skip, float):
-            nskip = int (self.nsteps * skip)
-            if self.logging:
-                percent = int (skip * 100.)
-                print ("# . %s> Skipping first %d%% (%d) of configurations" % (_MODULE_LABEL, percent, nskip))
-            steps = self.steps[nskip:]
-        else:
-            steps = self.steps
+        Skip and trim can be either numbers (absolute) or fractions (relative) of initial or final configurations to exclude from the calculation, respectively."""
+        collect = []
+        for (parameter, comment) in ((skip, "first"), (trim, "last")):
+            if   isinstance (parameter, int  ):
+                if self.logging:
+                    print ("# . %s> Skipping %s %d configurations" % (_MODULE_LABEL, comment, parameter))
+                nsteps = parameter
+            elif isinstance (parameter, float):
+                if self.logging:
+                    percent = int (parameter * 100.)
+                    print ("# . %s> Skipping %s %d%% (%d) of configurations" % (_MODULE_LABEL, comment, percent, nparameter))
+                nsteps = int (self.nsteps * parameter)
+            else:
+                nsteps = -1
+            collect.append (nsteps)
+        (nskip, ntrim) = collect
+        steps = self.steps
+        if nskip > 0:
+            steps = steps[nskip:]
+        if ntrim > 0:
+            steps = steps[:ntrim]
         collect = 0.
         for (n, step) in enumerate (steps):
             collect += (step.target - step.reference)

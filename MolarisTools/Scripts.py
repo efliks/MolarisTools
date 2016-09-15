@@ -321,23 +321,20 @@ def AminoComponents_FromPDB (filename, tolerance=_DEFAULT_TOLERANCE, toleranceLo
     return components
 
 
-def MolarisInput_ToEVBParameters (filename, evbLibrary=DEFAULT_EVB_LIB, logging=True):
+def MolarisInput_ToEVBTypes (filename, evbLibrary=DEFAULT_EVB_LIB, logging=True):
     """Write a list of EVB parameters for a given Molaris input file."""
-    molarisInput = MolarisInputFile (filename)
-    library      = EVBLibrary (evbLibrary)
+    molarisInput = MolarisInputFile (filename, logging=logging)
+    library      = EVBLibrary (evbLibrary, logging=logging)
     states       = molarisInput.types
     types        = []
     for state in states:
         for evbType in state:
             if evbType not in types:
                 types.append (evbType)
-    if logging:
-        library.PurgeTypes (types)
-        library.WriteLibrary ()
     return types
 
 
-def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None):
+def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, trim=None):
     """Calculate LRA for two endpoint simulations."""
     points = []
     for path in (patha, pathb):
@@ -373,8 +370,14 @@ def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None):
             percent  = int (skip * 100.)
             (na, nb) = int (gapa.nsteps * skip), int (gapb.nsteps * skip)
             print ("# . Skipping first %d%% (%d, %d) of configurations" % (percent, na, nb))
-    a = gapa.CalculateLRATerm (skip=skip)
-    b = gapb.CalculateLRATerm (skip=skip)
+        if   isinstance (trim, int):
+            print ("# . Skipping last %d configurations" % trim)
+        elif isinstance (trim, float):
+            percent  = int (trim * 100.)
+            (na, nb) = int (gapa.nsteps * trim), int (gapb.nsteps * trim)
+            print ("# . Skipping last %d%% (%d, %d) of configurations" % (percent, na, nb))
+    a = gapa.CalculateLRATerm (skip=skip, trim=trim)
+    b = gapb.CalculateLRATerm (skip=skip, trim=trim)
     lra = .5 * (a + b)
     if logging:
         print ("# . Calculated LRA = %f" % lra)

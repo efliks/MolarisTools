@@ -396,7 +396,7 @@ class EVBLibrary (object):
         # . Close the file
         data.close ()
         if logging:
-            print ("# . %s> TOTAL %d parameters read" % (_MODULE_LABEL, npar))
+            print ("# . %s> Total %d parameters read" % (_MODULE_LABEL, npar))
 
 
     def PurgeTypes (self, types):
