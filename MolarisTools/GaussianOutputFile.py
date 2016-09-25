@@ -190,13 +190,13 @@ class GaussianOutputFile (object):
                     for i in range (3):
                         next (lines)
                     line = next (lines)
-                    while (line.startswith ("      Atomic Center") or line.startswith ("      Read-in Center")):
+                    while (line.count ("Atomic Center") or line.count ("Read-in Center")):
                         # . Fixed format!
                         x   =   float (line[32:42])
                         y   =   float (line[42:52])
                         z   =   float (line[52:62])
                         position = (x, y, z)
-                        if line.startswith ("      Read-in Center"):
+                        if line.count ("Read-in Center"):
                             positions.append (position)
                         line = next (lines)
 
