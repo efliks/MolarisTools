@@ -334,7 +334,7 @@ def MolarisInput_ToEVBTypes (filename, evbLibrary=DEFAULT_EVB_LIB, logging=True)
     return types
 
 
-def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, trim=None):
+def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, trim=None, returnTerms=False):
     """Calculate LRA for two endpoint simulations."""
     points = []
     for path in (patha, pathb):
@@ -380,7 +380,9 @@ def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, 
     b = gapb.CalculateLRATerm (skip=skip, trim=trim)
     lra = .5 * (a + b)
     if logging:
-        print ("# . Calculated LRA = %f" % lra)
+        print ("# . Calculated LRA = %f  (%f, %f)" % (lra, a, b))
+    if returnTerms:
+        return (lra, a, b)
     return lra
 
 

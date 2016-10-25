@@ -4,7 +4,7 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-from QMCaller        import QMCaller
+from QMCaller        import QMCaller, CS_MULLIKEN, CS_CHELPG, CS_MERZKOLLMAN
 from Utilities       import WriteData
 from ORCAOutputFile  import ORCAOutputFile, PCgradFile, EngradFile
 
@@ -22,7 +22,7 @@ class QMCallerORCA (QMCaller):
         "memory"     :   1            ,
         "restart"    :   False        ,
         "debug"      :   False        ,
-        "pathORCA"   :   os.path.join (os.environ["HOME"], "local", "opt", "Grenoble", "orca_3_0_0_linux_x86-64", "orca") ,
+        "pathORCA"   :   os.path.join (os.environ["HOME"], "local", "opt", "orca_3_0_0_linux_x86-64", "orca") ,
             }
     defaultAttributes.update (QMCaller.defaultAttributes)
 
@@ -109,14 +109,14 @@ class QMCallerORCA (QMCaller):
             self.mmforces = pcgrad.forces
 
         # . Include charges
-        if   self.chargeScheme == "Mulliken":
+        if   self.chargeScheme == CS_MULLIKEN:
             charges = []
             for atom in orca.atoms:
                 charges.append (atom.charge)
             self.charges = charges
-        elif self.chargeScheme == "MerzKollman":
+        elif self.chargeScheme == CS_MERZKOLLMAN:
             raise exceptions.StandardError ("Merz-Kollman charges are not (yet) implemented in QMCallerORCA.")
-        elif self.chargeScheme == "Chelpg":
+        elif self.chargeScheme == CS_CHELPG:
             raise exceptions.StandardError ("CHELPG charges are not (yet) implemented in QMCallerORCA.")
 
         # . Finish up

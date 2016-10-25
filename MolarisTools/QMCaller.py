@@ -16,6 +16,9 @@ _FORMAT_CHARGE    = "%16.10f\n"
 _FORMAT_SIMPLE    = "%2s   %8.3f   %8.3f   %8.3f\n"
 _FORMAT_ARCHIVE   = "%2s   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f\n"
 
+CS_MULLIKEN    =   "Mulliken"
+CS_CHELPG      =   "Chelpg"
+CS_MERZKOLLMAN =   "MerzKollman"
 
 
 class QMCaller (object):

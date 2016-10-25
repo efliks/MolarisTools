@@ -4,9 +4,9 @@
 # . Copyright : USC, Mikolaj Feliks (2016)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-from QMCaller            import QMCaller
-from Utilities           import WriteData
-from MopacOutputFile     import MopacOutputFile
+from QMCaller          import QMCaller, CS_MULLIKEN, CS_CHELPG, CS_MERZKOLLMAN
+from Utilities         import WriteData
+from MopacOutputFile   import MopacOutputFile
 
 import subprocess, os.path, exceptions
 
@@ -17,6 +17,7 @@ class QMCallerMopac (QMCaller):
     # . Options specific to Mopac
     # . fileAtoms should be set to "mol.in" if qmmm=True
     defaultAttributes = {
+        "useElectronicEnergy"  :   False          ,
         "fileMopacError"       :   "run.err"      ,
         "fileMopacInput"       :   "run.mop"      ,
         "fileMopacOutput"      :   "run.out"      ,
@@ -40,8 +41,8 @@ class QMCallerMopac (QMCaller):
         """Write a Mopac input file."""
         # . Set up a charge scheme
         schemes = {
-            "Mulliken"     :   "MULLIK" ,
-            "MerzKollman"  :   "ESP"    ,
+            CS_MULLIKEN     :   "MULLIK" ,
+            CS_MERZKOLLMAN  :   "ESP"    ,
             }
         if not schemes.has_key (self.chargeScheme):
             raise exceptions.StandardError ("Charge scheme %s is undefined." % self.chargeScheme)
@@ -78,16 +79,18 @@ class QMCallerMopac (QMCaller):
         fileError  = open (self.fileMopacError, "w")
         subprocess.check_call ([self.pathMopac, self.fileMopacInput], stdout=fileError, stderr=fileError)
         fileError.close ()
-
         # . Parse the output file
         mopac        = MopacOutputFile (filename=self.fileMopacOutput)
-        self.Efinal  = mopac.Efinal
         self.forces  = mopac.forces
-        if self.chargeScheme == "Mulliken":
-            self.charges = mopac.charges
-        elif self.chargeScheme == "MerzKollman":
-            self.charges = mopac.mkcharges
-
+        if self.useElectronicEnergy:
+            self.Efinal  = mopac.Etotal
+        else:
+            self.Efinal  = mopac.Efinal
+        # . Include charges
+        scheme = {
+            CS_MULLIKEN     :   mopac.charges    if hasattr (mopac, "charges"   ) else []  ,
+            CS_MERZKOLLMAN  :   mopac.mkcharges  if hasattr (mopac, "mkcharges" ) else []  , }
+        self.charges = scheme[self.chargeScheme]
         # . Finish up
         self._Finalize ()
 

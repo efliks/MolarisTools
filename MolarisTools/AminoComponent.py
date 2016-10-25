@@ -357,7 +357,10 @@ class AminoComponent (object):
                     atomLabel = newLabel
                 newLabels.append (atomLabel)
             if found:
-                newGroup = AminoGroup (natoms=group.natoms, centralAtom=group.centralAtom, radius=group.radius, labels=newLabels, symbol=group.symbol)
+                centralAtom = label
+                if group.centralAtom == label:
+                    centralAtom = newLabel
+                newGroup = AminoGroup (natoms=group.natoms, centralAtom=centralAtom, radius=group.radius, labels=newLabels, symbol=group.symbol)
                 group    = newGroup
             newGroups.append (group)
         self.groups = newGroups

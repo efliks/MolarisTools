@@ -64,7 +64,7 @@ class PDBFile (object):
     def _Parse (self):
         lines    = open (self.inputfile)
         if self.logLevel > 1:
-            print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, self.filename))
+            print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, self.inputfile))
         # . Initialize
         bonds          = []
         atoms          = []

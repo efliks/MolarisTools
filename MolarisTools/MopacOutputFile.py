@@ -9,9 +9,9 @@ from   Utilities import TokenizeLine, WriteData
 import collections, exceptions
 
 
-Atom     = collections.namedtuple ("Atom"     , "symbol x y z charge")
-Force    = collections.namedtuple ("Force"    , "x y z")
-ScanStep = collections.namedtuple ("ScanStep" , "Efinal atoms forces mcharges charges")
+Atom     = collections.namedtuple ("Atom"     , "symbol  x  y  z  charge")
+Force    = collections.namedtuple ("Force"    , "x  y  z")
+ScanStep = collections.namedtuple ("ScanStep" , "Efinal  Etotal  atoms  forces  mcharges  charges")
 
 # . If any of these lines is encountered, parsing of a file must stop
 _ERROR_LINES = ("A FAILURE HAS OCCURRED, TREAT RESULTS WITH CAUTION" ,
@@ -65,12 +65,14 @@ class MopacOutputFile (object):
                         force = Force (x=self._GetGradientLine (lines) * GRADIENT_TO_FORCE, y=self._GetGradientLine (lines) * GRADIENT_TO_FORCE, z=self._GetGradientLine (lines) * GRADIENT_TO_FORCE)
                         self.forces.append (force)
 
-                # . Get the final total energy
-                # elif line.count ("TOTAL ENERGY"):
-                #     tokens = TokenizeLine (line, converters=[None, None, None, float, None])
-                #     self.Etotal = tokens[3] * EV_TO_KCAL_MOL
+                # . Get the final total energy (electronic + nuclear repulsion)
+                elif line.count ("TOTAL ENERGY"):
+                    tokens = TokenizeLine (line, converters=[None, None, None, float, None])
+                    self.Etotal = tokens[3] * EV_TO_KCAL_MOL
 
-                # . Read the final QM energy
+                # . Read the final heat in formation
+                # . Comment: For some reason (numeric?), heat of formation was used as a final form of energy
+                # . in old Plotnikov's scripts, instead of the total energy.
                 elif line.count ("FINAL HEAT OF FORMATION"):
                     tokens = TokenizeLine (line, converters=[None, None, None, None, None, float, None, None, float, None])
                     self.Efinal = tokens [5]
