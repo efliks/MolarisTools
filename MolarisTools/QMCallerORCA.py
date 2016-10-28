@@ -95,11 +95,10 @@ class QMCallerORCA (QMCaller):
             fileOutput  = open (orcaOutput, "w")
             subprocess.check_call ([self.pathORCA, orcaInput], stdout=fileOutput, stderr=fileOutput)
             fileOutput.close ()
-
         # . Parse the output file
         orca        = ORCAOutputFile (orcaOutput, reverse=True)
+        # . In ORCA, the final QM energy does not seem to include the self interaction energy of point charges
         self.Efinal = orca.Efinal
-
         # . Include forces on QM atoms
         engrad      = EngradFile (os.path.join (self.scratch, self.job + ".engrad"), reverse=True)
         self.forces = engrad.forces
@@ -107,7 +106,6 @@ class QMCallerORCA (QMCaller):
         if self.qmmm:
             pcgrad        = PCgradFile (os.path.join (self.scratch, self.job + ".pcgrad"), reverse=True)
             self.mmforces = pcgrad.forces
-
         # . Include charges
         if   self.chargeScheme == CS_MULLIKEN:
             charges = []
@@ -118,7 +116,6 @@ class QMCallerORCA (QMCaller):
             raise exceptions.StandardError ("Merz-Kollman charges are not (yet) implemented in QMCallerORCA.")
         elif self.chargeScheme == CS_CHELPG:
             raise exceptions.StandardError ("CHELPG charges are not (yet) implemented in QMCallerORCA.")
-
         # . Finish up
         self._Finalize ()
 
