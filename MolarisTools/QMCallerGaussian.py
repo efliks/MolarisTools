@@ -21,16 +21,17 @@ class QMCallerGaussian (QMCaller):
     # . env may define variables such as GAUSS_EXEDIR and GAUSS_SCRDIR
     # . restart means to reuse the wavefunction from the checkpoint file
     defaultAttributes = {
-        "env"                     :   None         ,
-        "ncpu"                    :   1            ,
-        "memory"                  :   1            ,
-        "restart"                 :   False        ,
-        "extraOptions"            :   None         ,
-        "fileGaussianError"       :   "job.err"    ,
-        "fileGaussianInput"       :   "job.inp"    ,
-        "fileGaussianOutput"      :   "job.log"    ,
-        "fileGaussianCheckpoint"  :   "job.chk"    ,
-        "SCFConvergence"          :   10           ,
+        "env"                     :   None            ,
+        "ncpu"                    :   1               ,
+        "memory"                  :   1               ,
+        "method"                  :   "B3LYP/6-31G*"  ,
+        "restart"                 :   False           ,
+        "extraOptions"            :   None            ,
+        "fileGaussianError"       :   "job.err"       ,
+        "fileGaussianInput"       :   "job.inp"       ,
+        "fileGaussianOutput"      :   "job.log"       ,
+        "fileGaussianCheckpoint"  :   "job.chk"       ,
+        "SCFConvergence"          :   10              ,
         "pathGaussian"            :   os.path.join (os.environ["HOME"], "local", "opt", "g03", "g03") ,
             }
     defaultAttributes.update (QMCaller.defaultAttributes)

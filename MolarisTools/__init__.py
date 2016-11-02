@@ -9,6 +9,7 @@ from QMCallerORCA        import QMCallerORCA
 from QMCallerMopac       import QMCallerMopac
 from QMCallerGAMESS      import QMCallerGAMESS
 from QMCallerGaussian    import QMCallerGaussian
+from QMCallerQChem       import QMCallerQChem
 
 # . Handling of Molaris files
 from MolarisResidue      import MolarisResidue
@@ -28,6 +29,7 @@ from EVBDatFile          import EVBDatFile
 from GaussianOutputFile  import GaussianOutputFile
 from GAMESSOutputFile    import GAMESSOutputFile, GAMESSDatFile
 from ORCAOutputFile      import ORCAOutputFile, PCgradFile, EngradFile
+from QChemOutputFile     import QChemOutputFile, EfieldFile
 from MopacOutputFile     import MopacOutputFile
 from MopacInputFile      import MopacInputFile
 from XYZTrajectory       import XYZTrajectory

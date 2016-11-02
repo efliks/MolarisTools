@@ -14,14 +14,15 @@ import subprocess, os.path, exceptions
 class QMCallerORCA (QMCaller):
     """A class to provide communication between Molaris and ORCA."""
 
-    # . Options specific to ORCA
+    # . Options specific to ORCA.
+    # . Note that ORCA will by default reuse the previous orbitals as a guess for SCF, hence no restart option.
     defaultAttributes = {
-        "job"        :   "job"        ,
-        "scratch"    :   "orca"       ,
-        "ncpu"       :   1            ,
-        "memory"     :   1            ,
-        "restart"    :   False        ,
-        "debug"      :   False        ,
+        "job"        :   "job"          ,
+        "scratch"    :   "orca"         ,
+        "ncpu"       :   1              ,
+        "memory"     :   1              ,
+        "method"     :   "B3LYP/6-31G*" ,
+        "debug"      :   False          ,
         "pathORCA"   :   os.path.join (os.environ["HOME"], "local", "opt", "orca_3_0_0_linux_x86-64", "orca") ,
             }
     defaultAttributes.update (QMCaller.defaultAttributes)

@@ -17,6 +17,7 @@ class QMCallerMopac (QMCaller):
     # . Options specific to Mopac
     # . fileAtoms should be set to "mol.in" if qmmm=True
     defaultAttributes = {
+        "method"               :   "PM3"          ,
         "useElectronicEnergy"  :   False          ,
         "fileMopacError"       :   "run.err"      ,
         "fileMopacInput"       :   "run.mop"      ,

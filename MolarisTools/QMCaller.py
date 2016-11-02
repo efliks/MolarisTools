@@ -29,7 +29,6 @@ class QMCaller (object):
     # . If qmmm is True, point charges will be used to polarize the wavefunction
     # . Charge schemes can be Mulliken, MerzKollman, Chelpg (only Gaussian)
     defaultAttributes = {
-        "method"             :     "PM3"              ,
         "charge"             :      0                 ,
         "multiplicity"       :      1                 ,
         "dielectric"         :     78.4               ,
