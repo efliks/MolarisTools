@@ -124,9 +124,9 @@ class QMCallerQChem (QMCaller):
             nvectors     = len (pointCharges)
             for point, (ex, ey, ez) in zip (pointCharges, efield.field[:nvectors]):
                 force = Force (
-                    x   =   -ex  *  point.charge   ,
-                    y   =   -ey  *  point.charge   ,
-                    z   =   -ez  *  point.charge   , )
+                    x   =   ex  *  point.charge   ,
+                    y   =   ey  *  point.charge   ,
+                    z   =   ez  *  point.charge   , )
                 mmforces.append (force)
             self.mmforces = mmforces
         # . Include forces on QM atoms
