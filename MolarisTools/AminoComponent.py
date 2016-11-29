@@ -330,12 +330,14 @@ class AminoComponent (object):
         for atom in self.atoms:
             if atom.atomLabel == label:
                 found = True
-                atom  = AminoAtom (atomLabel=newLabel, atomType=newType, atomCharge=newCharge)
+                atom  = AminoAtom (
+                    atomLabel   =   newLabel   ,
+                    atomType    =   newType    ,
+                    atomCharge  =   newCharge  , )
             newAtoms.append (atom)
         if not found:
             raise exceptions.StandardError ("Atom %s not found." % label)
         self.atoms = newAtoms
-
         # . Replace in the list of bonds
         newBonds = []
         for bonda, bondb in self.bonds:
@@ -345,7 +347,6 @@ class AminoComponent (object):
                 bondb = newLabel
             newBonds.append ((bonda, bondb))
         self.bonds = newBonds
-
         # . Replace in the group
         newGroups = []
         for group in self.groups:
@@ -357,10 +358,15 @@ class AminoComponent (object):
                     atomLabel = newLabel
                 newLabels.append (atomLabel)
             if found:
-                centralAtom = label
+                centralAtom = group.centralAtom
                 if group.centralAtom == label:
                     centralAtom = newLabel
-                newGroup = AminoGroup (natoms=group.natoms, centralAtom=centralAtom, radius=group.radius, labels=newLabels, symbol=group.symbol)
+                newGroup = AminoGroup (
+                    natoms      =   group.natoms    ,
+                    centralAtom =   centralAtom     ,
+                    radius      =   group.radius    ,
+                    labels      =   newLabels       ,
+                    symbol      =   group.symbol    , )
                 group    = newGroup
             newGroups.append (group)
         self.groups = newGroups
@@ -988,7 +994,7 @@ class AminoComponent (object):
     def RoundCharges (self, n=2, atomIndex=0, logging=True):
         """Round up charges to n (default: 2) digits."""
         if logging:
-            print ("# . %s> Total charge of %s is %f" % (_MODULE_LABEL, self.label, self.charge))
+            print ("# . %s> Total charge of component %s is %f" % (_MODULE_LABEL, self.label, self.charge))
         correction = round (self.charge, n) - self.charge
         if logging:
             print ("# . %s> Adding correction of %f to atom %s of component %s" % (_MODULE_LABEL, correction, atomIndex, self.label))
@@ -1001,6 +1007,61 @@ class AminoComponent (object):
         self.atoms[atomIndex] = atomNew
         if logging:
             print ("# . %s> Total charge of %s after correction is %f" % (_MODULE_LABEL, self.label, self.charge))
+
+
+#===============================================================================
+# . Helper functions
+#===============================================================================
+def MergeComponents (component, componentOther, serial=999, label="NEW", logging=True):
+    """Merge two components into one."""
+    labels = []
+    for atom in component.atoms:
+        labels.append (atom.atomLabel)
+    conflict = []
+    for atomOther in componentOther.atoms:
+        if atomOther.atomLabel in labels:
+            conflict.append (atomOther.atomLabel)
+    if conflict:
+        text = ", ".join (map (lambda a: "\"%s\"" % a, conflict))
+        raise exceptions.StandardError ("Conflicting atom labels (%s)." % text)
+    symbols = []
+    for group in component.groups:
+        symbols.append (group.symbol)
+    convert = {}
+    for groupOther in componentOther.groups:
+        newSymbol = groupOther.symbol
+        if groupOther.symbol in symbols:
+            for i in range (ord ('A'), ord ('Z') + 1):
+                symbol = chr (i)
+                if symbol not in symbols:
+                    newSymbol = symbol
+                    break
+        convert[groupOther.symbol] = newSymbol
+    groups = []
+    for groupOther in componentOther.groups:
+        group = AminoGroup (
+            natoms      =   groupOther.natoms           ,
+            radius      =   groupOther.radius           ,
+            labels      =   groupOther.labels           ,
+            centralAtom =   groupOther.centralAtom      ,
+            symbol      =   convert[groupOther.symbol]  ,
+            )
+        groups.append (group)
+    new = AminoComponent (
+        serial  =   serial       ,
+        label   =   label        ,
+        connect =   ("",    "")  ,
+        logging =   logging      ,
+        atoms   =   component.atoms  + componentOther.atoms   ,
+        bonds   =   component.bonds  + componentOther.bonds   ,
+        groups  =   component.groups + groups                 ,
+        title   =   "Merged from %s and %s" % (component.label, componentOther.label) ,
+        )
+    if hasattr (component, "angles"):
+        new.GenerateAngles (logging=logging)
+    if hasattr (component, "torsions"):
+        new.GenerateTorsions (logging=logging)
+    return new
 
 
 #===============================================================================

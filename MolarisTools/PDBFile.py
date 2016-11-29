@@ -50,6 +50,23 @@ class PDBResidue (object):
         return pairs
 
 
+    def ReplaceAtom (self, label, newLabel):
+        """Replace an atom."""
+        found = False
+        for (i, atom) in enumerate (self.atoms):
+            if atom.label == label:
+                new = PDBAtom (
+                    label   =   newLabel    ,
+                    serial  =   atom.serial ,
+                    x       =   atom.x      ,
+                    y       =   atom.y      ,
+                    z       =   atom.z      , )
+                self.atoms[i] = new
+                found = True
+        if not found:
+            raise exceptions.StandardError ("Atom %s not found." % label)
+
+
 #===============================================================================
 class PDBFile (object):
     """A class to read a PDB file."""

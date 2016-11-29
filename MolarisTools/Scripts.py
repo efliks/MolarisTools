@@ -24,15 +24,18 @@ _DEFAULT_TOLERANCE_LOW  = 0.85
 _SCALE_TOLERANCE        = 1.2
 
 
-def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", "BR", ), constrainAll=False):
+def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", "BR", ), constrainAll=False, overwriteCharges=[]):
     """Generate a list of EVB atoms and bonds based on a Molaris output file."""
-    library = AminoLibrary (fileLibrary, logging=False)
+    library    = AminoLibrary (fileLibrary, logging=False)
     
     mof        = MolarisOutputFile (fileMolarisOutput)
     tabs       = (" " * 4) * ntab
     natoms     = 0
     nbonds     = 0
     evbSerials = []
+    if overwriteCharges:
+        charges = list (reversed (overwriteCharges))
+
     for residue in mof.residues:
         libResidue    = library[residue.label]
         print ("%s# . %s%d" % (tabs, residue.label, residue.serial))
@@ -63,8 +66,11 @@ def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine
                     groupLabels = selectGroups[residue.label]
                     if groupLabel in groupLabels:
                         includeAtom = True
+            charge = atom.charge
+            if overwriteCharges:
+                charge = charges.pop ()
             if includeAtom:
-                print ("%sevb_atm    %2d    %6.3f    %2s        %6.3f    %2s    #  %6.3f  %4s  %4s    %1s" % (tabs, atom.serial, atom.charge, evbType, atom.charge, evbType, atom.charge, atom.atype, atom.label, groupLabel))
+                print ("%sevb_atm    %2d    %6.3f    %2s        %6.3f    %2s    #  %6.3f  %4s  %4s    %1s" % (tabs, atom.serial, charge, evbType, charge, evbType, atom.charge, atom.atype, atom.label, groupLabel))
                 evbSerials.append (atom.serial)
                 natoms += 1
     
