@@ -786,9 +786,23 @@ class AminoComponent (object):
             "MERZKOLLMAN"  :  gaussian.espcharges   ,
             "CHELPG"       :  gaussian.espcharges   , }
         charges = convert[scheme]
+
+        # . Check if there are any dummy atoms
+        update = []
+        charges.reverse ()
+        for atom in self.atoms:
+            if atom.atomLabel[0] != "X":
+                charge = charges.pop ()
+            else:
+                charge = 0.
+                if logging:
+                    print ("# . %s> Found dummy atom %s" % (_MODULE_LABEL, atom.atomLabel))
+            update.append (charge)
+        charges = update
+
         # . Update charges in atoms
         newAtoms = []
-        for atom, charge in zip (self.atoms, charges):
+        for (atom, charge) in zip (self.atoms, charges):
             newAtom = AminoAtom (
                 atomLabel   =   atom.atomLabel  ,
                 atomType    =   atom.atomType   ,
