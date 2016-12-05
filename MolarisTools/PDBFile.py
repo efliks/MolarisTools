@@ -28,25 +28,26 @@ class PDBResidue (object):
         """Return a list of bonds for a residue."""
         pairs = []
         pdb   = self.parent
-        for (seriala, serialb) in pdb.bonds:
-            found = False
-            for i, atoma in enumerate (self.atoms):
-                if atoma.serial == seriala:
-                    found = True
-                    break
-            if not found:
-                continue
-            paira = (i, atoma.serial, atoma.label)
-            found = False
-            for j, atomb in enumerate (self.atoms):
-                if atomb.serial == serialb:
-                    found = True
-                    break
-            if not found:
-                continue
-            pairb = (j, atomb.serial, atomb.label)
-            pair  = (paira, pairb)
-            pairs.append (pair)
+        if pdb.bonds != []:
+            for (seriala, serialb) in pdb.bonds:
+                found = False
+                for i, atoma in enumerate (self.atoms):
+                    if atoma.serial == seriala:
+                        found = True
+                        break
+                if not found:
+                    continue
+                paira = (i, atoma.serial, atoma.label)
+                found = False
+                for j, atomb in enumerate (self.atoms):
+                    if atomb.serial == serialb:
+                        found = True
+                        break
+                if not found:
+                    continue
+                pairb = (j, atomb.serial, atomb.label)
+                pair  = (paira, pairb)
+                pairs.append (pair)
         return pairs
 
 
@@ -65,6 +66,44 @@ class PDBResidue (object):
                 found = True
         if not found:
             raise exceptions.StandardError ("Atom %s not found." % label)
+
+
+    def KillAtom (self, label):
+        """Replace an atom."""
+        new   = []
+        found = False
+        for atom in self.atoms:
+            if atom.label == label:
+                found = True
+                continue
+            new.append (atom)
+        if not found:
+            raise exceptions.StandardError ("Atom %s not found." % label)
+        self.atoms = new
+        # . Remove bonds that involve removed atom
+        remove = []
+        for (paira, pairb) in self.bonds:
+            if (paira == label) or (pairb == label):
+                pair = (paira, pairb)
+                remove.append (pair)
+        pdb    = self.parent
+        update = []
+        for (paira, pairb) in pdb.bonds:
+            if ((paira, pairb) in remove) or ((pairb, paira) in remove):
+                continue
+            pair = (paira, pairb)
+            update.append (pair)
+        pdb.bonds = update
+
+
+    @property
+    def bonds (self):
+        return self.GetBonds ()
+
+    @property
+    def nbonds (self):
+        bonds = self.GetBonds ()
+        return len (bonds)
 
 
 #===============================================================================

@@ -24,7 +24,7 @@ _DEFAULT_TOLERANCE_LOW  = 0.85
 _SCALE_TOLERANCE        = 1.2
 
 
-def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", "BR", ), constrainAll=False, overwriteCharges=[]):
+def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", "BR", "DE", ), constrainAll=False, overwriteCharges=[]):
     """Generate a list of EVB atoms and bonds based on a Molaris output file."""
     library    = AminoLibrary (fileLibrary, logging=False)
     
@@ -389,6 +389,42 @@ def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, 
         print ("# . Calculated LRA = %f  (%f, %f)" % (lra, a, b))
     if returnTerms:
         return (lra, a, b)
+    return lra
+
+
+def CalculateOneSidedLRA (path="lra_RS_qmmm", logging=True, skip=None, trim=None):
+    """Calculate LRA for one endpoint simulation."""
+    gapfiles = []
+    logs     = glob.glob (os.path.join (path, "evb_equil_*out"))
+    for log in logs:
+        (logfile, logext) = os.path.splitext (log)
+        gapfile = os.path.join (logfile, "gap.out")
+        gapfiles.append (gapfile)
+    ngap = len (gapfiles)
+    if logging:
+        print ("# . Found %d gap files at location %s" % (ngap, path))
+    if logging:
+        print ("# . Using %d gap files" % ngap)
+    gapa = GapFile (gapfiles[0], logging=False)
+    for nextfile in gapfiles[1:ngap]:
+        gapa.Extend (nextfile)
+    if logging:
+        print ("# . Number of steps in endpoint is %d" % gapa.nsteps)
+        if   isinstance (skip, int):
+            print ("# . Skipping first %d configurations" % skip)
+        elif isinstance (skip, float):
+            percent  = int (skip * 100.)
+            na       = int (gapa.nsteps * skip)
+            print ("# . Skipping first %d%% (%d) of configurations" % (percent, na))
+        if   isinstance (trim, int):
+            print ("# . Skipping last %d configurations" % trim)
+        elif isinstance (trim, float):
+            percent  = int (trim * 100.)
+            na       = int (gapa.nsteps * trim)
+            print ("# . Skipping last %d%% (%d) of configurations" % (percent, na))
+    lra = gapa.CalculateLRATerm (skip=skip, trim=trim)
+    if logging:
+        print ("# . Calculated LRA = %f" % lra)
     return lra
 
 

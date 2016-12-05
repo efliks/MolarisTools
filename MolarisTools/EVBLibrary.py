@@ -502,8 +502,8 @@ class EVBLibrary (object):
             "solvdw"     :   "'%s'         %X.Yf    %X.Yf"  ,
             "inductive"  :   "'%s'         %X.Yf    %X.Yf"  ,
             "ipairs"     :   "'%s'  '%s'   %X.Yf"   ,
-            "screen"     :   "'%s'         %X.Yf"   ,
-            "spairs"     :   "'%s'  '%s'   %X.Yf"   , }
+            "screen"     :   "'%s'      %X.Yf"   ,
+            "spairs"     :   "'%s'  '%s'%X.Yf"   , }
         formats = {}
         for (key, string) in template.iteritems ():
             formats[key] = string.replace ("X", "%d" % (6 + digits)).replace ("Y", "%d" % digits)

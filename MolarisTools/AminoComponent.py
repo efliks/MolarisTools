@@ -689,7 +689,7 @@ class AminoComponent (object):
             fo.close ()
 
 
-    def CalculateCharges (self, pdbResidue, ncpu=1, memory=1, charge=None, multiplicity=1, method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, cosmo=False, dielectric=_DEFAULT_DIELECTRIC, optimize=False, pathGaussian=_DEFAULT_GAUSSIAN_PATH, logging=True):
+    def CalculateCharges (self, pdbResidue, ncpu=1, memory=1, charge=None, multiplicity=1, method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, cosmo=False, dielectric=_DEFAULT_DIELECTRIC, optimize=False, optimizeList=None, pathGaussian=_DEFAULT_GAUSSIAN_PATH, workdir="", scratch="", dryRun=False, logging=True):
         """Calculate quantum chemical charges in Gaussian."""
     
         # . Do some initial checks
@@ -712,10 +712,10 @@ class AminoComponent (object):
             coordinates.append (atomPDB)
     
         # . Prepare filenames
-        fError       =  "job_%s.err" % self.label
-        fInput       =  "job_%s.inp" % self.label
-        fOutput      =  "job_%s.log" % self.label
-        fCheckpoint  =  "job_%s.chk" % self.label
+        fError       =  os.path.join (workdir if (workdir != "") else ".", "job_%s.err" % self.label)
+        fInput       =  os.path.join (workdir if (workdir != "") else ".", "job_%s.inp" % self.label)
+        fOutput      =  os.path.join (workdir if (workdir != "") else ".", "job_%s.log" % self.label)
+        fCheckpoint  =  os.path.join (scratch if (scratch != "") else ".", "job_%s.chk" % self.label)
     
         lines   = []
         if ncpu > 1:
@@ -736,7 +736,11 @@ class AminoComponent (object):
         background = "SCRF=(Solvent=Water,Read)" if cosmo                        else ""
         restart    = "Guess=Read"                if os.path.exists (fCheckpoint) else ""
         # . Optimize geometry before calculating charges?
-        opt        = "OPT"                       if optimize                     else ""
+        opt = ""
+        if optimize:
+            opt = "OPT"
+            if optimizeList:
+                opt = "OPT=(AddRedundant)"
         keywords   = (method, "NoSymm", restart, background, chargeScheme, opt)
         header     = " ".join (keywords)
         lines.append ("#P " + header + "\n\n")
@@ -760,73 +764,86 @@ class AminoComponent (object):
                     break
             lines.append ("%2s    %16.10f    %16.10f    %16.10f\n" % (atomSymbol, atom.x, atom.y, atom.z))
         lines.append ("\n")
+
+        # . If optimizeList != None, optimize only some atoms
+        if optimize:
+            if optimizeList:
+                fixList    = []
+                allSerials = range (1, self.natoms + 1)
+                for serial in allSerials:
+                    if serial not in optimizeList:
+                        fixList.append (serial)
+                for serial in fixList:
+                    lines.append ("%d  f\n" % serial)
+                lines.append ("\n")
         
         # . If cosmo=True, write epsilon
         if cosmo:
             lines.append ("eps=%f\n\n" % dielectric)
-    
-        # . Run when there is no output file    
-        if not os.path.exists (fOutput):
-            if logging:
-                print ("# . %s> Now running charge calculation for %s ..." % (_MODULE_LABEL, self.label))
-            fi = open (fInput, "w")
-            for line in lines:
-                fi.write (line)
-            fi.close ()
-            fe = open (fError, "w")
-            subprocess.check_call ([pathGaussian, fInput], stdout=fe, stderr=fe)
-            fe.close ()
-    
-        # . Read Gaussian putput file
-        gaussian = GaussianOutputFile (fOutput)
-    
-        # . Assign charges to amino component
-        convert = {
-            "MULLIKEN"     :  gaussian.charges      ,
-            "MERZKOLLMAN"  :  gaussian.espcharges   ,
-            "CHELPG"       :  gaussian.espcharges   , }
-        charges = convert[scheme]
 
-        # . Check if there are any dummy atoms
-        update = []
-        charges.reverse ()
-        for atom in self.atoms:
-            if atom.atomLabel[0] != "X":
-                charge = charges.pop ()
-            else:
-                charge = 0.
+        # . Write input file
+        fi = open (fInput, "w")
+        for line in lines:
+            fi.write (line)
+        fi.close ()
+
+        if not dryRun:
+            # . Run when there is no output file    
+            if not os.path.exists (fOutput):
                 if logging:
-                    print ("# . %s> Found dummy atom %s" % (_MODULE_LABEL, atom.atomLabel))
-            update.append (charge)
-        charges = update
-
-        # . Update charges in atoms
-        newAtoms = []
-        for (atom, charge) in zip (self.atoms, charges):
-            newAtom = AminoAtom (
-                atomLabel   =   atom.atomLabel  ,
-                atomType    =   atom.atomType   ,
-                atomCharge  =   charge          ,
+                    print ("# . %s> Now running charge calculation for %s ..." % (_MODULE_LABEL, self.label))
+                fe = open (fError, "w")
+                subprocess.check_call ([pathGaussian, fInput], stdout=fe, stderr=fe)
+                fe.close ()
+            # . Read Gaussian putput file
+            gaussian = GaussianOutputFile (fOutput)
+        
+            # . Assign charges to amino component
+            convert = {
+                "MULLIKEN"     :  gaussian.charges      ,
+                "MERZKOLLMAN"  :  gaussian.espcharges   ,
+                "CHELPG"       :  gaussian.espcharges   , }
+            charges = convert[scheme]
+    
+            # . Check if there are any dummy atoms
+            update = []
+            charges.reverse ()
+            for atom in self.atoms:
+                if atom.atomLabel[0] != "X":
+                    charge = charges.pop ()
+                else:
+                    charge = 0.
+                    if logging:
+                        print ("# . %s> Found dummy atom %s" % (_MODULE_LABEL, atom.atomLabel))
+                update.append (charge)
+            charges = update
+    
+            # . Update charges in atoms
+            newAtoms = []
+            for (atom, charge) in zip (self.atoms, charges):
+                newAtom = AminoAtom (
+                    atomLabel   =   atom.atomLabel  ,
+                    atomType    =   atom.atomType   ,
+                    atomCharge  =   charge          ,
+                    )
+                newAtoms.append (newAtom)
+            self.atoms = newAtoms
+            # . Create one group of atoms
+            labels = []
+            for atom in newAtoms:
+                labels.append (atom.atomLabel)
+            natoms = len (newAtoms)
+            aminoGroup = AminoGroup (
+                radius      =   5.       ,
+                natoms      =   natoms   ,
+                labels      =   labels   ,
+                symbol      =   self.groups[0].symbol           ,
+                centralAtom =   newAtoms[natoms / 2].atomLabel  ,
                 )
-            newAtoms.append (newAtom)
-        self.atoms = newAtoms
-        # . Create one group of atoms
-        labels = []
-        for atom in newAtoms:
-            labels.append (atom.atomLabel)
-        natoms = len (newAtoms)
-        aminoGroup = AminoGroup (
-            radius      =   5.       ,
-            natoms      =   natoms   ,
-            labels      =   labels   ,
-            symbol      =   self.groups[0].symbol           ,
-            centralAtom =   newAtoms[natoms / 2].atomLabel  ,
-            )
-        self.groups = [aminoGroup, ]
-
-        # . Finish up
-        if logging:
-            print ("# . %s> Setting quantum charges to %s complete" % (_MODULE_LABEL, self.label))
+            self.groups = [aminoGroup, ]
+            # . Finish up
+            if logging:
+                print ("# . %s> Setting quantum charges to %s complete" % (_MODULE_LABEL, self.label))
 
 
     def CalculateChargesGroups (self, pdbResidue, ncpu=1, memory=1, method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, cosmo=False, dielectric=_DEFAULT_DIELECTRIC, optimize=False, pathGaussian=_DEFAULT_GAUSSIAN_PATH, logging=True):
