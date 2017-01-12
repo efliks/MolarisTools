@@ -54,10 +54,17 @@ class EVBDatFile (object):
                         for token in tokens:
                             if token != None:
                                 serials.append (token)
-                    # . Read atom type numbers (?) for each form
+                    # . Read atom type numbers for each form
+                    forms = []
                     for i in range (nforms):
+                        types = []
                         for j in range (nlines):
-                            next (data)
+                            tokens = TokenizeLine (next (data), converters=([int, ] * _ATOMS_PER_LINE))
+                            for token in tokens:
+                                if token != None:
+                                    types.append (token)
+                        forms.append (types)
+                    self.types   = forms
                     # . Read atomic charges for each form
                     charges = []
                     for i in range (nforms):
@@ -72,7 +79,13 @@ class EVBDatFile (object):
                     self.natoms  = natoms
                     self.nforms  = nforms
                     if logging:
-                        print ("# . %s> Found %d EVB atoms" % (_MODULE_LABEL, natoms))
+                        print ("# . %s> Found %d EVB atoms in %d forms" % (_MODULE_LABEL, natoms, nforms))
+                        types = set ()
+                        for form in self.types:
+                            for atom in form:
+                                types.add (atom)
+                        ntypes = len (types)
+                        print ("# . %s> Found %d unique atom types" % (_MODULE_LABEL, ntypes))
 
                 elif line.count ("bonds(atoms,types,exist)"):
                     (nbonds, foo) = TokenizeLine (line, converters=[int, None])

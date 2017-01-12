@@ -610,7 +610,8 @@ class EVBLibrary (object):
             for pair in self.pairs:
                 if (pair.typea == typea and pair.typeb == typeb) or (pair.typea == typeb and pair.typeb == typea):
                     (morseD, r0) = pair.morseAB, pair.rab
-                    return (morseD, r0)
+                    # return (morseD, r0)
+                    return pair
         # . No pairs found, search one-atom parameters
         if hasattr (self, "morse"):
             morsea = None
@@ -624,15 +625,17 @@ class EVBLibrary (object):
                 # . Apply combination rules
                 morseD = math.sqrt (morsea.morseD * morseb.morseD)
                 r0     = morsea.radius + morseb.radius
-                return (morseD, r0)
+                # return (morseD, r0)
+                return (morsea, morseb)
         return None
 
 
     def GetAngle (self, typea, typeb, typec):
         if hasattr (self, "angles"):
             for angle in self.angles:
-                if (angle.typeb == typeb):
-                    return (angle.force, angle.angle0)
+                if (angle.evbType == typeb):
+                    # return (angle.force, angle.angle0)
+                    return angle
         return None
 
 
@@ -640,7 +643,8 @@ class EVBLibrary (object):
         if hasattr (self, "torsions"):
             for torsion in self.torsions:
                 if (torsion.typea == typeb and torsion.typeb == typec) or (torsion.typea == typec and torsion.typeb == typeb):
-                    return (torsion.force, torsion.periodicity, torsion.phase)
+                    # return (torsion.force, torsion.periodicity, torsion.phase)
+                    return torsion
         return None
 
 
