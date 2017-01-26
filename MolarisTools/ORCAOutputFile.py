@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 # . File      : ORCAOutputFile.py
 # . Program   : MolarisTools
-# . Copyright : USC, Mikolaj Feliks (2016)
+# . Copyright : USC, Mikolaj Feliks (2015-2017)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from   Units     import HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM, HARTREE_TO_KCAL_MOL

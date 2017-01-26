@@ -1,11 +1,11 @@
 #-------------------------------------------------------------------------------
 # . File      : AminoComponent.py
 # . Program   : MolarisTools
-# . Copyright : USC, Mikolaj Feliks (2016)
+# . Copyright : USC, Mikolaj Feliks (2015-2017)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from    Utilities           import TokenizeLine
-from    PDBFile             import PDBResidue, PDBAtom
+from    PDBFile             import PDBFile, PDBResidue, PDBAtom
 from    ParametersLibrary   import ParametersLibrary
 from    GaussianOutputFile  import GaussianOutputFile
 import  collections, exceptions, os, subprocess, math
@@ -1038,6 +1038,80 @@ class AminoComponent (object):
         self.atoms[atomIndex] = atomNew
         if logging:
             print ("# . %s> Total charge of %s after correction is %f" % (_MODULE_LABEL, self.label, self.charge))
+
+
+    def ReorderHydrogens (self, pdbFile, residue=1, logging=True):
+        """Reorder hydrogens based on a PDB geometry so that each hydrogen is close to its parent heavy atom."""
+        if self.ngroups > 1:
+            raise exceptions.StandardError ("Reordering can only work for one charge group.")
+        # . Construct lists of heavy and hydrogen atoms
+        heavy     = []
+        hydrogens = []
+        for (i, atom) in enumerate (self.atoms):
+            if (atom.atomLabel[0] != "H"):
+                heavy.append (i)
+            else:
+                hydrogens.append (i)
+        # . Geometry loading
+        pdb     = PDBFile (pdbFile)
+        atoms   = pdb.residues[(residue - 1)].atoms
+        # . Construct mapping topology atom -> PDB atom
+        mapping = {}
+        for (i, atomTopology) in enumerate (self.atoms):
+            found = False
+            for (j, atomPDB) in enumerate (atoms):
+                if (atomTopology.atomLabel == atomPDB.label):
+                    mapping[i] = j
+                    found = True
+            if not found:
+                raise exceptions.StandardError ("Atom %s not found in PDB file." % atomTopology.atomLabel)
+        # . Construct a rectangular distance matrix (rows: heavy atoms, columns: hydrogens)
+        rows = []
+        for i in heavy:
+            columns = []
+            for j in hydrogens:
+                (m, n)          = (mapping[i], mapping[j])
+                (pdb, pdbOther) = (atoms[m], atoms[n])
+                distance        = math.sqrt ((pdb.x - pdbOther.x) ** 2 + (pdb.y - pdbOther.y) ** 2 + (pdb.z - pdbOther.z) ** 2)
+                columns.append (distance)
+            rows.append (columns)
+        # . Now order atoms
+        new = []
+        # . Iterate heavy atoms
+        for (di, i) in enumerate (heavy):
+            atom = self.atoms[i]
+            new.append (atom)
+            # . Iterate hydrogens
+            for (dj, j) in enumerate (hydrogens):
+                atomOther  = self.atoms[j]
+                distance   = rows[di][dj]
+                include    = True
+                # . For each hydrogen, find its closest distance to a heavy atom
+                for (dk, k) in enumerate (heavy):
+                    if (k != i):
+                        atomInner     = self.atoms[k]
+                        distanceInner = rows[dk][dj]
+                        if (distanceInner < distance):
+                            # . The current hydrogen is closer to some other heavy atom
+                            include = False
+                            break
+                if include:
+                    if logging:
+                        print ("# . %s> Hydrogen %-4s moved after atom %-4s (distance: %.2f)" % (_MODULE_LABEL, atomOther.atomLabel, atom.atomLabel, distance))
+                    new.append (atomOther)
+        self.atoms = new
+        # . Rebuild the charge group
+        labels = []
+        for atom in self.atoms:
+            labels.append (atom.atomLabel)
+        group    = self.groups[0]
+        newGroup = AminoGroup (
+            natoms      =   group.natoms       ,
+            centralAtom =   group.centralAtom  ,
+            radius      =   group.radius       ,
+            symbol      =   group.symbol       ,
+            labels      =   labels             , )
+        self.groups = [newGroup, ]
 
 
 #===============================================================================

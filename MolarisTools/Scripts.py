@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 # . File      : Scripts.py
 # . Program   : MolarisTools
-# . Copyright : USC, Mikolaj Feliks (2016)
+# . Copyright : USC, Mikolaj Feliks (2015-2017)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 from MolarisOutputFile      import MolarisOutputFile
@@ -28,7 +28,7 @@ _SCALE_TOLERANCE        = 1.2
 _DEFAULT_BETA           = 2.
 
 
-def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", "BR", "DE", ), constrainAll=False, overwriteCharges=[]):
+def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_atoms.out", selectGroups={}, ntab=2, exceptions=("MG", "CL", "BR", "DE", ), overwriteCharges=[], constrainForce=_DEFAULT_FORCE, constrainAll=False, overwriteConstraints=[]):
     """Generate a list of EVB atoms and bonds based on a Molaris output file."""
     library    = AminoLibrary (fileLibrary, logging=False)
     
@@ -38,7 +38,10 @@ def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine
     nbonds     = 0
     evbSerials = []
     if overwriteCharges:
-        charges = list (reversed (overwriteCharges))
+        charges     = iter (overwriteCharges)
+    if overwriteConstraints:
+        # . Do not use atomic coordinates from the PDB file, use a predefined list of positional constraints
+        constraints = iter (overwriteConstraints)
 
     for residue in mof.residues:
         libResidue    = library[residue.label]
@@ -72,8 +75,8 @@ def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine
                         includeAtom = True
             charge = atom.charge
             if includeAtom:
-                if overwriteCharges:
-                    charge = charges.pop ()
+                if overwriteCharges != []:
+                    charge = next (charges)
                 print ("%sevb_atm    %2d    %6.2f    %2s        %6.2f    %2s    #  %6.2f  %4s  %4s    %1s" % (tabs, atom.serial, charge, evbType, charge, evbType, atom.charge, atom.atype, atom.label, groupLabel))
                 evbSerials.append (atom.serial)
                 natoms += 1
@@ -113,7 +116,10 @@ def GenerateEVBList (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine
                 if not constrainAll:
                     if atom.label[0] == "H":
                         continue
-                print ("%s# constraint_post  %4d    %4.1f  %4.1f  %4.1f  %8.3f  %8.3f  %8.3f   # %s" % (tabs, atom.serial, _DEFAULT_FORCE, _DEFAULT_FORCE, _DEFAULT_FORCE, atom.x, atom.y, atom.z, atom.label))
+                (cx, cy, cz) = (atom.x, atom.y, atom.z)
+                if overwriteConstraints != []:
+                    (cx, cy, cz) = next (constraints)
+                print ("%s# constraint_post  %4d    %4.1f  %4.1f  %4.1f  %8.3f  %8.3f  %8.3f   # %s" % (tabs, atom.serial, constrainForce, constrainForce, constrainForce, cx, cy, cz, atom.label))
 
 
 def DetermineBAT (fileLibrary=DEFAULT_AMINO_LIB, fileMolarisOutput="determine_atoms.out", residueLabels=(), fileParameters=DEFAULT_PARM_LIB):

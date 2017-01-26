@@ -1,11 +1,11 @@
 #-------------------------------------------------------------------------------
 # . File      : XYZTrajectory.py
 # . Program   : MolarisTools
-# . Copyright : USC, Mikolaj Feliks (2016)
+# . Copyright : USC, Mikolaj Feliks (2015-2017)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-from    Utilities import TokenizeLine, WriteData
-import  math, exceptions, collections
+from    Utilities import TokenizeLine
+import  exceptions, collections
 
 
 _FORMAT_SIMPLE    = "%2s   %8.3f   %8.3f   %8.3f\n"
@@ -43,8 +43,14 @@ class XYZTrajectory (object):
     def nsteps (self):
         if hasattr (self, "steps"):
             return len (self.steps)
-        else:
-            return 0
+        return 0
+
+    @property
+    def natoms (self):
+        if hasattr (self, "steps"):
+            atoms = self.steps[0].atoms
+            return len (atoms)
+        return 0
 
 
     def _Parse (self):
@@ -265,6 +271,42 @@ class XYZTrajectory (object):
             print ("%3d  %4s    %5.2f" % (atomSerial, atom.label, charge))
 
 
+    def MergeLinkAtomCharges (self, pairs):
+        """Add charges of link atoms to the charges of their parent heavy atoms.
+
+        Pairs have the following format: ((serialOfLinkAtom, serialOfParentAtom), ...)"""
+        indices = []
+        for (serialLink, serialParent) in pairs:
+            pair = (serialLink - 1, serialParent - 1)
+            indices.append (pair)
+        for step in self.steps:
+            for (indexLink, indexParent) in indices:
+                link      = step.atoms[indexLink  ]
+                parent    = step.atoms[indexParent]
+                newParent = TrajAtomExtended (
+                    label   =   parent.label  ,
+                    x       =   parent.x      ,
+                    y       =   parent.y      ,
+                    z       =   parent.z      ,
+                    fx      =   parent.fx     ,
+                    fy      =   parent.fy     ,
+                    fz      =   parent.fz     ,
+                    fm      =   parent.fm     ,
+                    charge  =   (parent.charge + link.charge) , )
+                step.atoms[indexParent] = newParent
+                newLink = TrajAtomExtended (
+                    label  =   link.label  ,
+                    x      =   link.x      ,
+                    y      =   link.y      ,
+                    z      =   link.z      ,
+                    fx     =   link.fx     ,
+                    fy     =   link.fy     ,
+                    fz     =   link.fz     ,
+                    fm     =   link.fm     ,
+                    charge =   0.          , )
+                step.atoms[indexLink] = newLink
+
+
     def AverageCharges (self):
         """For each atom, calculate its average charge from the trajectory."""
         nsteps = len (self.steps)
@@ -282,20 +324,69 @@ class XYZTrajectory (object):
 
     def AverageChargesWrite (self, filename=""):
         """Write average charges."""
-        if hasattr (self, "averageCharges"):
-            toFile = False
-            if filename != "":
-                output = open (filename, "w")
-                toFile = True
-            step   = self.steps[0]
-            for atomSerial, (atom, averageCharge) in enumerate (zip (step.atoms, self.averageCharges), 1):
-                line = "%3d  %4s    %5.2f" % (atomSerial, atom.label, averageCharge)
-                if toFile:
-                    output.write (line + "\n")
-                else:
-                    print (line)
+        if not hasattr (self, "averageCharges"):
+            self.AverageCharges ()
+        toFile = False
+        if filename != "":
+            output = open (filename, "w")
+            toFile = True
+        step   = self.steps[0]
+        for atomSerial, (atom, averageCharge) in enumerate (zip (step.atoms, self.averageCharges), 1):
+            line = "%3d  %4s    %5.2f" % (atomSerial, atom.label, averageCharge)
             if toFile:
-                output.close ()
+                output.write (line + "\n")
+            else:
+                print (line)
+        if toFile:
+            output.close ()
+
+
+    def AveragePositions (self):
+        """Calculate an average position of each atom."""
+        if self.nsteps > 0:
+            coordinates = [0., 0., 0.]
+            averages    = [coordinates] * self.natoms
+            for step in self.steps:
+                for (i, atom) in enumerate (step.atoms):
+                    (x, y, z) = averages[i]
+                    x += atom.x
+                    y += atom.y
+                    z += atom.z
+                    averages[i] = [x, y, z]
+            atoms     = self.steps[0].atoms
+            scale     = 1. / self.nsteps
+            positions = []
+            for (atom, (ax, ay, az)) in zip (atoms, averages):
+                ax *= scale
+                ay *= scale
+                az *= scale
+                positions.append ((ax, ay, az))
+            self.averagePositions = positions
+
+
+    def AveragePositionsWrite (self, filename=""):
+        """Write average positions."""
+        if not hasattr (self, "averagePositions"):
+            self.AveragePositions ()
+        toFile = False
+        if filename != "":
+            output = open (filename, "w")
+            toFile = True
+        header = "%d\nAverage positions" % self.natoms
+        if toFile:
+            output.write (header + "\n")
+        else:
+            print (header)
+        step   = self.steps[0]
+        for atomSerial, (atom, averagePosition) in enumerate (zip (step.atoms, self.averagePositions), 1):
+            (x, y, z) = averagePosition
+            line = "%4s    %7.3f    %7.3f    %7.3f" % (atom.label, x, y, z)
+            if toFile:
+                output.write (line + "\n")
+            else:
+                print (line)
+        if toFile:
+            output.close ()
 
 
 #===============================================================================
