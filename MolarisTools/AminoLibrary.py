@@ -162,7 +162,9 @@ class AminoLibrary (object):
                 #  BOND CB CA  CG CB  OD2 CG
                 #   (...)
                 #  DOUBLE  O   C   CG  OD1
-                if line.startswith ("RESI"):
+                #
+                # . Treat patches as components
+                if line[:4] in ("RESI", "PRES", ):
                     if group:
                         groups.append (group)
                         # . Create a temporary component

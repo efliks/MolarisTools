@@ -439,7 +439,9 @@ def CalculateOneSidedLRA (path="lra_RS_qmmm", logging=True, skip=None, trim=None
 
 
 def DetermineEVBParameters (filenameInput="heat_template.inp", filenameDat=os.path.join ("evb_heat_01", "evb.dat"), filenameEVBLibrary=DEFAULT_EVB_LIB, state=1, logging=True):
-    """Get EVB parameters for a system."""
+    """Get EVB parameters for a system.
+
+    For now, only bonding parameters are returned."""
     # . Dat file contains lists of parameters used by Molaris for a particular system
     dat      = EVBDatFile       (filenameDat        , logging=logging)
     # . Input file is used to relate atom serial numbers to their types

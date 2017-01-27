@@ -1114,6 +1114,45 @@ class AminoComponent (object):
         self.groups = [newGroup, ]
 
 
+    def CorrectGroupCharges (self, n=2, logging=True):
+        """Correct the net charge of each group so it becomes integral."""
+        for group in self.groups:
+            collect = []
+            for label in group.labels:
+                for (i, atom) in enumerate (self.atoms):
+                    if (atom.atomLabel == label):
+                        pair = (i, atom)
+                        collect.append (pair)
+                        break
+            charges = []
+            for (i, atom) in collect:
+                charges.append (atom.atomCharge)
+            charge     = sum (charges)
+            save       = charge
+            scale      = math.pow (10, n)
+            target     = int (round (charge) * scale)
+            delta      = 1 if (target >= 0) else -1
+            integers   = map (lambda c: int (c * scale), charges)
+            ncharges   = len (charges)
+            i          = 0
+            while (sum (integers) != target):
+                integers[i] += delta
+                i += 1
+                if (i >= ncharges):
+                    i = 0
+            charges = map (lambda i: (float (i) / scale), integers)
+            for (i, atom), charge in zip (collect, charges):
+                newAtom = AminoAtom (
+                    atomLabel   =   atom.atomLabel  ,
+                    atomType    =   atom.atomType   ,
+                    atomCharge  =   charge          , )
+                self.atoms[i] = newAtom
+            if logging:
+                charge     = sum (charges)
+                formatting = "%%.%df" % n
+                print ("# . %s> Changed charge of group %s from %5s  to %5s" % (_MODULE_LABEL, group.symbol, formatting % save, formatting % charge))
+
+
 #===============================================================================
 # . Helper functions
 #===============================================================================
