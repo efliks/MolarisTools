@@ -689,7 +689,7 @@ class AminoComponent (object):
             fo.close ()
 
 
-    def CalculateCharges (self, pdbResidue, ncpu=1, memory=1, charge=None, multiplicity=1, method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, cosmo=False, dielectric=_DEFAULT_DIELECTRIC, optimize=False, optimizeList=None, pathGaussian=_DEFAULT_GAUSSIAN_PATH, workdir="", scratch="", dryRun=False, logging=True):
+    def CalculateCharges (self, pdbResidue, ncpu=1, memory=1, charge=None, multiplicity=1, method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, cosmo=False, dielectric=_DEFAULT_DIELECTRIC, optimize=False, optimizeList=None, pathGaussian=_DEFAULT_GAUSSIAN_PATH, workdir="", scratch="", dryRun=False, resetGroups=True, logging=True):
         """Calculate quantum chemical charges in Gaussian."""
     
         # . Do some initial checks
@@ -828,19 +828,21 @@ class AminoComponent (object):
                     )
                 newAtoms.append (newAtom)
             self.atoms = newAtoms
+
             # . Create one group of atoms
-            labels = []
-            for atom in newAtoms:
-                labels.append (atom.atomLabel)
-            natoms = len (newAtoms)
-            aminoGroup = AminoGroup (
-                radius      =   5.       ,
-                natoms      =   natoms   ,
-                labels      =   labels   ,
-                symbol      =   self.groups[0].symbol           ,
-                centralAtom =   newAtoms[natoms / 2].atomLabel  ,
-                )
-            self.groups = [aminoGroup, ]
+            if resetGroups:
+                labels = []
+                for atom in newAtoms:
+                    labels.append (atom.atomLabel)
+                natoms = len (newAtoms)
+                aminoGroup = AminoGroup (
+                    radius      =   5.       ,
+                    natoms      =   natoms   ,
+                    labels      =   labels   ,
+                    symbol      =   self.groups[0].symbol           ,
+                    centralAtom =   newAtoms[natoms / 2].atomLabel  ,
+                    )
+                self.groups = [aminoGroup, ]
             # . Finish up
             if logging:
                 print ("# . %s> Setting quantum charges to %s complete" % (_MODULE_LABEL, self.label))
@@ -1114,8 +1116,10 @@ class AminoComponent (object):
         self.groups = [newGroup, ]
 
 
-    def CorrectGroupCharges (self, n=2, logging=True):
-        """Correct the net charge of each group so it becomes integral."""
+    def CorrectGroupCharges (self, force={}, logging=True):
+        """Correct the net charge of each group so it becomes integral.
+
+        Parameter force is used to force a specific charge for a group, for example: {"A": -1.0, }."""
         for group in self.groups:
             collect = []
             for label in group.labels:
@@ -1128,19 +1132,14 @@ class AminoComponent (object):
             for (i, atom) in collect:
                 charges.append (atom.atomCharge)
             charge     = sum (charges)
-            save       = charge
-            scale      = math.pow (10, n)
-            target     = int (round (charge) * scale)
-            delta      = 1 if (target >= 0) else -1
-            integers   = map (lambda c: int (c * scale), charges)
-            ncharges   = len (charges)
-            i          = 0
-            while (sum (integers) != target):
-                integers[i] += delta
-                i += 1
-                if (i >= ncharges):
-                    i = 0
-            charges = map (lambda i: (float (i) / scale), integers)
+            chargeOld  = charge
+            target     = round (charge)
+            if force:
+                if force.has_key (group.symbol):
+                    target = force[group.symbol]
+            delta = (target - charge) / len (collect)
+            for (i, charge) in enumerate (charges):
+                charges[i] += delta
             for (i, atom), charge in zip (collect, charges):
                 newAtom = AminoAtom (
                     atomLabel   =   atom.atomLabel  ,
@@ -1148,9 +1147,8 @@ class AminoComponent (object):
                     atomCharge  =   charge          , )
                 self.atoms[i] = newAtom
             if logging:
-                charge     = sum (charges)
-                formatting = "%%.%df" % n
-                print ("# . %s> Changed charge of group %s from %5s  to %5s" % (_MODULE_LABEL, group.symbol, formatting % save, formatting % charge))
+                charge = sum (charges)
+                print ("# . %s> Changed charge of group %s from %5.2f  to %5.2f" % (_MODULE_LABEL, group.symbol, chargeOld, charge))
 
 
 #===============================================================================
