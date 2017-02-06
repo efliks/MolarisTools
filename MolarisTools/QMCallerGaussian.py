@@ -76,7 +76,7 @@ class QMCallerGaussian (QMCaller):
 
         # . Include extra options, if any present
         if self.extraOptions:
-            if isinstance (extraOptions, tuple):
+            if isinstance (self.extraOptions, tuple):
                 extraOptions = " ".join (self.extraOptions)
             else:
                 extraOptions = self.extraOptions

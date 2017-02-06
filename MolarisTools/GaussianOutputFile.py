@@ -135,6 +135,24 @@ class GaussianOutputFile (object):
                         self.charges.append (charge)
 
 
+                # . Get Mulliken charges summed into heavy atoms
+                elif line.startswith (" Mulliken charges with hydrogens summed into heavy atoms"):
+                    nheavy = 0
+                    for atom in self.atoms:
+                        if atom.symbol[0] != "H":
+                            nheavy += 1
+                    next (lines)
+                    self.sumcharges = []
+                    #while True:
+                    for i in range (nheavy):
+                        line = next (lines)
+                        #if line.startswith (" Electronic spatial extent (au):"):
+                        #    break
+                        tokens = TokenizeLine (line, converters=[int, None, float])
+                        charge = tokens[2]
+                        self.sumcharges.append (charge)
+
+
                 # . Get forces
                 # . http://www.gaussian.com/g_tech/g_ur/k_force.htm
                 # . Gaussian prints gradients, not forces, despite the misleading label "Forces" (?)
