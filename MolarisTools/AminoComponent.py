@@ -1116,18 +1116,20 @@ class AminoComponent (object):
         self.groups = [newGroup, ]
 
 
-    def CorrectGroupCharges (self, force={}, logging=True):
+    def CorrectGroupCharges (self, force={}, ndigits=2, logging=True):
         """Correct the net charge of each group so it becomes integral.
 
         Parameter force is used to force a specific charge for a group, for example: {"A": -1.0, }."""
         for group in self.groups:
             collect = []
             for label in group.labels:
-                for (i, atom) in enumerate (self.atoms):
-                    if (atom.atomLabel == label):
-                        pair = (i, atom)
-                        collect.append (pair)
-                        break
+                # . Exclude dummy atoms
+                if (label[0] != "X"):
+                    for (i, atom) in enumerate (self.atoms):
+                        if (atom.atomLabel == label):
+                            pair = (i, atom)
+                            collect.append (pair)
+                            break
             charges = []
             for (i, atom) in collect:
                 charges.append (atom.atomCharge)
@@ -1140,6 +1142,13 @@ class AminoComponent (object):
             delta = (target - charge) / len (collect)
             for (i, charge) in enumerate (charges):
                 charges[i] += delta
+            # . Round charges to ndigits significant digits
+            for (i, charge) in enumerate (charges):
+                charges[i] = round (charge, ndigits)
+            total   = sum (charges)
+            correct = round (total) - total
+            charges[0] += correct
+            # . Assign new charges to atoms
             for (i, atom), charge in zip (collect, charges):
                 newAtom = AminoAtom (
                     atomLabel   =   atom.atomLabel  ,
@@ -1147,8 +1156,9 @@ class AminoComponent (object):
                     atomCharge  =   charge          , )
                 self.atoms[i] = newAtom
             if logging:
-                charge = sum (charges)
-                print ("# . %s> Changed charge of group %s from %5.2f  to %5.2f" % (_MODULE_LABEL, group.symbol, chargeOld, charge))
+                charge  = sum (charges)
+                prepare = "%%%d.%df" % (ndigits + 3, ndigits)
+                print ("# . %s> Changed charge of group %s from %s  to %s (correction: %s)" % (_MODULE_LABEL, group.symbol, prepare % chargeOld, prepare % charge, prepare % correct))
 
 
 #===============================================================================
