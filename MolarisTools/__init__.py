@@ -22,7 +22,7 @@ from FVXFile             import FVXFile
 from ParametersLibrary   import ParametersLibrary
 from AminoLibrary        import AminoLibrary
 from EVBLibrary          import EVBLibrary
-from GapFile             import GapFile
+from GapFile             import GapFile, GapFileEVB
 from EVBDatFile          import EVBDatFile
 
 # . Handling of other files

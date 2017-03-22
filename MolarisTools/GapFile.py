@@ -13,8 +13,10 @@ GapStep = collections.namedtuple ("GapStep", "reference  target")
 _MODULE_LABEL = "GapFile"
 
 
-class GapFile (object):
-    """A class to represent a gap file from an evb_to_qm_map type of simulation."""
+class _GapFile (object):
+    """Base class to represent a gap file.
+
+    This class should not be used directly."""
 
     def __init__ (self, filename, logging=True, ignoreStepZero=True):
         """Constructor."""
@@ -66,6 +68,19 @@ class GapFile (object):
 
 
     def _Parse (self, filename):
+        pass
+
+
+#-------------------------------------------------------------------------------
+class GapFile (_GapFile):
+    """A class to represent a gap file from an evb_to_qm_map type of simulation."""
+
+    def __init__ (self, filename, **keywordArguments):
+        """Constructor."""
+        super (GapFile, self).__init__ (filename, **keywordArguments)
+
+
+    def _Parse (self, filename):
         lines  = open (filename)
         steps  = []
         if self.logging:
@@ -85,6 +100,63 @@ class GapFile (object):
                 step   = GapStep (
                     target    = potentialTarget     ,
                     reference = potentialReference  , )
+                if index < 1:
+                    if self.ignoreStepZero:
+                        continue
+                steps.append (step)
+        except StopIteration:
+            pass
+        # . Finalize
+        lines.close ()
+        if hasattr (self, "steps"):
+            self.steps.extend (steps)
+        else:
+            self.steps = steps
+        if self.logging:
+            nsteps = len (steps)
+            print ("# . %s> Read %d steps" % (_MODULE_LABEL, nsteps))
+
+
+#-------------------------------------------------------------------------------
+class GapFileEVB (_GapFile):
+    """A class to represent a gap file from a regular evb simulation."""
+
+    def __init__ (self, filename, **keywordArguments):
+        """Constructor."""
+        super (GapFileEVB, self).__init__ (filename, **keywordArguments)
+
+
+    def _Parse (self, filename):
+        lines  = open (filename)
+        steps  = []
+        if self.logging:
+            print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, filename))
+        try:
+            #                   0  0.00100000 0.00    2 0.0000 1.0000   0   0.0000000  -1.0000000
+            # -233.01     0.00    0.03      0.10    0.00  -251.70    0.00    18.55    0.00  -214.51    0.00    0.00    0.22   -18.86    0.00    0.00    1.76  -9648.77    0.00    0.00    0.00    0.00    6.96    0.00
+            #    0.00     0.00    0.00 0  0
+            #    0.00  -233.01    0.03      0.10    0.00  -251.70    0.00    18.55    0.00  -214.51    0.00    0.00    0.22   -18.86    0.00    0.00   10.08  -9648.77    0.00    0.00    0.00    0.00    6.96    0.00
+            #    0.00     0.00    0.00 0  0
+            while True:
+                # . Read each step's header
+                line   = next (lines)
+                tokens = TokenizeLine (line, converters=[int, ])
+                index  = tokens[0]
+                # . Read data for state I
+                line   = next (lines)
+                tokens = TokenizeLine (line, converters=[float, ] * 24)
+                # TODO: Include other terms too
+                Ea     = tokens[16]
+                line   = next (lines)
+                # . Read data for state II
+                line   = next (lines)
+                tokens = TokenizeLine (line, converters=[float, ] * 24)
+                # TODO: Include other terms too
+                Eb     = tokens[16]
+                line   = next (lines)
+                step   = GapStep (
+                    target    = Ea ,
+                    reference = Eb , )
                 if index < 1:
                     if self.ignoreStepZero:
                         continue

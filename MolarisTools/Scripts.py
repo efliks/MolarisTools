@@ -12,7 +12,7 @@ from ParametersLibrary      import ParametersLibrary
 from EVBLibrary             import EVBLibrary, EVBMorseAtom, EVBMorsePair
 from EVBDatFile             import EVBDatFile
 from MolarisInputFile       import MolarisInputFile
-from GapFile                import GapFile
+from GapFile                import GapFile, GapFileEVB
 from Units                  import DEFAULT_AMINO_LIB, DEFAULT_PARM_LIB, DEFAULT_EVB_LIB, typicalBonds
 
 import os, math, glob
@@ -350,7 +350,7 @@ def MolarisInput_ToEVBTypes (filename, evbLibrary=DEFAULT_EVB_LIB, logging=True)
     return types
 
 
-def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, trim=None, returnTerms=False):
+def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, trim=None, returnTerms=False, gapFormat="QM"):
     """Calculate LRA for two endpoint simulations."""
     points = []
     for path in (patha, pathb):
@@ -373,7 +373,10 @@ def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, 
         print ("# . Using %d gap files" % ngap)
     points = []
     for gapfiles in (filesa, filesb):
-        gap = GapFile (gapfiles[0], logging=False)
+        if (gapFormat == "QM"):
+            gap = GapFile (gapfiles[0], logging=False)
+        else:
+            gap = GapFileEVB (gapfiles[0], logging=False)
         for nextfile in gapfiles[1:ngap]:
             gap.Extend (nextfile)
         points.append (gap)
@@ -402,7 +405,7 @@ def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, 
     return lra
 
 
-def CalculateOneSidedLRA (path="lra_RS_qmmm", logging=True, skip=None, trim=None):
+def CalculateOneSidedLRA (path="lra_RS_qmmm", logging=True, skip=None, trim=None, gapFormat="QM"):
     """Calculate LRA for one endpoint simulation."""
     gapfiles = []
     logs     = glob.glob (os.path.join (path, "evb_equil_*out"))
@@ -415,7 +418,10 @@ def CalculateOneSidedLRA (path="lra_RS_qmmm", logging=True, skip=None, trim=None
         print ("# . Found %d gap files at location %s" % (ngap, path))
     if logging:
         print ("# . Using %d gap files" % ngap)
-    gapa = GapFile (gapfiles[0], logging=False)
+    if (gapFormat == "QM"):
+        gapa = GapFile (gapfiles[0], logging=False)
+    else:
+        gapa = GapFileEVB (gapfiles[0], logging=False)
     for nextfile in gapfiles[1:ngap]:
         gapa.Extend (nextfile)
     if logging:
