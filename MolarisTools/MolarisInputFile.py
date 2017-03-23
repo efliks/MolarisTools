@@ -60,7 +60,7 @@ class MolarisInputFile (object):
 
 
     def WriteStates (self, selection=0, shift=2, comments=True):
-        """Write a table of statesi.
+        """Write a table of states.
 
         If selection=1 or selection=2, write state I or state II twice, respectively."""
         if hasattr (self, "states"):

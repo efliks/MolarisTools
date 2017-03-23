@@ -350,12 +350,13 @@ def MolarisInput_ToEVBTypes (filename, evbLibrary=DEFAULT_EVB_LIB, logging=True)
     return types
 
 
-def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, trim=None, returnTerms=False, gapFormat="QM"):
+def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, verbose=False, skip=None, trim=None, returnTerms=False, gapFormat="QM"):
     """Calculate LRA for two endpoint simulations."""
     points = []
     for path in (patha, pathb):
-        logs     = glob.glob (os.path.join (path, "evb_equil_*out"))
         gapfiles = []
+        logs     = glob.glob (os.path.join (path, "evb_equil_*out"))
+        logs.sort ()
         for log in logs:
             (logfile, logext) = os.path.splitext (log)
             gapfile = os.path.join (logfile, "gap.out")
@@ -374,9 +375,9 @@ def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, 
     points = []
     for gapfiles in (filesa, filesb):
         if (gapFormat == "QM"):
-            gap = GapFile (gapfiles[0], logging=False)
+            gap = GapFile (gapfiles[0], logging=(True if (logging and verbose) else False))
         else:
-            gap = GapFileEVB (gapfiles[0], logging=False)
+            gap = GapFileEVB (gapfiles[0], logging=(True if (logging and verbose) else False))
         for nextfile in gapfiles[1:ngap]:
             gap.Extend (nextfile)
         points.append (gap)
@@ -405,10 +406,11 @@ def CalculateLRA (patha="lra_RS", pathb="lra_RS_qmmm", logging=True, skip=None, 
     return lra
 
 
-def CalculateOneSidedLRA (path="lra_RS_qmmm", logging=True, skip=None, trim=None, gapFormat="QM"):
+def CalculateOneSidedLRA (path="lra_RS_qmmm", logging=True, verbose=False, skip=None, trim=None, gapFormat="QM"):
     """Calculate LRA for one endpoint simulation."""
     gapfiles = []
     logs     = glob.glob (os.path.join (path, "evb_equil_*out"))
+    logs.sort ()
     for log in logs:
         (logfile, logext) = os.path.splitext (log)
         gapfile = os.path.join (logfile, "gap.out")
@@ -419,9 +421,9 @@ def CalculateOneSidedLRA (path="lra_RS_qmmm", logging=True, skip=None, trim=None
     if logging:
         print ("# . Using %d gap files" % ngap)
     if (gapFormat == "QM"):
-        gapa = GapFile (gapfiles[0], logging=False)
+        gapa = GapFile (gapfiles[0], logging=(True if (logging and verbose) else False))
     else:
-        gapa = GapFileEVB (gapfiles[0], logging=False)
+        gapa = GapFileEVB (gapfiles[0], logging=(True if (logging and verbose) else False))
     for nextfile in gapfiles[1:ngap]:
         gapa.Extend (nextfile)
     if logging:

@@ -172,72 +172,6 @@ class EVBDatFile (object):
         data.close ()
 
 
-    def Decode (self, filenameInput, state=1, digits=1, showOnly=(), logging=True):
-        """Translate a DAT file into a list of parameters."""
-        template = {
-            "bonds"      :   "%4s  %4s  %X.Yf    %X.Yf    %X.Yf    %X.Yf    %X.Yf      (%d)"  ,
-            "angles"     :   "%4s  %4s  %4s  %X.Yf    %X.Yf    %X.Yf    %X.Yf      (%d)"  ,
-            "torsions"   :   "%4s  %4s  %4s  %4s   %X.Yf    %X.Yf    %X.Yf      (%d)"  ,  }
-        formats = {}
-        for (key, string) in template.iteritems ():
-            formats[key] = string.replace ("X", "%d" % (6 + digits)).replace ("Y", "%d" % digits)
-    
-        # . Input file is used to relate atom serial numbers to their labels
-        mif     = MolarisInputFile (filenameInput  , logging=logging)
-        convert = {}
-        for (i, atom) in enumerate (mif.states[(state - 1)], 1):
-            (enzymixCharge, enzymixType, label, group) = atom.SplitComment ()
-            convert[i] = label
-    
-        print ("\n-- EVB bonds --")
-        for bond in self.bonds:
-            if bond.exist[(state - 1)]:
-                try:
-                    (labela, labelb) = map (lambda j: convert[j], bond.serials)
-                    select   = bond.types[(state - 1)]
-                    parBond  = self.parBonds[(select - 1)]
-                    if showOnly:
-                        if parBond.ptype not in showOnly:
-                            continue
-                    print (formats["bonds"] % (labela, labelb, parBond.r0, parBond.alpha, parBond.diss, parBond.f_harm, parBond.r_harm, parBond.ptype))
-                except:
-                    if logging:
-                        (seriala, serialb) = bond.serials
-                        print ("# . %s> Warning: Bond (%d, %d) involves non-EVB atoms" % (_MODULE_LABEL, seriala, serialb))
-    
-        print ("\n-- EVB angles --")
-        for angle in self.angles:
-            if angle.exist[(state - 1)]:
-                try:
-                    (labela, labelb, labelc) = map (lambda j: convert[j], angle.serials)
-                    select   = angle.types[(state - 1)]
-                    parAngle = self.parAngles[(select - 1)]
-                    if showOnly:
-                        if parAngle.ptype not in showOnly:
-                            continue
-                    print (formats["angles"] % (labela, labelb, labelc, (parAngle.angle0 * 180. / math.pi), parAngle.force, parAngle.gausD, parAngle.gausig, parAngle.ptype))
-                except:
-                    if logging:
-                        (seriala, serialb, serialc) = angle.serials
-                        print ("# . %s> Warning: Angle (%d, %d, %d) involves non-EVB atoms" % (_MODULE_LABEL, seriala, serialb, serialc))
-    
-        print ("\n-- EVB torsions --")
-        for torsion in self.torsions:
-            if torsion.exist[(state - 1)]:
-                try:
-                    (labela, labelb, labelc, labeld) = map (lambda j: convert[j], torsion.serials)
-                    select     = torsion.types[(state - 1)]
-                    parTorsion = self.parTorsions[(select - 1)]
-                    if showOnly:
-                        if parTorsion.ptype not in showOnly:
-                            continue
-                    print (formats["torsions"] % (labela, labelb, labelc, labeld, parTorsion.force, parTorsion.n, (parTorsion.phase * 180. / math.pi), parTorsion.ptype))
-                except:
-                    if logging:
-                        (seriala, serialb, serialc, seriald) = torsion.serials
-                        print ("# . %s> Warning: Torsion (%d, %d, %d, %d) involves non-EVB atoms" % (_MODULE_LABEL, seriala, serialb, serialc, seriald))
-
-
     def _GetConvert (self, filenameInput, state, logging, purify=False):
         convert = {}
         if (filenameInput != ""):
@@ -246,8 +180,92 @@ class EVBDatFile (object):
                 (enzymixCharge, enzymixType, label, group) = atom.SplitComment ()
                 if purify:
                     label = label.replace ("'", "p").replace ("*", "p")
-                convert[i] = label
+                convert[i] = (label, atom.atype)
         return convert
+
+
+    def Decode (self, filenameInput, state=1, digits=1, showOnly=(), extended=False, logging=True):
+        """Translate a DAT file into a list of parameters."""
+        template = {
+            "bonds"         :   "%4s  %4s  %X.Yf    %X.Yf    %X.Yf    %X.Yf    %X.Yf      (%d)"  ,
+            "angles"        :   "%4s  %4s  %4s  %X.Yf    %X.Yf    %X.Yf    %X.Yf      (%d)"  ,
+            "torsions"      :   "%4s  %4s  %4s  %4s   %X.Yf    %X.Yf    %X.Yf      (%d)"  ,
+            "bonds_ext"     :   "%4s  %4s  %X.Yf    %X.Yf    %X.Yf    %X.Yf    %X.Yf      (%d)   %s    %s"  ,
+            "angles_ext"    :   "%4s  %4s  %4s  %X.Yf    %X.Yf    %X.Yf    %X.Yf      (%d)   %s    %s    %s"  ,
+            "torsions_ext"  :   "%4s  %4s  %4s  %4s   %X.Yf    %X.Yf    %X.Yf      (%d)   %s    %s    %s    %s"  , }
+        formats = {}
+        for (key, string) in template.iteritems ():
+            formats[key] = string.replace ("X", "%d" % (6 + digits)).replace ("Y", "%d" % digits)
+        convert = self._GetConvert (filenameInput, state, logging, purify=False)
+    
+        print ("\n-- EVB bonds --")
+        for bond in self.bonds:
+            if bond.exist[(state - 1)]:
+                found = True
+                try:
+                    (i, j) = bond.serials
+                    (labela, typea), (labelb, typeb) = convert[i], convert[j]
+                except:
+                    found = False
+                    if logging:
+                        (seriala, serialb) = bond.serials
+                        print ("# . %s> Warning: Bond (%d, %d) involves non-EVB atoms" % (_MODULE_LABEL, seriala, serialb))
+                if found:
+                    select   = bond.types[(state - 1)]
+                    parBond  = self.parBonds[(select - 1)]
+                    if showOnly:
+                        if parBond.ptype not in showOnly:
+                            continue
+                    if extended:
+                        print (formats["bonds_ext"] % (labela, labelb, parBond.r0, parBond.alpha, parBond.diss, parBond.f_harm, parBond.r_harm, parBond.ptype, typea, typeb))
+                    else:
+                        print (formats["bonds"]     % (labela, labelb, parBond.r0, parBond.alpha, parBond.diss, parBond.f_harm, parBond.r_harm, parBond.ptype))
+    
+        print ("\n-- EVB angles --")
+        for angle in self.angles:
+            if angle.exist[(state - 1)]:
+                found = True
+                try:
+                    (i, j, k) = angle.serials
+                    (labela, typea), (labelb, typeb), (labelc, typec) = convert[i], convert[j], convert[k]
+                except:
+                    found = False
+                    if logging:
+                        (seriala, serialb, serialc) = angle.serials
+                        print ("# . %s> Warning: Angle (%d, %d, %d) involves non-EVB atoms" % (_MODULE_LABEL, seriala, serialb, serialc))
+                if found:
+                    select   = angle.types[(state - 1)]
+                    parAngle = self.parAngles[(select - 1)]
+                    if showOnly:
+                        if parAngle.ptype not in showOnly:
+                            continue
+                    if extended:
+                        print (formats["angles_ext"] % (labela, labelb, labelc, (parAngle.angle0 * 180. / math.pi), parAngle.force, parAngle.gausD, parAngle.gausig, parAngle.ptype, typea, typeb, typec))
+                    else:
+                        print (formats["angles"]     % (labela, labelb, labelc, (parAngle.angle0 * 180. / math.pi), parAngle.force, parAngle.gausD, parAngle.gausig, parAngle.ptype))
+    
+        print ("\n-- EVB torsions --")
+        for torsion in self.torsions:
+            if torsion.exist[(state - 1)]:
+                found = True
+                try:
+                    (i, j, k, l) = torsion.serials
+                    (labela, typea), (labelb, typeb), (labelc, typec), (labeld, typed) = convert[i], convert[j], convert[k], convert[l]
+                except:
+                    found = False
+                    if logging:
+                        (seriala, serialb, serialc, seriald) = torsion.serials
+                        print ("# . %s> Warning: Torsion (%d, %d, %d, %d) involves non-EVB atoms" % (_MODULE_LABEL, seriala, serialb, serialc, seriald))
+                if found:
+                    select     = torsion.types[(state - 1)]
+                    parTorsion = self.parTorsions[(select - 1)]
+                    if showOnly:
+                        if parTorsion.ptype not in showOnly:
+                            continue
+                    if extended:
+                        print (formats["torsions_ext"] % (labela, labelb, labelc, labeld, parTorsion.force, parTorsion.n, (parTorsion.phase * 180. / math.pi), parTorsion.ptype, typea, typeb, typec, typed))
+                    else:
+                        print (formats["torsions"]     % (labela, labelb, labelc, labeld, parTorsion.force, parTorsion.n, (parTorsion.phase * 180. / math.pi), parTorsion.ptype))
 
 
     def GenerateVMDCommands (self, location=_VMD_DIR, state=1, filenameInput="", useLabels=False, logging=True):
@@ -255,11 +273,12 @@ class EVBDatFile (object):
         convert  = self._GetConvert (filenameInput, state, logging, purify=useLabels)
         commands = []
 
-        for (i, bond) in enumerate (self.bonds):
+        for (counter, bond) in enumerate (self.bonds):
             if bond.exist[(state - 1)]:
                 if convert != {}:
                     try:
-                        (labela, labelb) = map (lambda j: convert[j], bond.serials)
+                        (i, j) = bond.serials
+                        (labela, typea), (labelb, typeb) = convert[i], convert[j]
                         commands.append ("#  %s--%s" % (labela, labelb))
                     except:
                         commands.append ("# Bond (%d, %d) involves non-EVB atoms" % (seriala, serialb))
@@ -267,15 +286,16 @@ class EVBDatFile (object):
                 commands.append ("label  add    Bonds       0/%d     0/%d"        % (indexa, indexb))
                 (seriala, serialb) = bond.serials
                 if useLabels:
-                    commands.append ("label  graph  Bonds       %3d     %s/dist_%s_%s.dat" % (i, location, labela, labelb))
+                    commands.append ("label  graph  Bonds       %3d     %s/dist_%s_%s.dat" % (counter, location, labela, labelb))
                 else:
-                    commands.append ("label  graph  Bonds       %3d     %s/dist_%d_%d.dat" % (i, location, seriala, serialb))
+                    commands.append ("label  graph  Bonds       %3d     %s/dist_%d_%d.dat" % (counter, location, seriala, serialb))
 
-        for (i, angle) in enumerate (self.angles):
+        for (counter, angle) in enumerate (self.angles):
             if angle.exist[(state -1)]:
                 if convert != {}:
                     try:
-                        (labela, labelb, labelc) = map (lambda j: convert[j], angle.serials)
+                        (i, j, k) = angle.serials
+                        (labela, typea), (labelb, typeb), (labelc, typec) = convert[i], convert[j], convert[k]
                         commands.append ("#  %s--%s--%s" % (labela, labelb, labelc))
                     except:
                         commands.append ("# Angle (%d, %d, %d) involves non-EVB atoms" % (seriala, serialb, serialc))
@@ -283,15 +303,16 @@ class EVBDatFile (object):
                 commands.append ("label  add    Angles      0/%d     0/%d   0/%d"   % (indexa, indexb, indexc))
                 (seriala, serialb, serialc) = angle.serials
                 if useLabels:
-                    commands.append ("label  graph  Angles      %3d     %s/angl_%s_%s_%s.dat" % (i, location, labela, labelb, labelc))
+                    commands.append ("label  graph  Angles      %3d     %s/angl_%s_%s_%s.dat" % (counter, location, labela, labelb, labelc))
                 else:
-                    commands.append ("label  graph  Angles      %3d     %s/angl_%d_%d_%d.dat" % (i, location, seriala, serialb, serialc))
+                    commands.append ("label  graph  Angles      %3d     %s/angl_%d_%d_%d.dat" % (counter, location, seriala, serialb, serialc))
 
-        for (i, torsion) in enumerate (self.torsions):
+        for (counter, torsion) in enumerate (self.torsions):
             if torsion.exist[(state - 1)]:
                 if convert != {}:
                     try:
-                        (labela, labelb, labelc, labeld) = map (lambda j: convert[j], torsion.serials)
+                        (i, j, k, l) = torsion.serials
+                        (labela, typea), (labelb, typeb), (labelc, typec), (labeld, typed) = convert[i], convert[j], convert[k], convert[l]
                         commands.append ("#  %s--%s--%s--%s" % (labela, labelb, labelc, labeld))
                     except:
                         commands.append ("# Torsion (%d, %d, %d, %d) involves non-EVB atoms" % (seriala, serialb, serialc, seriald))
@@ -299,9 +320,9 @@ class EVBDatFile (object):
                 commands.append ("label  add    Dihedrals   0/%d     0/%d   0/%d   0/%d" % (indexa, indexb, indexc, indexd))
                 (seriala, serialb, serialc, seriald) = torsion.serials
                 if useLabels:
-                    commands.append ("label  graph  Dihedrals   %3d     %s/dihe_%s_%s_%s_%s.dat"    % (i, location, labela, labelb, labelc, labeld))
+                    commands.append ("label  graph  Dihedrals   %3d     %s/dihe_%s_%s_%s_%s.dat"    % (counter, location, labela, labelb, labelc, labeld))
                 else:
-                    commands.append ("label  graph  Dihedrals   %3d     %s/dihe_%d_%d_%d_%d.dat"    % (i, location, seriala, serialb, serialc, seriald))
+                    commands.append ("label  graph  Dihedrals   %3d     %s/dihe_%d_%d_%d_%d.dat"    % (counter, location, seriala, serialb, serialc, seriald))
         return commands
 
 
