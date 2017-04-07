@@ -584,6 +584,47 @@ def DetermineEVBParameters (filenameInput="heat_template.inp", filenameDat=os.pa
     return (parBonds, parAngles, parTorsions)
 
 
+def ParsePESScan (pattern="evb_scan_", logging=True, filenameTotal="total_e.dat", patternChanges="changes_"):
+    """Parse a potential energy surface scan job."""
+    steps = []
+    files = glob.glob ("%s*.out" % pattern)
+    files.sort ()
+    for fn in files:
+        mof = MolarisOutputFile (filename=fn, logging=False)
+        if logging:
+            print ("# . Parsing file %s ..." % fn)
+        collect = []
+        for step in mof.qmmmComponentsI:
+            Eqmmm = step.Eqmmm
+            collect.append (Eqmmm)
+        if logging:
+            nsteps = len (collect)
+            print ("# . Found %d steps." % nsteps)
+        steps.append (collect)
+    if logging:
+        ntotal = sum (map (lambda s: len (s), steps))
+        print ("Found %d total steps in %d files." % (ntotal, len (files)))
+    base = steps[0][-1]
+    fo   = open (filenameTotal, "w")
+    for (i, step) in enumerate (steps, 1):
+        last = step[-1]
+        fo.write ("%d   %f\n" % (i, last - base))
+    fo.close ()
+    if logging:
+        print ("Wrote file %s." % filenameTotal)
+    for (i, step) in enumerate (steps, 1):
+        filename = "%s%03d.dat" % (patternChanges, i)
+        fo       = open (filename, "w")
+        previous = step[0]
+        for iteration in step[1:]:
+            change   = (iteration - previous)
+            previous = iteration
+            fo.write ("%f\n" % change)
+        fo.close ()
+        if logging:
+            print ("Wrote file %s." % filename)
+
+
 #===============================================================================
 # . Main program
 #===============================================================================
