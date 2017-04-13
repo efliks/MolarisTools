@@ -15,7 +15,8 @@ from MolarisInputFile       import MolarisInputFile
 from GapFile                import GapFile, GapFileEVB
 from Units                  import DEFAULT_AMINO_LIB, DEFAULT_PARM_LIB, DEFAULT_EVB_LIB, typicalBonds
 
-import os, math, glob
+import os, math, glob, time, datetime
+
 
 _DEFAULT_FORCE          = 5.
 _DEFAULT_TOLERANCE      = 1.6
@@ -584,8 +585,8 @@ def DetermineEVBParameters (filenameInput="heat_template.inp", filenameDat=os.pa
     return (parBonds, parAngles, parTorsions)
 
 
-def ParsePESScan (pattern="evb_scan_", logging=True, filenameTotal="total_e.dat", patternChanges="changes_"):
-    """Parse a potential energy surface scan job."""
+def ParsePESScan (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTotalRelative="total_e_rel.dat", patternChanges="changes_", logging=True):
+    """Parse a potential energy surface scan."""
     steps = []
     files = glob.glob ("%s*.out" % pattern)
     files.sort ()
@@ -599,19 +600,32 @@ def ParsePESScan (pattern="evb_scan_", logging=True, filenameTotal="total_e.dat"
             collect.append (Eqmmm)
         if logging:
             nsteps = len (collect)
-            print ("# . Found %d steps." % nsteps)
+            print ("# . Found %d steps" % nsteps)
         steps.append (collect)
     if logging:
-        ntotal = sum (map (lambda s: len (s), steps))
-        print ("Found %d total steps in %d files." % (ntotal, len (files)))
-    base = steps[0][-1]
-    fo   = open (filenameTotal, "w")
+        ntotal = 0
+        for step in steps:
+            ntotal += len (step)
+        print ("Found %d total steps in %d files" % (ntotal, len (files)))
+    base  = steps[0][-1]
+    m, n  = (0, 0)
+    baseRel, topRel = (base, base)
     for (i, step) in enumerate (steps, 1):
-        last = step[-1]
-        fo.write ("%d   %f\n" % (i, last - base))
-    fo.close ()
+        if step[-1] < baseRel:
+            (baseRel, m) = (step[-1], i)
+        if step[-1] > topRel:
+            (topRel,  n) = (step[-1], i)
+    barrier = topRel - baseRel
     if logging:
-        print ("Wrote file %s." % filenameTotal)
+        print ("Found a barrier between points (%d, %d) of %.1f kcal/mol" % (m, n, barrier))
+    for (filename, subtract) in ((filenameTotal, base), (filenameTotalRelative, baseRel)):
+        fo   = open (filename, "w")
+        for (i, step) in enumerate (steps, 1):
+            last = step[-1]
+            fo.write ("%d   %f\n" % (i, last - subtract))
+        fo.close ()
+        if logging:
+            print ("Wrote file %s" % filename)
     for (i, step) in enumerate (steps, 1):
         filename = "%s%03d.dat" % (patternChanges, i)
         fo       = open (filename, "w")
@@ -622,7 +636,149 @@ def ParsePESScan (pattern="evb_scan_", logging=True, filenameTotal="total_e.dat"
             fo.write ("%f\n" % change)
         fo.close ()
         if logging:
-            print ("Wrote file %s." % filename)
+            print ("Wrote file %s" % filename)
+
+
+def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTotalRelative="total_e_rel.dat", logging=True):
+    """Parse a two-dimensional potential energy surface scan."""
+    files  = glob.glob ("%s*.inp" % pattern)
+    nfiles = len (files)
+    size   = int (math.sqrt (nfiles))
+    base   = 0.
+    found  = False
+    for i in range (1, size + 1):
+        for j in range (1, size + 1):
+            filename = "%s%02d_%02d.out" % (pattern, 1, 1)
+            if os.path.exists (filename):
+                if logging:
+                    print ("# . Parsing file %s ..." % filename)
+                mof   = MolarisOutputFile (filename=filename, logging=False)
+                last  = mof.qmmmComponentsI[-1]
+                base  = last.Eqmmm
+                found = True
+                break
+        if found:
+            break
+    if logging:
+        print ("# . Base energy is %f" % base)
+
+    rows   = []
+    nlogs  = 0
+    for i in range (1, size + 1):
+        columns = []
+        for j in range (1, size + 1):
+            filename = "%s%02d_%02d.out" % (pattern, i, j)
+            Eqmmm    = base
+            if os.path.exists (filename):
+                if logging:
+                    print ("# . Parsing file %s ..." % filename)
+                mof   = MolarisOutputFile (filename=filename, logging=False)
+                last  = mof.qmmmComponentsI[-1]
+                Eqmmm = last.Eqmmm
+                if logging:
+                    nsteps = len (mof.qmmmComponentsI)
+                    print ("# . Found %d steps" % nsteps)
+                nlogs += 1
+            columns.append (Eqmmm)
+        rows.append (columns)
+    if logging:
+        print ("Parsed %d log files out of %d calculations" % (nlogs, nfiles))
+
+    low, high = (base, base)
+    for (i, row) in enumerate (rows):
+        for (j, column) in enumerate (row):
+            if (column < low):
+                low      = column
+                (li, lj) = (i, j)
+            if (column > high):
+                high     = column
+                (hi, hj) = (i, j)
+    if logging:
+        print ("Found lowest  point at (%d, %d) with energy of %.1f kcal/mol" % (li + 1, lj + 1, low ))
+        print ("Found highest point at (%d, %d) with energy of %.1f kcal/mol" % (hi + 1, hj + 1, high))
+        barrier = high - low
+        print ("Barrier is %.1f kcal/mol" % barrier)
+
+    for (filename, subtract) in ((filenameTotal, 0.), (filenameTotalRelative, low)):
+        fo = open (filename, "w")
+        for (i, row) in enumerate (rows):
+            for (j, column) in enumerate (row):
+                line = "%2d   %2d   %f" % (j + 1, i + 1, rows[i][j] - subtract)
+                fo.write ("%s\n" % line)
+            fo.write ("\n")
+        fo.close ()
+        if logging:
+            print ("Wrote file %s" % filename)
+
+
+def PredictSimulationTime (pattern="evb_*out"):
+    """Calculate remaining time for a simulation consisting of multiple files."""
+    files = glob.glob (pattern)
+    files.sort ()
+    nfiles = len (files)
+    print ("Found %d output files." % nfiles)
+    pattern = "%a %b %d %H:%M:%S %Y"
+    
+    times = []
+    for (i, log) in enumerate (files):
+        mtime = int (os.path.getmtime (log))
+        times.append (mtime)
+    
+    #    lines = open (log).readlines ()
+    #    for line in lines:
+    #        if line.startswith ("  Job finishing time:"):
+    #            break
+    #    string = " ".join (line.split ()[3:])
+    #    epoch = int (time.mktime (time.strptime (string, pattern)))
+    #    if (i < 1):
+    #        print ("File %s: converting %s -> %d" % (log, string, epoch))
+    #    else:
+    #        seconds = epoch - times[i - 1]
+    #        delta = str (datetime.timedelta (seconds=seconds))
+    #        print ("File %s: converting %s -> %d  (%s)" % (log, string, epoch, delta))
+    #    times.append (epoch)
+    gradients = []
+    for (i, t) in enumerate (times[1:], 1):
+        grad = (t - times[i - 1])
+        gradients.append (grad)
+    
+    gradient = sum (gradients) / len (gradients)
+    intercept = times[0]
+    print ("Gradient = %d, intercept = %d" % (gradient, intercept))
+    
+    inputs = glob.glob ("evb_*inp")
+    inputs.sort ()
+    nleft = len (inputs) - nfiles
+    
+    lines  = open (inputs[0]).readlines ()
+    nsteps = 0
+    for line in lines:
+        # if line.count ("nsteps"):
+        tokens = line.split ()
+        if len (tokens) >= 2:
+            if (tokens[0] == "nsteps"):
+                nsteps = int (line.split ()[1])
+                break
+    if (nsteps > 0):
+        totalSteps = float (nfiles * nsteps)
+        delta = float (times[-1] - times[0])
+        perTime = totalSteps / delta * 3600.
+        print ("Simulation was running at the rate of %d steps per hour." % perTime)
+        perStep = delta / totalSteps
+        print ("One step takes %d seconds." % perStep)
+    
+    
+    if (nleft > 0):
+        print ("There are %d files left." % nleft)
+        
+        ends = times[-1] + gradient * nleft
+        final = datetime.datetime.fromtimestamp (ends)
+        fmt = final.strftime (pattern)
+        
+        now = int (time.time ())
+        seconds = ends - now
+        delta = str (datetime.timedelta (seconds=seconds))
+        print ("Job will end on: %s (%s from now)" % (fmt, delta))
 
 
 #===============================================================================
