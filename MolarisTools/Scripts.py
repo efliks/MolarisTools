@@ -639,7 +639,7 @@ def ParsePESScan (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTota
             print ("Wrote file %s" % filename)
 
 
-def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTotalRelative="total_e_rel.dat", logging=True):
+def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTotalRelative="total_e_rel.dat", useDistances=False, logging=True):
     """Parse a two-dimensional potential energy surface scan."""
     files  = glob.glob ("%s*.inp" % pattern)
     nfiles = len (files)
@@ -663,9 +663,11 @@ def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTo
         print ("# . Base energy is %f" % base)
 
     rows   = []
+    pairs  = []
     nlogs  = 0
     for i in range (1, size + 1):
         columns = []
+        gather  = []
         for j in range (1, size + 1):
             filename = "%s%02d_%02d.out" % (pattern, i, j)
             Eqmmm    = base
@@ -680,7 +682,16 @@ def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTo
                     print ("# . Found %d steps" % nsteps)
                 nlogs += 1
             columns.append (Eqmmm)
+            if useDistances:
+                filename   = "%s%02d_%02d.inp" % (pattern, i, j)
+                molaris    = MolarisInputFile (filename, logging=False)
+                (coi, coj) = molaris.constrainedPairs[:2]
+                (ri, rj)   = (coi.req, coj.req)
+                pair = (ri, rj)
+                gather.append (pair)
         rows.append (columns)
+        if useDistances:
+            pairs.append (gather)
     if logging:
         print ("Parsed %d log files out of %d calculations" % (nlogs, nfiles))
 
@@ -694,16 +705,26 @@ def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTo
                 high     = column
                 (hi, hj) = (i, j)
     if logging:
-        print ("Found lowest  point at (%d, %d) with energy of %.1f kcal/mol" % (li + 1, lj + 1, low ))
-        print ("Found highest point at (%d, %d) with energy of %.1f kcal/mol" % (hi + 1, hj + 1, high))
-        barrier = high - low
-        print ("Barrier is %.1f kcal/mol" % barrier)
+        if useDistances:
+            (ra, rb) = pairs[li][lj]
+            print ("Lowest  point at (%.2f, %.2f) with energy of %.1f kcals" % (ra, rb, low ))
+            (ra, rb) = pairs[hi][hj]
+            print ("Highest point at (%.2f, %.2f) with energy of %.1f kcals" % (ra, rb, high))
+        else:
+            print ("Lowest  point at (%d, %d) with energy of %.1f kcal/mol" % (li + 1, lj + 1, low ))
+            print ("Highest point at (%d, %d) with energy of %.1f kcal/mol" % (hi + 1, hj + 1, high))
+        difference = high - low
+        print ("Energy difference is %.1f kcal/mol" % difference)
 
     for (filename, subtract) in ((filenameTotal, 0.), (filenameTotalRelative, low)):
         fo = open (filename, "w")
         for (i, row) in enumerate (rows):
             for (j, column) in enumerate (row):
-                line = "%2d   %2d   %f" % (j + 1, i + 1, rows[i][j] - subtract)
+                if useDistances:
+                    (idist, jdist) = pairs[i][j]
+                    line = "%6.2f   %6.2f   %f" % (idist, jdist, rows[i][j] - subtract)
+                else:
+                    line = "%2d   %2d   %f" % (j + 1, i + 1, rows[i][j] - subtract)
                 fo.write ("%s\n" % line)
             fo.write ("\n")
         fo.close ()
@@ -745,6 +766,8 @@ def PredictSimulationTime (pattern="evb_*out"):
     gradient = sum (gradients) / len (gradients)
     intercept = times[0]
     print ("Gradient = %d, intercept = %d" % (gradient, intercept))
+    average = str (datetime.timedelta (seconds=gradient))
+    print ("Average time per file is %s" % average)
     
     inputs = glob.glob ("evb_*inp")
     inputs.sort ()

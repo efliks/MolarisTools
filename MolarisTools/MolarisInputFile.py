@@ -10,6 +10,7 @@ import  collections, exceptions
 
 
 EVBBond  = collections.namedtuple ("EVBBond"  , "states  seriala  serialb  comment")
+ConstrainedPair = collections.namedtuple ("ConstrainedPair", "seriala  serialb  force  req  state")
 
 _MODULE_LABEL = "MolarisInput"
 
@@ -92,12 +93,12 @@ class MolarisInputFile (object):
         line      = data.next ()
         position  = line.find (beginComment)
         if position > -1:
-            text      = line[             : position].strip ()
+            text      = line[             : position]
             comment   = line[position + 1 :         ][:-1]
         else:
             text      = line
             comment   = ""
-        return (text, comment)
+        return (text.strip (), comment)
 
 
     @property
@@ -193,19 +194,17 @@ class MolarisInputFile (object):
                     self.bonds.append (bond)
 
 
-#                if line.count ("constraint_pair"):
-#                    foo, aserial, bserial, forceConst, equilDist = TokenizeLine (line, converters=[None, int, int, float, float])
-#                    pair  = (aserial, bserial)
-#                    found = False
-#                    if pair == self.pair:
-#                        found = True
-#                    else:
-#                        pair = (bserial, aserial)
-#                        if pair == self.pair:
-#                            found = True
-#                    if found:
-#                        equil = [forceConst, equilDist]
-#                        break
+                elif line.startswith ("constraint_pair"):
+                    (foo, aserial, bserial, forceConst, equilDist, state) = TokenizeLine (line, converters=[None, int, int, float, float, int])
+                    pair  = ConstrainedPair (
+                        seriala =   aserial     ,
+                        serialb =   bserial     ,
+                        force   =   forceConst  ,
+                        req     =   equilDist   ,
+                        state   =   state       , )
+                    if not hasattr (self, "constrainedPairs"):
+                        self.constrainedPairs = []
+                    self.constrainedPairs.append (pair)
         except StopIteration:
             pass
         # . Close the file
