@@ -707,14 +707,14 @@ def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTo
     if logging:
         if useDistances:
             (ra, rb) = pairs[li][lj]
-            print ("Lowest  point at (%.2f, %.2f) with energy of %.1f kcals" % (ra, rb, low ))
+            print ("Lowest  point at (%.2f, %.2f) with energy of %.2f kcals" % (ra, rb, low ))
             (ra, rb) = pairs[hi][hj]
-            print ("Highest point at (%.2f, %.2f) with energy of %.1f kcals" % (ra, rb, high))
+            print ("Highest point at (%.2f, %.2f) with energy of %.2f kcals" % (ra, rb, high))
         else:
-            print ("Lowest  point at (%d, %d) with energy of %.1f kcal/mol" % (li + 1, lj + 1, low ))
-            print ("Highest point at (%d, %d) with energy of %.1f kcal/mol" % (hi + 1, hj + 1, high))
+            print ("Lowest  point at (%d, %d) with energy of %.2f kcals" % (li + 1, lj + 1, low ))
+            print ("Highest point at (%d, %d) with energy of %.2f kcals" % (hi + 1, hj + 1, high))
         difference = high - low
-        print ("Energy difference is %.1f kcal/mol" % difference)
+        print ("Energy difference is %.1f kcals" % difference)
 
     for (filename, subtract) in ((filenameTotal, 0.), (filenameTotalRelative, low)):
         fo = open (filename, "w")
@@ -730,6 +730,32 @@ def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTo
         fo.close ()
         if logging:
             print ("Wrote file %s" % filename)
+
+    nrows = len (rows)
+    for irow in range (1, nrows - 2):
+        ncolumns = len (rows[irow])
+        for jcolumn in range (1, ncolumns - 2):
+            up     = rows[irow - 1][jcolumn    ]
+            down   = rows[irow + 1][jcolumn    ]
+            left   = rows[irow    ][jcolumn - 1]
+            right  = rows[irow    ][jcolumn + 1]
+            center = rows[irow    ][jcolumn    ]
+            checks = (center < up, center < down, center < left, center < right)
+            if all (checks):
+                if logging:
+                    if useDistances:
+                        (idist, jdist) = pairs[irow][jcolumn]
+                        print ("Found minimum at (%.2f, %.2f) with energy of %.2f kcals" % (idist, jdist, center - low))
+                    else:
+                        print ("Found minimum at (%d, %d) with energy of %.2f kcals" % (irow, jcolumn, center - low))
+            checks = (center > up, center > down, center > left, center > right)
+            if all (checks):
+                if logging:
+                    if useDistances:
+                        (idist, jdist) = pairs[irow][jcolumn]
+                        print ("Found maximum at (%.2f, %.2f) with energy of %.2f kcals" % (idist, jdist, center - low))
+                    else:
+                        print ("Found maximum at (%d, %d) with energy of %.2f kcals" % (irow, jcolumn, center - low))
 
 
 def PredictSimulationTime (pattern="evb_*out"):
