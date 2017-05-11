@@ -795,9 +795,19 @@ class AminoComponent (object):
                 fe = open (fError, "w")
                 subprocess.check_call ([pathGaussian, fInput], stdout=fe, stderr=fe)
                 fe.close ()
-            # . Read Gaussian putput file
-            gaussian = GaussianOutputFile (fOutput)
-        
+
+        # . Read Gaussian putput file
+        fileOK = False
+        if os.path.exists (fOutput):
+            if logging:
+                print ("# . %s> Reading charges from file %s ..." % (_MODULE_LABEL, fOutput))
+            try:
+                gaussian = GaussianOutputFile (fOutput)
+                fileOK = True
+            except:
+                if logging:
+                    print ("# . %s> File %s unfinished or calculation failed. Leaving charges as they are." % (_MODULE_LABEL, fOutput))
+        if fileOK: 
             # . Assign charges to amino component
             convert = {
                 "MULLIKEN"     :  gaussian.charges      ,

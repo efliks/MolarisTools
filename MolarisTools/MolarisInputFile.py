@@ -154,9 +154,11 @@ class MolarisInputFile (object):
         stateI      = []
         stateII     = []
         self.bonds  = []
+        counter     = 0
         try:
             while True:
                 line, comment = self._GetLineWithComment (lines)
+                counter += 1
 
                 # . Read EVB states, assume there are only two of them
                 # evb_atm         6   -0.3000    C0   -0.3000    C0
@@ -195,16 +197,23 @@ class MolarisInputFile (object):
 
 
                 elif line.startswith ("constraint_pair"):
-                    (foo, aserial, bserial, forceConst, equilDist, state) = TokenizeLine (line, converters=[None, int, int, float, float, int])
-                    pair  = ConstrainedPair (
-                        seriala =   aserial     ,
-                        serialb =   bserial     ,
-                        force   =   forceConst  ,
-                        req     =   equilDist   ,
-                        state   =   state       , )
-                    if not hasattr (self, "constrainedPairs"):
-                        self.constrainedPairs = []
-                    self.constrainedPairs.append (pair)
+                    # . Prevent reading lines with @DIST_ATT@ or @DIST_LEA@ 
+                    # . type of labels instead of numerical values (as in 
+                    # . template files)
+                    try:
+                        (foo, aserial, bserial, forceConst, equilDist, state) = TokenizeLine (line, converters=[None, int, int, float, float, int])
+                        pair  = ConstrainedPair (
+                            seriala =   aserial     ,
+                            serialb =   bserial     ,
+                            force   =   forceConst  ,
+                            req     =   equilDist   ,
+                            state   =   state       , )
+                        if not hasattr (self, "constrainedPairs"):
+                            self.constrainedPairs = []
+                        self.constrainedPairs.append (pair)
+                    except:
+                        if logging:
+                            print ("# . %s> Skipping line %d in file \"%s\"" % (_MODULE_LABEL, counter, self.filename))
         except StopIteration:
             pass
         # . Close the file

@@ -4,15 +4,23 @@ m_pair         morse_ab    r_ab      beta     f_harmonic   r0_harmonic
 'P0'  'O0'      95.0       1.58       2.0        400.0        1.4
 'P0'  'O-'     120.0       1.50       2.0        400.0        1.4
 'P0'  'Op'      85.0       1.68       2.0        400.0        1.4
-'P+'  'O0'      80.0       1.65       2.0        400.0        1.4
-'P+'  'O-'     100.0       1.52       2.0        400.0        1.4
-'P+'  'Op'      50.0       1.90       1.0        400.0        1.4
+'P+'  'O0'      80.0       1.65       2.0        400.0        1.4       ! change r_ab from 1.65 to 1.85 ?
+'P+'  'O-'     100.0       1.52       2.0        400.0        1.4               
+'P+'  'Op'      50.0       1.90       1.0        400.0        1.4       ! change r_ab from 1.90 to 1.85 ?
 'P+'  'Oq'      50.0       1.90       1.0        400.0        1.4
 'O0'  'H0'     102.0       0.96       1.0        400.0        1.4
 'CT'  'F0'     105.0       1.39       1.8        400.0        1.4
 'CT'  'CL'     105.0       1.39       1.8        400.0        1.4
 'CT'  'BR'     105.0       1.39       1.8        400.0        1.4
 'MG'  'DU'     105.0       5.00       1.8        400.0        5.0
+'H0'  'DE'     105.0       1.50       1.8        400.0        1.4   ! -X(DE)2 quasi-group
+'CL'  'DE'     105.0       1.50       1.8        400.0        1.4   ! -X(DE)2 quasi-group
+'F0'  'DE'     105.0       1.50       1.8        400.0        1.4   ! -X(DE)2 quasi-group
+'C0'  'DE'     105.0       1.50       1.8        400.0        1.4   ! -X(DE)2 quasi-group
+'C0'  'F0'     105.0       1.36       1.8        400.0        1.4       ! Own
+'C0'  'CL'     105.0       1.80       1.8        400.0        1.4       ! Own
+'C0'  'BR'     105.0       1.96       1.8        400.0        1.4       ! Own
+'C+'  'CL'     105.0       2.36       1.8        400.0        1.4       ! Own
 
 morse_type     morse_d    radius
 'H0'           105.0      0.4
@@ -48,7 +56,7 @@ morse_type     morse_d    radius
 'MG'          100.0       0.5   ! Does not matter for MG........MG
 'NA'          100.0       0.5
 'DD'            0.0       0.2   ! Dummy
-'DE'            0.0       0.2   ! Dummy
+'DE'          100.0       0.7
 'DU'            0.0       0.0  ! Dummy
 'F0'           65.0       1.12
 'CL'           65.0       1.12
@@ -56,7 +64,7 @@ morse_type     morse_d    radius
 'LI'           96.0       0.7   ! Same parameters as carbon
 
 angle_type     force      angle0
-'H0'            0.00        0.0       0.00    1.00
+'H0'           10.00      120.0       0.00    1.00  !  -H(DE)2 quasi-group
 'H+'            0.00        0.0       0.00    1.00
 'H-'            0.00        0.0       0.00    1.00
 'C0'           36.00      109.5       0.00    1.00
@@ -89,7 +97,7 @@ angle_type     force      angle0
 'MG'            0.00        0.0       0.00    1.00
 'NA'            0.00        0.0       0.00    1.00
 'DD'            0.00        0.0    0.00    1.00     ! Dummy
-'DE'            0.00        0.0    0.00    1.00     ! Dummy
+'DE'           10.00      120.0       0.00    1.00
 'F0'           30.00      109.5       0.00    1.00
 'CL'           30.00      109.5       0.00    1.00
 'BR'           30.00      109.5       0.00    1.00
@@ -111,7 +119,7 @@ itorsion_type  force      periodicity  itorsion_angle0
 'MG'            0.0       0.0          180.0
 'NA'            0.0       0.0          180.0
 'DD'            0.0       1.0            0.0    ! Dummy
-'DE'            0.0       1.0            0.0    ! Dummy
+'DE'            1.0       1.0            0.0    ! Dummy
 
 exnonbond_type  ex_repl   beta     q_vdwa    q_vdwb
 'H0'            5.00      2.50 	  0.00000     0.000
@@ -170,7 +178,6 @@ x_pair          ex_repl    beta     q_vdwa    q_vdwb
 'O0' 'H0'         4000.0      4.00      0.    0.
 'Oq' 'H0'         4000.0      4.00      0.    0.
 'DP' 'DO'            0.0      0.0       0.    0.
-# mfx 'C0' 'CL'            0.0      4.0  139246.  285.
 'C0' 'X-'            0.0      4.0  139246.  285.
 'X-' 'H0'        11297.2      3.6       0.  120.45
 
@@ -253,12 +260,11 @@ elect   mu_s
 'P+'    2.00
 'L-'    2.00
 'L0'    2.00
-# mfx 'CL'    0.00
 'X-'    0.00
 'MG'    2.00    ! Changed from 0 to 2, otherwise MG....MG form a bond
 'NA'    2.00
 'DD'    2.00    ! Dummy
-'DE'    2.00    ! Dummy
+'DE'    0.00    ! Dummy
 'DU'    0.00    ! Dummy
 'LI'    2.00
 
@@ -293,3 +299,4 @@ a_elect     mu_s
 'O0'  'O0'  0.30
 'H0'  'X-'  4.00
 'C0'  'X-'  4.00
+

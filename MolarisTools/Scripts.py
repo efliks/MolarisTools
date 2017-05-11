@@ -639,7 +639,7 @@ def ParsePESScan (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTota
             print ("Wrote file %s" % filename)
 
 
-def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTotalRelative="total_e_rel.dat", useDistances=False, logging=True):
+def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTotalRelative="total_e_rel.dat", useDistances=False, zigzag=False, logging=True):
     """Parse a two-dimensional potential energy surface scan."""
     files  = glob.glob ("%s*.inp" % pattern)
     nfiles = len (files)
@@ -669,7 +669,14 @@ def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTo
         columns = []
         gather  = []
         for j in range (1, size + 1):
-            filename = "%s%02d_%02d.out" % (pattern, i, j)
+            je = j
+            if zigzag:
+                # . In a zig-zag scan, the second coordinate 
+                # . increases and decreases for odd and even iterations 
+                # . of the first coordinate, respectively.
+                if ((i % 2) == 0):
+                    je = size - j + 1
+            filename = "%s%02d_%02d.out" % (pattern, i, je)
             Eqmmm    = base
             if os.path.exists (filename):
                 if logging:
@@ -683,7 +690,7 @@ def ParsePESScan2D (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTo
                 nlogs += 1
             columns.append (Eqmmm)
             if useDistances:
-                filename   = "%s%02d_%02d.inp" % (pattern, i, j)
+                filename   = "%s%02d_%02d.inp" % (pattern, i, je)
                 molaris    = MolarisInputFile (filename, logging=False)
                 (coi, coj) = molaris.constrainedPairs[:2]
                 (ri, rj)   = (coi.req, coj.req)
