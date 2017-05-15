@@ -41,6 +41,8 @@ class AminoLibrary (object):
             raise exceptions.StandardError ("Unknown topology format.")
         if logging:
             print ("# . %s> Found %d component%s" % (_MODULE_LABEL, self.ncomponents, "s" if self.ncomponents != 1 else ""))
+            if not verbose:
+                self.WriteLabels ()
         self._i = 0
 
 
@@ -382,6 +384,21 @@ class AminoLibrary (object):
         # . Write the last component
         component = self.components[-1]
         component.Write (showGroups=showGroups, showLabels=showLabels, terminate=True)
+
+
+    def WriteLabels (self, rowl=14, serials=False):
+        """Write labels of all components."""
+        line = ""
+        for (i, component) in enumerate (self.components, 1):
+            if serials:
+                line = "%s   %3d %-3s" % (line, component.serial, component.label)
+            else:
+                line = "%s  %3s" % (line, component.label)
+            if (i % rowl == 0):
+                print line
+                line = ""
+        if line:
+            print line
 
 
 #===============================================================================

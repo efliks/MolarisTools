@@ -107,6 +107,17 @@ class AminoComponent (object):
         return total
 
 
+    def ConversionTables (self):
+        """Convert atomic labels to serials and vice-versa."""
+        convert = {"" : 0, }
+        for (serial, atom) in enumerate (self.atoms, 1):
+            convert[atom.atomLabel] = serial
+        trevnoc = {}
+        for (label, serial) in convert.iteritems ():
+            trevnoc[serial] = label
+        return (convert, trevnoc)
+
+
     _DEFAULT_MODIFY = {
         "A" :   ("O3",  "O-"),
         "B" :   ("O3",  "O-"),
