@@ -1,4 +1,10 @@
+/dist/
+/build/
+/MANIFEST
+*~
 *.a
 *.o
 *.so
 *.pyc
+*.egg
+*.egg-info

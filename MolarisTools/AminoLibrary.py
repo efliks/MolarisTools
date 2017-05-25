@@ -34,9 +34,9 @@ class AminoLibrary (object):
         """Constructor."""
         self.filename = filename
         if   topologyFormat == "Molaris":
-            self._Parse (logging=logging, reorder=reorder, unique=unique, verbose=verbose)
+            self._Parse (reorder=reorder, unique=unique, logging=logging, verbose=verbose)
         elif topologyFormat == "CHARMM":
-            self._ParseCHARMM (logging=logging, cutType=cutType)
+            self._ParseCHARMM (cutType=cutType, logging=logging, verbose=verbose)
         else:
             raise exceptions.StandardError ("Unknown topology format.")
         if logging:
@@ -140,7 +140,7 @@ class AminoLibrary (object):
         return (text, comment)
 
 
-    def _ParseCHARMM (self, logging, cutType):
+    def _ParseCHARMM (self, cutType, logging, verbose):
         data       = open (self.filename)
         if logging:
             print ("# . %s> Parsing file \"%s\"" % (_MODULE_LABEL, self.filename))
@@ -248,7 +248,7 @@ class AminoLibrary (object):
                 atoms   =   aminoAtoms      ,
                 bonds   =   bonds           ,
                 connect =   ("",    "")     ,
-                logging =   logging         ,
+                logging =   True if (logging and verbose) else False ,
                 title   =   "Generated from CHARMM topology"  ,
                 )
             aminoComponents.append (component)

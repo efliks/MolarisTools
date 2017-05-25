@@ -1,0 +1,5 @@
+include  COPYING  README.md  requirements.txt
+recursive-include  MolarisTools/tests *
+recursive-include  MolarisTools/data *
+recursive-include  examples *
+recursive-include  docs *

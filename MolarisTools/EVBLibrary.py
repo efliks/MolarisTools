@@ -55,6 +55,35 @@ class EVBLibrary (object):
         return (text, comment)
 
 
+    @property
+    def nparameters (self):
+        npar = 0
+        labels = ("morse", "pairs", "angles", "torsions", "impropers", "vdwevb", 
+            "solvdw", "exnonbond", "xpairs", "vpairs", "inductive", "ipairs", "screen", "spairs", )
+        for label in labels:
+            if hasattr (self, label):
+                data = eval ("self.%s" % label)
+                npar += len (data)
+        return npar
+        #  if hasattr (self, "morse"    ):  npar += len (self.morse     )
+        #  if hasattr (self, "pairs"    ):  npar += len (self.pairs     )
+        #  if hasattr (self, "angles"   ):  npar += len (self.angles    )
+        #  if hasattr (self, "torsions" ):  npar += len (self.torsions  )
+        #  if hasattr (self, "impropers"):  npar += len (self.impropers )
+        #  if hasattr (self, "vdwevb"   ):  npar += len (self.vdwevb    )
+        #  if hasattr (self, "solvdw"   ):  npar += len (self.solvdw    )
+        #  if hasattr (self, "exnonbond"):  npar += len (self.exnonbond )
+        #  if hasattr (self, "xpairs"   ):  npar += len (self.xpairs    )
+        #  if hasattr (self, "vpairs"   ):  npar += len (self.vpairs    )
+        #  if hasattr (self, "inductive"):  npar += len (self.inductive )
+        #  if hasattr (self, "ipairs"   ):  npar += len (self.ipairs    )
+        #  if hasattr (self, "screen"   ):  npar += len (self.screen    )
+        #  if hasattr (self, "spairs"   ):  npar += len (self.spairs    )
+
+    def __len__ (self):
+        return self.nparameters
+
+
     def _Parse (self, logging):
         messages = {
             "morse_type"        :   "# . %s> Read %d Morse types"   ,

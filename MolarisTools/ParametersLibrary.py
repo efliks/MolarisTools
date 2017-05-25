@@ -28,6 +28,20 @@ class ParametersLibrary (object):
         self._Parse (logging=logging)
 
 
+    @property
+    def nparameters (self):
+        npar = 0
+        labels = ("hbonds", "bonds", "angles", "torsions", "impropers", "vdws", )
+        for label in labels:
+            if hasattr (self, label):
+                data = eval ("self.%s" % label)
+                npar += len (data)
+        return npar
+
+    def __len__ (self):
+        return self.nparameters
+
+
     def _Parse (self, logging):
         lines = open (self.filename)
         if logging:
