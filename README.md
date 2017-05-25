@@ -1,11 +1,11 @@
 # MolarisTools
 A Python toolkit to facilitate working with Molaris-XG.
 
-Author: Mikolaj Feliks <mikolaj.feliks@gmail.com>
+Author: Mikolaj Feliks <<mikolaj.feliks@gmail.com>><br>
 Released as open source software under the GNU GPL v3.0 license (see COPYING).
 
 
-_Key features_
+_Key features:_
   * QM/MM interface with electrostatic embedding to Gaussian, Mopac, GAMESS-US, ORCA, Q-Chem
   * Parsing of Molaris files (input, log, gap, FVX, mol.in, evb.dat)
   * Parsing of files from quantum chemical packages (Gaussian, Mopac, GAMESS-US, ORCA, Q-Chem)
@@ -18,13 +18,12 @@ _Key features_
   * Parsing of 1D \& 2D PES scans
   * LRA calculations
 
-_Installation instructions_
+_Installation instructions:_
 
 MolarisTools is a stand-alone Python library and as such does not 
-need Molaris to be preinstalled.
-
-Nevertheless, a copy of Molaris can be obtained at the website of
-the Warshel Group: <http://laetro.usc.edu/software.html>
+need Molaris to be preinstalled. Nevertheless, a copy of Molaris can
+be obtained from the website of the Warshel Group:
+<http://laetro.usc.edu/software.html>
 
 To install MolarisTools, first download and unpack the ZIP archive
 from this website. Prepare the package for installation:
