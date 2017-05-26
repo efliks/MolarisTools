@@ -5,7 +5,7 @@ Author: Mikolaj Feliks <<mikolaj.feliks@gmail.com>><br>
 Released as open source software under the GNU GPL v3.0 license (see COPYING).
 
 
-### Key features:
+_Key features:_
   * QM/MM interface with electrostatic embedding to Gaussian, Mopac, GAMESS-US, ORCA, Q-Chem
   * Parsing of Molaris files (input, log, gap, FVX, mol.in, evb.dat)
   * Parsing of files from quantum chemical packages (Gaussian, Mopac, GAMESS-US, ORCA, Q-Chem)
@@ -18,7 +18,7 @@ Released as open source software under the GNU GPL v3.0 license (see COPYING).
   * Parsing of 1D \& 2D PES scans
   * LRA calculations
 
-### Installation instructions:
+_Installation instructions:_
 
 MolarisTools is a stand-alone Python library and as such does not 
 need Molaris to be preinstalled. Nevertheless, a copy of Molaris can
