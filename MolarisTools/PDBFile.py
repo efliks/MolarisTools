@@ -110,6 +110,33 @@ class PDBResidue (object):
 class PDBFile (object):
     """A class to read a PDB file."""
 
+
+    def CenterMolecule (self, residueSerial, atomSerial):
+        """Move a selected atom to the origin of the coordinate system."""
+        found = False
+        for residue in self.residues:
+            if (residue.serial == residueSerial):
+                for atom in residue.atoms:
+                    if (atom.serial == atomSerial):
+                        (ax, ay, az) = (atom.x, atom.y, atom.z)
+                        found = True
+                        break
+                break
+        if not found:
+            raise exceptions.StandardError ("Residue or atom not found.")
+        for residue in self.residues:
+            newAtoms = []
+            for atom in residue.atoms:
+                newAtom = PDBAtom (
+                    label   =  atom.label     ,
+                    serial  =  atom.serial    ,
+                    x       =  (atom.x - ax)  ,
+                    y       =  (atom.y - ay)  ,
+                    z       =  (atom.z - az)  , )
+                newAtoms.append (newAtom)
+            residue.atoms = newAtoms
+
+
     def __init__ (self, filename, logLevel=_DEFAULT_LOG_LEVEL):
         """Constructor."""
         self.inputfile = filename
