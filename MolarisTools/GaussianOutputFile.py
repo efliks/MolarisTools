@@ -75,6 +75,17 @@ class GaussianOutputFile (object):
                     self.Efinal = tokens[4] * HARTREE_TO_KCAL_MOL
 
 
+                # . Get the final, PCM-corrected energy (replace the regular energy)
+                #
+                # After PCM corrections, the SCF energy is  -2571.87944471     a.u.
+                elif line.count ("After PCM corrections, the SCF energy is"):
+                    tokens = TokenizeLine (line, converters=([None, ] * 7 + [float, ]))
+                    Efinal = tokens[-1] * HARTREE_TO_KCAL_MOL
+                    if hasattr (self, "Efinal"):
+                        self.PCMcorr = Efinal - self.Efinal
+                    self.Efinal = Efinal
+
+
                 # . Get the thermochemistry
                 #
                 #  Zero-point correction=                           0.381354 (Hartree/Particle)
