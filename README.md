@@ -32,9 +32,9 @@ git installed on your computer):
 git clone https://github.com/mfx9/MolarisTools.git
 ```
 
-Or download the ZIP package from this website. In the next step, adjust
-your PYTHONPATH variable so it points to the location of MolarisTools, for
-example (in Bash):
+Or download and unpack the ZIP package from this website. In the next
+step, adjust your PYTHONPATH variable so it points to the location
+of MolarisTools, for example (in Bash):
 
 ```
 export PYTHONPATH=${HOME}/MolarisTools:${PYTHONPATH}
