@@ -1,0 +1,19 @@
+# . Molaris script
+./mcl_rs.pdb  keepallh
+
+
+analyze
+    allres
+    makepdb
+        residue all
+        file_nm output.pdb
+    end
+end
+
+analyze
+    resatom     1
+    resatom     2
+end
+
+# . Script ends
+end

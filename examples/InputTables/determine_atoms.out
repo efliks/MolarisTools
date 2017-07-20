@@ -1,0 +1,942 @@
+ Usage:
+ For interactive run, please press the Enter key, then type 
+ your keywords line by line
+
+ For using input file on command line, please press the Enter key,
+ type quit
+ to run in the foreground, type:
+ molaris < input_file_name  
+ or:
+ molaris input_file_name
+
+ Notice: here molaris is a script file, not the molaris executable
+
+ to submitting run to the background, type:
+ molaris < input_file_name > log_file &  
+ or:
+ molaris input_file_name log_file & 
+
+
+ you may use command line options to read in alternative libraries: 
+ molaris [-a amino_lib_name] [-p parm_lib_name] [-e evb_lib_name]
+         [-s solvent_opt_name] [-o output_directory_name]
+
+ ==============================================================================
+  RUNNING executable:
+  molaris_hpc9.15_apr06 
+  on machine eigen
+  with input file: determine_atoms.inp 
+
+  Job starting time: Wed Jul 19 11:14:04 2017
+ ==============================================================================
+
+ Checking the file path and name for ...
+
+
+ directory path & name for AMINO_LIB  -> 
+ /home/mikolaj/DNA_polymerase/libs/amino98_custom_small.lib                                                                                                                                                                                                                                                  
+
+ directory path & name for PARM_LIB  -> 
+ /home/mikolaj/DNA_polymerase/libs/parm.lib                                                                                                                                                                                                                                                                  
+
+ directory path & name for EVB_LIB  -> 
+ /home/mikolaj/DNA_polymerase/libs/evb_sn2_mopac.lib                                                                                                                                                                                                                                                         
+
+ directory path & name for SOLVENT_OPT  -> 
+ /home/mikolaj/DNA_polymerase/libs/solvent.opt                                                                                                                                                                                                                                                               
+
+ directory path & name for OUT_DIR  -> 
+ .                                                                                                                                                                                                                                                                                                           
+
+ The cpu time now =             0.00 sec
+
+ Step cpu time    =             0.00 sec (    0.00 min)
+
+ This run was using the input file: 
+ /home/mikolaj/DNA_polymerase/mutate/sn2/decouple/auto_types_mop_III/mcl/rs/determine_atoms.inp
+
+ ALL OUTPUT FILES WILL GO TO:
+ ./determine_atoms/
+
+
+ Notice: If there are no H atoms in the coordinate file (pdb file),
+         molaris will create all the right H atoms for the system.
+
+
+         If there are H atoms in the coordinate file:
+
+         keyword "keeph" following the pdb file name will keep all the
+         good H atoms with right coordinates (this is the default);
+
+         keyword "keepallh"  following the pdb file name will keep all the
+         H atoms, even the coordinates are bad;
+
+         keyword "keepnoh" following the pdb file name will discard all
+         the H atoms in the pdb file and create all the right H atoms.
+
+
+         keyword "trim x y z r" following the pdb file name will
+         trim the system in the pdb file (if the system is too big),
+         where x y z are coordinates for the trim center and r is the
+         trim radius. Residues outside the radius are trimed to alpha
+         carbon atoms. If using this one with other keywords, put the
+         keyword trim first.
+
+
+         keyword "fold_alfa_beta x y z r" following the pdb file name
+         will simplify the system in the pdb file for folding, where
+         x y z are coordinates for the specified center and r is the
+         radius. Residues outside the radius are simplified to alpha 
+         carbons and united beta carbon atoms;
+
+         keyword "fold2 x y z r" following the pdb file name will simplify
+         the system in the pdb file for folding, where x y z are
+         coordinates for the specified center and r is the radius.
+         The sidechains of the 20 types of amino residues and 4 types of DNA
+         outside the radius are simplified to united beta carbon atoms.
+         If the option "no_dna_cg" is used, all the DNA are not simplified
+
+
+         please use "keephis" as the LAST keyword on the input line:
+         keyword "keephis" following the pdb file name will keep
+         the structures of all the HIS or HIE as is in the pdb file;
+
+         keyword "keephis 3 7" following the pdb file name will keep
+         the structures of residue 3 and 7 in the pdb file for HIS or
+         HIE without being switched to HIE or HIS;
+
+         without the keyword "keephis", molaris may automatically
+         optimize the conformation of HIS to HIE, or HIE to HIS
+         depending on which structure is more stable in the system.
+
+
+         keyword "amber" following the pdb file name will use the AMBER
+         force field parameters automatically from the amber_amino.lib
+         and amber_parm.lib in $MOLARIS_PATH/lib
+
+
+         keyword "xyz_file" followed by a file name will read a coordinate
+         file for ONE molecule with the following file format:
+         #_of_atoms_in_the_file               <- the 1st line
+         molecule_name                        <- the 2nd line
+         atom_symbol  x  y  z  charge  atoms_connected_to_it   <- the 3rd line
+         ( the same as the above for all the rest lines )
+         an entry for the molecule will be automatically added to the AMINO_LIB
+         and a pdb file of the molecule will be created.
+
+
+ Warning: if "keeph" or "keepallh" or "keepnoh" is used in the relaxation
+          run, it also needs to be used for all the subsequenet runs;
+          if "keephis" is used in the relaxation run, it also needs to be
+          used for all the subsequenet runs
+
+
+ Input the coordinate file name (or type "quit" to exit, or "next" to the
+ next level):
+
+ PDB > 
+ PDB > 
+ PDB> ./mcl_rs.pdb  keepallh
+ Keeping ALL Hydrogens from the PDB
+ Note: you need also to use "keepallh" for all the subsequent runs
+ Note: you need also to use "keephis" for all the subsequent runs
+
+ reading library data from: 
+ /home/mikolaj/DNA_polymerase/libs/amino98_custom_small.lib                                                                                                                                                                                                                                                  
+  
+ The following residues in the above library are charged:
+ total charge = -1.000,  for resiude: MUR
+ total charge = -1.000,  for resiude: MUT
+ total charge = -1.000,  for resiude: MUP
+ total charge = -1.000,  for resiude: VPR
+ total charge = -1.000,  for resiude: WPR
+ total charge = -1.000,  for resiude: XPR
+ total charge = -1.000,  for resiude: YPR
+ total charge = -1.000,  for resiude: V4F
+ total charge = -1.000,  for resiude: W4F
+ total charge = -1.000,  for resiude: X4F
+ total charge = -1.000,  for resiude: Y4F
+ total charge = -1.000,  for resiude: V4C
+ total charge = -1.000,  for resiude: W4C
+ total charge = -1.000,  for resiude: X4C
+ total charge = -1.000,  for resiude: Y4C
+ total charge = -1.000,  for resiude: V3F
+ total charge = -1.000,  for resiude: W3F
+ total charge = -1.000,  for resiude: X3F
+ total charge = -1.000,  for resiude: Y3F
+ total charge = -1.000,  for resiude: V3C
+ total charge = -1.000,  for resiude: W3C
+ total charge = -1.000,  for resiude: X3C
+ total charge = -1.000,  for resiude: Y3C
+ total charge = -1.000,  for resiude: V34
+ total charge = -1.000,  for resiude: W34
+ total charge = -1.000,  for resiude: X34
+ total charge = -1.000,  for resiude: Y34
+ total charge = -1.000,  for resiude: V3N
+ total charge = -1.000,  for resiude: W3N
+ total charge = -1.000,  for resiude: X3N
+ total charge = -1.000,  for resiude: Y3N
+ total charge = -1.000,  for resiude: V4Y
+ total charge = -1.000,  for resiude: W4Y
+ total charge = -1.000,  for resiude: X4Y
+ total charge = -1.000,  for resiude: Y4Y
+ total charge = -1.000,  for resiude: VCN
+ total charge = -1.000,  for resiude: WCN
+ total charge = -1.000,  for resiude: XCN
+ total charge = -1.000,  for resiude: YCN
+ total charge = -1.000,  for resiude: V4N
+ total charge = -1.000,  for resiude: W4N
+ total charge = -1.000,  for resiude: X4N
+ total charge = -1.000,  for resiude: Y4N
+ total charge = -1.000,  for resiude: PRS
+ total charge = -1.000,  for resiude: PRX
+ total charge = -1.000,  for resiude: PRP
+ total charge = -1.000,  for resiude: PRE
+ total charge =  2.000,  for resiude: MGS
+ total charge =  2.000,  for resiude: MGC
+ total charge =  1.000,  for resiude: NA 
+ total charge = -4.000,  for resiude: NMO
+ total charge = -2.000,  for resiude: NHO
+ total charge = -2.000,  for resiude: NHP
+ total charge =  2.000,  for resiude: MD6
+ total charge = -2.000,  for resiude: NMS
+ total charge =  2.000,  for resiude: MGX
+ total charge =  1.000,  for resiude: LIT
+ total charge =  1.000,  for resiude: LTD
+ total charge = -1.000,  for resiude: HYD
+ total charge = -2.000,  for resiude: MLI
+ total charge = -2.000,  for resiude: MLT
+ total charge = -4.000,  for resiude: NMH
+ total charge = -4.000,  for resiude: NMF
+ total charge = -4.000,  for resiude: NMB
+ total charge = -4.000,  for resiude: NMC
+ total charge = -4.000,  for resiude: NHF
+ total charge = -4.000,  for resiude: NHC
+ total charge = -4.000,  for resiude: NFC
+ total charge = -4.000,  for resiude: NHB
+ total charge = -2.000,  for resiude: MLS
+ total charge = -2.000,  for resiude: ZMH
+ total charge = -2.000,  for resiude: ZMF
+ total charge = -2.000,  for resiude: ZMB
+ total charge = -2.000,  for resiude: ZMC
+ total charge = -2.000,  for resiude: ZHF
+ total charge = -2.000,  for resiude: ZHC
+ total charge = -2.000,  for resiude: ZFC
+ total charge = -2.000,  for resiude: ZHB
+ total charge = -4.000,  for resiude: TMH
+ total charge = -4.000,  for resiude: TMF
+ total charge = -4.000,  for resiude: TMB
+ total charge = -4.000,  for resiude: TMC
+ total charge = -4.000,  for resiude: THF
+ total charge = -4.000,  for resiude: THC
+ total charge = -4.000,  for resiude: TFC
+ total charge = -4.000,  for resiude: THB
+ total charge = -1.000,  for resiude: RPA
+ total charge = -1.000,  for resiude: RNO
+ total charge = -1.000,  for resiude: RFL
+ total charge = -1.000,  for resiude: RCY
+ total charge = -1.000,  for resiude: RCL
+ total charge = -1.000,  for resiude: CL-
+ total charge = -1.000,  for resiude: BR-
+ total charge = -1.000,  for resiude: CCL
+ total charge = -1.000,  for resiude: CBR
+ total charge = -1.000,  for resiude: TPA
+ total charge = -1.000,  for resiude: FUL
+ total charge = -2.000,  for resiude: PAR
+ total charge = -2.000,  for resiude: FL4
+ total charge = -2.000,  for resiude: CL4
+ total charge = -2.000,  for resiude: FL3
+ total charge = -2.000,  for resiude: CL3
+ total charge = -2.000,  for resiude: E34
+ total charge = -2.000,  for resiude: NO3
+ total charge = -2.000,  for resiude: CN4
+ total charge = -2.000,  for resiude: CNO
+ total charge = -2.000,  for resiude: NO4
+ total charge = -2.000,  for resiude: EMH
+ total charge = -2.000,  for resiude: EMF
+ total charge = -2.000,  for resiude: EMC
+ total charge = -2.000,  for resiude: EMB
+ total charge = -2.000,  for resiude: NYH
+ total charge = -1.000,  for resiude: DPR
+ total charge = -1.000,  for resiude: LPR
+ total charge = -1.000,  for resiude: D4F
+ total charge = -1.000,  for resiude: L4F
+ total charge = -1.000,  for resiude: D4C
+ total charge = -1.000,  for resiude: L4C
+ total charge = -1.000,  for resiude: D3F
+ total charge = -1.000,  for resiude: L3F
+ total charge = -1.000,  for resiude: D3C
+ total charge = -1.000,  for resiude: L3C
+ total charge = -1.000,  for resiude: D34
+ total charge = -1.000,  for resiude: L34
+ total charge = -1.000,  for resiude: D3N
+ total charge = -1.000,  for resiude: L3N
+ total charge = -1.000,  for resiude: D4Y
+ total charge = -1.000,  for resiude: L4Y
+ total charge = -1.000,  for resiude: DCN
+ total charge = -1.000,  for resiude: LCN
+ total charge = -1.000,  for resiude: D4N
+ total charge = -1.000,  for resiude: L4N
+ total charge = -1.000,  for resiude: TRS
+ total charge = -1.000,  for resiude: TPS
+
+ Notice: If you have the above residues in your pdb file, please check
+         if these charges are right for you
+
+         You may need to edit the charges in the library to suit your
+         pdb system
+
+ The library has been read successfully
+      
+ Molecules or residues in the library:
+
+   1-MUR   2-MUT   3-MUP   4-VPR   5-WPR   6-XPR   7-YPR   8-V4F   9-W4F
+  10-X4F  11-Y4F  12-V4C  13-W4C  14-X4C  15-Y4C  16-V3F  17-W3F  18-X3F
+  19-Y3F  20-V3C  21-W3C  22-X3C  23-Y3C  24-V34  25-W34  26-X34  27-Y34
+  28-V3N  29-W3N  30-X3N  31-Y3N  32-V4Y  33-W4Y  34-X4Y  35-Y4Y  36-VCN
+  37-WCN  38-XCN  39-YCN  40-V4N  41-W4N  42-X4N  43-Y4N  44-MOH  45-PRS
+  46-PRX  47-PRP  48-PRE  49-MGS  50-MGC  51-NA   52-PMH  53-PMF  54-PMC
+  55-PMB  56-NMO  57-NHO  58-NHP  59-MD6  60-NMS  61-MGX  62-LIT  63-LTD
+  64-HYD  65-WAT  66-WAA  67-MDL  68-MLI  69-MLT  70-ETH  71-NMH  72-NMF
+  73-NMB  74-NMC  75-NHF  76-NHC  77-NFC  78-NHB  79-MLS  80-ZMH  81-ZMF
+  82-ZMB  83-ZMC  84-ZHF  85-ZHC  86-ZFC  87-ZHB  88-TMH  89-TMF  90-TMB
+  91-TMC  92-THF  93-THC  94-TFC  95-THB  96-RPA  97-RNO  98-RFL  99-RCY
+ 100-RCL 101-MCL 102-MBR 103-MFL 104-CL- 105-BR- 106-CCL 107-CBR 108-SPA
+ 109-TPA 110-FUL 111-PAR 112-FL4 113-CL4 114-FL3 115-CL3 116-E34 117-NO3
+ 118-CN4 119-CNO 120-NO4 121-EMH 122-EMF 123-EMC 124-EMB 125-NYH 126-DPR
+ 127-LPR 128-D4F 129-L4F 130-D4C 131-L4C 132-D3F 133-L3F 134-D3C 135-L3C
+ 136-D34 137-L34 138-D3N 139-L3N 140-D4Y 141-L4Y 142-DCN 143-LCN 144-D4N
+ 145-L4N 146-AMI 147-ATS 148-IMI 149-MOR 150-MOT 151-MOP 152-TRS 153-TPS
+ 154-ALP
+
+ reading parameter data from: 
+ /home/mikolaj/DNA_polymerase/libs/parm.lib                                                                                                                                                                                                                                                                  
+
+ The PDB file has been read successfully:
+ # of residues =    2
+ # of atoms    =    6
+
+  
+
+ Angle parameters for: H4 CT CL  are not defined in parm file !
+ Default angle force:    40.00  angle (degree):  90.00 are used
+ these atoms having the above angle type:
+     2_MCL     1_MCL     5_MCL
+     3_MCL     1_MCL     5_MCL
+     4_MCL     1_MCL     5_MCL
+
+ Angle parameters for: H4 CT CL  are not defined in parm file !
+ Default angle force:    40.00  angle (degree):  90.00 are used
+ these atoms having the above angle type:
+     2_MCL     1_MCL     5_MCL
+     3_MCL     1_MCL     5_MCL
+     4_MCL     1_MCL     5_MCL
+
+ To use accurate data, add parameters for these angles in parm file and rerun
+ molaris
+
+ Created a topology file: 
+ ./determine_atoms/mcl_rs.top                                                                                                                                                                                                                                                                                
+
+
+ Reading structure information from the topology file:
+ ./determine_atoms/mcl_rs.top                                                                                                                                                                                                                                                                                
+ force field type: ENZYMIX
+
+ 1-4 interaction excluded
+
+ atom     :    6
+ bond     :    4
+ angle    :    6
+ torsion  :    0
+ itorsion :    0
+ residue  :    2
+ neu-group:    2
+
+ Residue sequence in the topology file:
+ (for each residue, the # inside the parentheses is the original
+  residue # from the pdb file)
+
+      1_MCL(    1)      2_CL-(    2)
+
+ The molecular structure has been read successfully from the file: 
+ ./determine_atoms/mcl_rs.top                                                                                                                                                                                                                                                                                
+   Residue   2 CL-, is charged:    -1.00
+ Residue sequence from the PDB file:
+ protein chain or fragment    1: from residue    1 to    1
+ MCL-
+     GAP
+ protein chain or fragment    2: from residue    2 to    2
+ CL--
+
+ coordinates of the center for the whole system are:     0.166    -0.289     0.117
+ The system is in a box, which has the dimensions:
+ x =    2.16   y =    3.81   z =    1.71
+
+
+         Table of the Keywords for the Task Level
+         ........................................
+ keyword               modifier    example
+ -------               --------    ------------------
+ analyze               no          analyze
+                                   analyse
+ polaris               no          polaris
+ enzymix               no          enzymix
+ simplified_electro    no          simplified_electro
+ channel_current       no          channel_current
+ CG_model              no          CG_model
+                                   CG_model no_dna_cg
+ end                   no          end    
+ help                  yes         help <keyword1> <keyword2> ...
+ help                  yes         help task
+                                   help all
+                                   help alphabetic
+                                   help create_keywords_list
+ help                  no          help   
+ exit                  no          exit   
+ !<unix shell command>             !ls -l 
+------------------------------------------------------------------------
+
+
+
+
+ task> analyze
+
+
+ ------ The default parameter values of MD to be used in this run ------
+
+      keyword             default value
+ -----------------  --------------------------
+ nsteps              500
+ temperature(k)      300.00
+ tolerance_temp(k)  2000.00
+ stepsize(ps)        0.0020000
+ nbupdate            30
+ region2a_r          18.0
+ water_r             18.0
+ langevin_r          20.0
+ induce              0
+ indforce            10
+ constraint_1        0.030
+ constraint_2        0.030
+ constraint_pair     0
+ constraint_post     0
+ constraint_ang      0
+ cutpp               10.0
+ cutpw               10.0
+ cutww               10.0
+ cutaep              20.0
+ cutaew              20.0
+ movie_co            0
+
+------------------------------------------------------------------------
+
+
+         Table of the Keywords for the Analyze Level
+         ...........................................
+ keyword            modifier  example
+ -------            --------  ------- 
+ rest_in             yes      rest_in rest.in
+ rest_pdld_conf_in   yes      rest_pdld_conf_in restA.scratch001
+ rest_to_pdb         yes      rest_to_pdb rest.pdb
+ topf_in             yes      topf_in test.top
+ allres              no       allres     
+ all_ionizable       no       all_ionizable     
+ restype             yes      restype ASP
+ resatom             yes      resatom 1  
+ resbond             yes      resbond 1  
+ resang              yes      resang  1  
+ restor              yes      restor  1  
+ resitor             yes      resitor 1  
+ res_ion_vq          yes      res_ion_vq 5 10.0
+ system_e            yes      system_e 18.0
+                              system_e 18.0  2.300 10.023 -5.006
+ distatom            yes      distatom 234 456
+                              distatom 2.0
+                              distatom 2 6.170 8.040 5.161
+                              distatom 6.170 8.040 5.161 0.268 2.142 9.451
+ rms_pdb_res         no       rms_pdb_res
+ get_ang             yes      get_ang 1 4 7
+ get_tor             yes      get_tor 1 4 7 10
+ get_gyration        no       get_gyration
+                     yes      get_gyration 1 to 10
+                     yes      get_gyration no_side
+ get_native_hb       no       get_native_hb
+                     yes      get_native_hb pdbfile1
+ contact_linear_f    yes      contact_linear_f 0.04 1.4 
+ get_contact_order   no       get_contact_order
+                     yes      get_contact_order 10 to 30
+ distres             yes      distres  10 35
+ dist_cen_side_heavy yes      dist_cen_side_heavy 10 35
+ dist_ca_ca          yes      dist_ca_ca
+ dist_center1_ca     yes      dist_center1_ca 2.30 6.72 10.26
+ dist_center1_cb     yes      dist_center1_cb 2.30 6.72 10.26
+ minimum_distres     yes      minimum_distres  10 35
+ setxyz              yes      setxyz 2 0.220 1.365 10.378
+ setcrg              yes      setcrg 1 0.50
+                              setcrg 1 to 100 1.0
+ chk_bond            yes      chk_bond 50.0
+ chk_angle           yes      chk_angle 50.0
+ chk_maintor         no       chk_maintor
+ chk_alltor          no       chk_alltor
+ chk_tor_ca_ca_ca_ca no       chk_tor_ca_ca_ca_ca
+ set_angle           yes      set_angle 2 4 6 120.0
+                              set_angle 20 21 22 109.5 30
+ chk_angle_ca_ca_ca  yes      chk_angle_ca_ca_ca
+ chk_bad_nonbd_r     yes      chk_bad_nonbd_r 1.3
+ chk_disulfide       no       chk_disulfide
+ chk_salt_bridge     no       chk_salt_bridge
+                     yes      chk_salt_bridge 4.0
+ chk_ss_bridge       no       chk_ss_bridge
+ electro_radius_res  yes      electro_radius_res 1 18.0 4
+ electro_radius_atm  yes      electro_radius_atm 3 18.0 3 10 20
+ electro_res         yes      electro_res 1 4
+                              electro_res 1 4 write_pair
+ electro_atm         yes      electro_atm 1 4
+ center_s            no       center_s    
+ center_r            yes      center_r 5 12
+ center_atoms        yes      center_atoms 3 7 9
+ adjust_cm           yes      adjust_cm
+ sphereion           yes      sphereion 12.50 3.64 -6.28 10.63
+ sphereres           yes      sphereres 12.50 3.64 -6.28 10.63
+ sphereres_layer     yes      sphereres_layer 10.0 12.0 3.64 -6.28 10.63
+ sphereatm           yes      sphereatm 12.50 3.64 -6.28 10.63
+ sphereatm_layer     yes      sphereatm_layer 10.0 12.0 3.64 -6.28 10.63
+ addbond             yes      addbond 2 5 9 10 18
+ bonds_for_atom      yes      bonds_for_atom 2 
+ angles_for_atom     yes      angles_for_atom 2 
+ removebond          yes      removebond 2 5 9 10 18
+ set_atom_dummy      yes      set_atom_dummy 6
+                              set_atom_dummy 1 to 20
+ move_atoms          yes      move_atoms 2 6 3.0 3 6 7 8
+                              move_atoms 2 6 3.0 5 to 100
+ mutate_res          yes      mutate_res 2 SER
+ mutate_res                   mutate_res 2 SER HA2
+ mutate_res                   mutate_res 2 SER  5 ARG 10 GLU
+ mutate_simp_res     yes      mutate_simp_res 2 S*2
+ simp_res_to_atm     yes      simp_res_to_atm 10
+                              simp_res_to_atm 10 3.056 5.782 0.245
+ c_beta_to_expl_side yes      c_beta_to_expl_side 1.0 3 ASP 2
+ mutate_res_to_h2o   yes      mutate_res_to_h2o 2 
+ rotate_h            yes      rotate_h 5 12
+ rotate_atom         yes      rotate_atom 2 5 6 10 90.0
+ rotate_atom_list    yes      rotate_atom_list 2 5 90.0 3 6 8 9
+ rotate_axis         yes      rotate_axis Y 5 12
+                              rotate_axis Z 2.0 3.5 6.7 12.0 23.1 -2.3
+ rotate_helix        yes      rotate_helix 20 100 90.0
+ viewmovie           no       viewmovie 
+ viewpot             no       viewpot   
+ vdwsurf             no       vdwsurf   
+ makepdb             no       makepdb   
+ maketop             yes      maketop new.top
+ makepdb_from_2_pdb  yes      makepdb_from_2_pdb pdb_2_name 0.5  
+ makepdb_from_rest   yes      makepdb_from_rest rest_file pdb_file
+ makepdb_from_rest            makepdb_from_rest rest_file pdb_file 5 20
+ makepdb_from_qm     yes      makepdb_from_qm qm_file res_name_file pdb_file1
+                              makepdb_from_qm qm_file res_name_file pdb_file 20
+ make_f_from_qm      yes      make_f_from_qm qm_out_file fq_file1
+                              make_f_from_qm qm_out_file fq_file 20
+ makelib1            no       makelib1  
+ translate_system    yes      translate_system 4.0 5.0 -5.0
+ replace_ligand      no       replace_ligand
+ superimpose_ca_pdb  yes      superimpose_ca_pdb structure2.pdb
+                              superimpose_ca_pdb structure2.pdb 20 22 24 26 30
+ superimpose_ca_rest yes      superimpose_ca_rest test.rest
+ list_hbonds         yes      list_hbonds 1.5 2.2
+ list_hbonds_2       yes      list_hbonds_2 1.5 2.2 md.rest
+ whichres            yes      whichres 10 
+ pdb_res_to_mol_res  yes      pdb_res_to_mol_res 20 
+                              pdb_res_to_mol_res 20  2
+ uncharge_amber      yes      uncharge_amber
+ write_alfa_beta_pdb yes      write_alfa_beta_pdb alf_beta.pdb
+ cg_to_alfa_beta     no       cg_to_alfa_beta
+ cb_nonbond_list     yes      cb_nonbond_list 7.0 R*2 H*2 
+ add_main_atoms      no       add_main_atoms 
+ add_sidechain       no       add_sidechain 
+                     yes      add_sidechain 90.0 
+                              add_sidechain 90.0 2 
+                              add_sidechain 90.0 2 rest
+                              add_sidechain 0.0 3 cb-cg
+ c_alfa_to_explicit  no       c_alfa_to_explicit
+ mc_ceta_phi         yes      mc_ceta_phi 100 200.0
+                              mc_ceta_phi 100 200.0 11
+ rotamer_res         yes      rotamer_res rotamer.lib
+                              rotamer_res rotamer.lib 11
+ minimize_side       yes      minimize_side 500 
+                              minimize_side 500 2
+                              minimize_side 500 3
+                              minimize_side 500 3 cb-cg
+ simp_to_expl_pdb    yes      simp_to_expl_pdb 500 5
+                              simp_to_expl_pdb 500 5 200
+ simp_to_expl_relax  yes      simp_to_expl_relax 1
+ expl_pdb_2_relax    yes      expl_pdb_2_relax 
+ ionres              yes      ionres 3     
+ iontyp              yes      iontyp ASP   
+                              iontyp ALL   
+ ion_simp_type       yes      ion_simp_type H*2
+                              ion_simp_type H*2 0.5
+                              ion_simp_type ALL
+                              ion_simp_type ALL 0.5
+ ion_united_type     yes      ion_united_type D^H
+                              ion_united_type ALL
+ add_electrodes      yes      add_electrodes 25.0 10.0 3.0
+ add_memgrid         yes      add_memgrid 1.0 3.2 0.5 Y 10.0 20.0 10.0 1 3.0
+ add_mem_electrodes  yes      add_mem_electrodes 1.0 3.2 0.5 Y 10.0 20.0 10.0 1 3.0 Z 20.0 3.0 1.0 -1.0
+ dock_ligand         yes      dock_ligand 5 9 4.0 200 5.0 ligand.pdb
+ dock_ligand_dist    yes      dock_ligand_dist 5 9 4.0 200 5.0 9 12 3.0 ligand.pdb
+ dock_ligand_dist2   yes      dock_ligand_dist2 5 9 4.0 200 5.0 9 12 3.0 20 3 3.5 ligand.pdb
+ reg1_atm            yes      reg1_atm 3 5 10
+                              reg1_atm 1 to 10
+ add_memgrid_surface yes      add_memgrid_surface 4.0 11.0 5.0 Y 2.0 
+                              add_memgrid_surface 4.0 11.0 5.0 Y 2.0 6.30 -0.24 10.15
+                              add_memgrid_surface 4.0 11.0 5.0 Y 2.0 6.30 -0.24 10.15 6.0
+                              add_memgrid_surface 4.0 11.0 5.0 Y 2.0 6.30 -0.24 10.15 6.0 2.0 4.5 -3.7
+ remove_mem_r        yes      remove_mem_r 1.0 3.2 0.5 10.0
+                              remove_mem_r 1.0 3.2 0.5 5.0 10.0
+ remove_mem_xyz      yes      remove_mem_xyz 1.0 3.2 0.5 2.0 2.0 10.0
+ charge_membrane     yes      charge_membrane Y 1.0
+ ld_for_membrane     yes      ld_for_membrane 3.0 20.0 4.0 6.0 8.0
+ ig_for_membrane     yes      ig_for_membrane 3.0 20.0 4.0 6.0 8.0 0.5 80.0
+ add_res_at_end      yes      add_res_at_end ASP
+ add_res_at_start    yes      add_res_at_start ASP
+ insert_res          yes      insert_res 2 3 ASP
+ remove_res          yes      remove_res 5
+ add_one_wat         yes      add_one_wat 40 62 2.5
+                     yes      add_one_wat O 3.475 -2.107 7.687
+ write_grp_corr      yes      write_grp_corr files_path
+ auto_correlation    yes      auto_correlation input_file
+                              auto_correlation input_file cross
+ update_topology     no       update_topology
+ general_histogram   yes      general_histogram data_file
+ histogram_non_eq    yes      histogram_non_eq 5 300.0
+ calculate_w_ele_vdw yes      calculate_w_ele_vdw 0.0 10.0 100 rest_file
+                              calculate_w_ele_vdw 0.0 10.0 100
+                              calculate_w_ele_vdw 0.0 10.0 0
+ end                 no       end       
+ help                yes      help <keyword1> <keyword2> ... 
+ help                yes      help all  
+ help                no       help      
+ exit                no       exit      
+------------------------------------------------------------------------
+
+
+ analyze> allres
+
+    1: MCL_001     2: CL-_002 
+
+
+ analyze> makepdb
+
+         Table of the Keywords makepdb Level
+         ...................................
+ keyword   modifier   example
+ -------   --------   ------ 
+ residue     yes      residue 2 
+                      residue 2 to 10
+                      residue all
+                      residue all+w
+ center_r    yes      center_r 5 18.0 
+ center_r_w  yes      center_r_w 5 18.0 
+ center_r_pw yes      center_r_pw 5 18.0 
+ file_nm     yes      file_nm file.pdb 
+ end         no       end       
+ help        yes      help <keyword1> <keyword2> ... 
+ help        no       help      
+ exit        no       exit      
+------------------------------------------------------------------------
+
+ makepdb> residue all
+
+ makepdb> file_nm output.pdb
+
+ makepdb> end
+
+ created a pdb file: 
+ ./determine_atoms/output.pdb                                                                                                                                                                                                                                                                                                  
+
+
+ analyze> end
+
+
+
+ task> analyze
+
+
+ ------ The default parameter values of MD to be used in this run ------
+
+      keyword             default value
+ -----------------  --------------------------
+ nsteps              500
+ temperature(k)      300.00
+ tolerance_temp(k)  2000.00
+ stepsize(ps)        0.0020000
+ nbupdate            30
+ region2a_r          18.0
+ water_r             18.0
+ langevin_r          20.0
+ induce              0
+ indforce            10
+ constraint_1        0.030
+ constraint_2        0.030
+ constraint_pair     0
+ constraint_post     0
+ constraint_ang      0
+ cutpp               10.0
+ cutpw               10.0
+ cutww               10.0
+ cutaep              20.0
+ cutaew              20.0
+ movie_co            0
+
+------------------------------------------------------------------------
+
+
+         Table of the Keywords for the Analyze Level
+         ...........................................
+ keyword            modifier  example
+ -------            --------  ------- 
+ rest_in             yes      rest_in rest.in
+ rest_pdld_conf_in   yes      rest_pdld_conf_in restA.scratch001
+ rest_to_pdb         yes      rest_to_pdb rest.pdb
+ topf_in             yes      topf_in test.top
+ allres              no       allres     
+ all_ionizable       no       all_ionizable     
+ restype             yes      restype ASP
+ resatom             yes      resatom 1  
+ resbond             yes      resbond 1  
+ resang              yes      resang  1  
+ restor              yes      restor  1  
+ resitor             yes      resitor 1  
+ res_ion_vq          yes      res_ion_vq 5 10.0
+ system_e            yes      system_e 18.0
+                              system_e 18.0  2.300 10.023 -5.006
+ distatom            yes      distatom 234 456
+                              distatom 2.0
+                              distatom 2 6.170 8.040 5.161
+                              distatom 6.170 8.040 5.161 0.268 2.142 9.451
+ rms_pdb_res         no       rms_pdb_res
+ get_ang             yes      get_ang 1 4 7
+ get_tor             yes      get_tor 1 4 7 10
+ get_gyration        no       get_gyration
+                     yes      get_gyration 1 to 10
+                     yes      get_gyration no_side
+ get_native_hb       no       get_native_hb
+                     yes      get_native_hb pdbfile1
+ contact_linear_f    yes      contact_linear_f 0.04 1.4 
+ get_contact_order   no       get_contact_order
+                     yes      get_contact_order 10 to 30
+ distres             yes      distres  10 35
+ dist_cen_side_heavy yes      dist_cen_side_heavy 10 35
+ dist_ca_ca          yes      dist_ca_ca
+ dist_center1_ca     yes      dist_center1_ca 2.30 6.72 10.26
+ dist_center1_cb     yes      dist_center1_cb 2.30 6.72 10.26
+ minimum_distres     yes      minimum_distres  10 35
+ setxyz              yes      setxyz 2 0.220 1.365 10.378
+ setcrg              yes      setcrg 1 0.50
+                              setcrg 1 to 100 1.0
+ chk_bond            yes      chk_bond 50.0
+ chk_angle           yes      chk_angle 50.0
+ chk_maintor         no       chk_maintor
+ chk_alltor          no       chk_alltor
+ chk_tor_ca_ca_ca_ca no       chk_tor_ca_ca_ca_ca
+ set_angle           yes      set_angle 2 4 6 120.0
+                              set_angle 20 21 22 109.5 30
+ chk_angle_ca_ca_ca  yes      chk_angle_ca_ca_ca
+ chk_bad_nonbd_r     yes      chk_bad_nonbd_r 1.3
+ chk_disulfide       no       chk_disulfide
+ chk_salt_bridge     no       chk_salt_bridge
+                     yes      chk_salt_bridge 4.0
+ chk_ss_bridge       no       chk_ss_bridge
+ electro_radius_res  yes      electro_radius_res 1 18.0 4
+ electro_radius_atm  yes      electro_radius_atm 3 18.0 3 10 20
+ electro_res         yes      electro_res 1 4
+                              electro_res 1 4 write_pair
+ electro_atm         yes      electro_atm 1 4
+ center_s            no       center_s    
+ center_r            yes      center_r 5 12
+ center_atoms        yes      center_atoms 3 7 9
+ adjust_cm           yes      adjust_cm
+ sphereion           yes      sphereion 12.50 3.64 -6.28 10.63
+ sphereres           yes      sphereres 12.50 3.64 -6.28 10.63
+ sphereres_layer     yes      sphereres_layer 10.0 12.0 3.64 -6.28 10.63
+ sphereatm           yes      sphereatm 12.50 3.64 -6.28 10.63
+ sphereatm_layer     yes      sphereatm_layer 10.0 12.0 3.64 -6.28 10.63
+ addbond             yes      addbond 2 5 9 10 18
+ bonds_for_atom      yes      bonds_for_atom 2 
+ angles_for_atom     yes      angles_for_atom 2 
+ removebond          yes      removebond 2 5 9 10 18
+ set_atom_dummy      yes      set_atom_dummy 6
+                              set_atom_dummy 1 to 20
+ move_atoms          yes      move_atoms 2 6 3.0 3 6 7 8
+                              move_atoms 2 6 3.0 5 to 100
+ mutate_res          yes      mutate_res 2 SER
+ mutate_res                   mutate_res 2 SER HA2
+ mutate_res                   mutate_res 2 SER  5 ARG 10 GLU
+ mutate_simp_res     yes      mutate_simp_res 2 S*2
+ simp_res_to_atm     yes      simp_res_to_atm 10
+                              simp_res_to_atm 10 3.056 5.782 0.245
+ c_beta_to_expl_side yes      c_beta_to_expl_side 1.0 3 ASP 2
+ mutate_res_to_h2o   yes      mutate_res_to_h2o 2 
+ rotate_h            yes      rotate_h 5 12
+ rotate_atom         yes      rotate_atom 2 5 6 10 90.0
+ rotate_atom_list    yes      rotate_atom_list 2 5 90.0 3 6 8 9
+ rotate_axis         yes      rotate_axis Y 5 12
+                              rotate_axis Z 2.0 3.5 6.7 12.0 23.1 -2.3
+ rotate_helix        yes      rotate_helix 20 100 90.0
+ viewmovie           no       viewmovie 
+ viewpot             no       viewpot   
+ vdwsurf             no       vdwsurf   
+ makepdb             no       makepdb   
+ maketop             yes      maketop new.top
+ makepdb_from_2_pdb  yes      makepdb_from_2_pdb pdb_2_name 0.5  
+ makepdb_from_rest   yes      makepdb_from_rest rest_file pdb_file
+ makepdb_from_rest            makepdb_from_rest rest_file pdb_file 5 20
+ makepdb_from_qm     yes      makepdb_from_qm qm_file res_name_file pdb_file1
+                              makepdb_from_qm qm_file res_name_file pdb_file 20
+ make_f_from_qm      yes      make_f_from_qm qm_out_file fq_file1
+                              make_f_from_qm qm_out_file fq_file 20
+ makelib1            no       makelib1  
+ translate_system    yes      translate_system 4.0 5.0 -5.0
+ replace_ligand      no       replace_ligand
+ superimpose_ca_pdb  yes      superimpose_ca_pdb structure2.pdb
+                              superimpose_ca_pdb structure2.pdb 20 22 24 26 30
+ superimpose_ca_rest yes      superimpose_ca_rest test.rest
+ list_hbonds         yes      list_hbonds 1.5 2.2
+ list_hbonds_2       yes      list_hbonds_2 1.5 2.2 md.rest
+ whichres            yes      whichres 10 
+ pdb_res_to_mol_res  yes      pdb_res_to_mol_res 20 
+                              pdb_res_to_mol_res 20  2
+ uncharge_amber      yes      uncharge_amber
+ write_alfa_beta_pdb yes      write_alfa_beta_pdb alf_beta.pdb
+ cg_to_alfa_beta     no       cg_to_alfa_beta
+ cb_nonbond_list     yes      cb_nonbond_list 7.0 R*2 H*2 
+ add_main_atoms      no       add_main_atoms 
+ add_sidechain       no       add_sidechain 
+                     yes      add_sidechain 90.0 
+                              add_sidechain 90.0 2 
+                              add_sidechain 90.0 2 rest
+                              add_sidechain 0.0 3 cb-cg
+ c_alfa_to_explicit  no       c_alfa_to_explicit
+ mc_ceta_phi         yes      mc_ceta_phi 100 200.0
+                              mc_ceta_phi 100 200.0 11
+ rotamer_res         yes      rotamer_res rotamer.lib
+                              rotamer_res rotamer.lib 11
+ minimize_side       yes      minimize_side 500 
+                              minimize_side 500 2
+                              minimize_side 500 3
+                              minimize_side 500 3 cb-cg
+ simp_to_expl_pdb    yes      simp_to_expl_pdb 500 5
+                              simp_to_expl_pdb 500 5 200
+ simp_to_expl_relax  yes      simp_to_expl_relax 1
+ expl_pdb_2_relax    yes      expl_pdb_2_relax 
+ ionres              yes      ionres 3     
+ iontyp              yes      iontyp ASP   
+                              iontyp ALL   
+ ion_simp_type       yes      ion_simp_type H*2
+                              ion_simp_type H*2 0.5
+                              ion_simp_type ALL
+                              ion_simp_type ALL 0.5
+ ion_united_type     yes      ion_united_type D^H
+                              ion_united_type ALL
+ add_electrodes      yes      add_electrodes 25.0 10.0 3.0
+ add_memgrid         yes      add_memgrid 1.0 3.2 0.5 Y 10.0 20.0 10.0 1 3.0
+ add_mem_electrodes  yes      add_mem_electrodes 1.0 3.2 0.5 Y 10.0 20.0 10.0 1 3.0 Z 20.0 3.0 1.0 -1.0
+ dock_ligand         yes      dock_ligand 5 9 4.0 200 5.0 ligand.pdb
+ dock_ligand_dist    yes      dock_ligand_dist 5 9 4.0 200 5.0 9 12 3.0 ligand.pdb
+ dock_ligand_dist2   yes      dock_ligand_dist2 5 9 4.0 200 5.0 9 12 3.0 20 3 3.5 ligand.pdb
+ reg1_atm            yes      reg1_atm 3 5 10
+                              reg1_atm 1 to 10
+ add_memgrid_surface yes      add_memgrid_surface 4.0 11.0 5.0 Y 2.0 
+                              add_memgrid_surface 4.0 11.0 5.0 Y 2.0 6.30 -0.24 10.15
+                              add_memgrid_surface 4.0 11.0 5.0 Y 2.0 6.30 -0.24 10.15 6.0
+                              add_memgrid_surface 4.0 11.0 5.0 Y 2.0 6.30 -0.24 10.15 6.0 2.0 4.5 -3.7
+ remove_mem_r        yes      remove_mem_r 1.0 3.2 0.5 10.0
+                              remove_mem_r 1.0 3.2 0.5 5.0 10.0
+ remove_mem_xyz      yes      remove_mem_xyz 1.0 3.2 0.5 2.0 2.0 10.0
+ charge_membrane     yes      charge_membrane Y 1.0
+ ld_for_membrane     yes      ld_for_membrane 3.0 20.0 4.0 6.0 8.0
+ ig_for_membrane     yes      ig_for_membrane 3.0 20.0 4.0 6.0 8.0 0.5 80.0
+ add_res_at_end      yes      add_res_at_end ASP
+ add_res_at_start    yes      add_res_at_start ASP
+ insert_res          yes      insert_res 2 3 ASP
+ remove_res          yes      remove_res 5
+ add_one_wat         yes      add_one_wat 40 62 2.5
+                     yes      add_one_wat O 3.475 -2.107 7.687
+ write_grp_corr      yes      write_grp_corr files_path
+ auto_correlation    yes      auto_correlation input_file
+                              auto_correlation input_file cross
+ update_topology     no       update_topology
+ general_histogram   yes      general_histogram data_file
+ histogram_non_eq    yes      histogram_non_eq 5 300.0
+ calculate_w_ele_vdw yes      calculate_w_ele_vdw 0.0 10.0 100 rest_file
+                              calculate_w_ele_vdw 0.0 10.0 100
+                              calculate_w_ele_vdw 0.0 10.0 0
+ end                 no       end       
+ help                yes      help <keyword1> <keyword2> ... 
+ help                yes      help all  
+ help                no       help      
+ exit                no       exit      
+------------------------------------------------------------------------
+
+
+ analyze> resatom     1
+
+ There is a GAP before residue    1
+ There is a GAP after  residue    1
+
+ atom list for residue:     1_MCL,    # of atoms in this residue:   5
+
+ number  name  type      x          y          z      charge      atoms bonded(name)      atoms bonded(number)
+ ------  ----  ----   -------    -------    -------   ------   ------------------------ ------------------------
+    1    C1     CT      0.000      0.000      0.000   -0.400   H1   H2   H3   CL            2     3     4     5
+    2    H1     H4     -0.009      0.011      1.093    0.210   C1                           1
+    3    H2     H4      1.033     -0.008     -0.359    0.210   C1                           1
+    4    H3     H4     -0.523     -0.887     -0.365    0.210   C1                           1
+    5    CL     CL     -0.833      1.479     -0.616   -0.230   C1                           1
+
+ Total charge of this residue:     0.000
+
+
+
+ analyze> resatom     2
+
+ There is a GAP before residue    2
+ There is a GAP after  residue    2
+
+ atom list for residue:     2_CL-,    # of atoms in this residue:   1
+
+ number  name  type      x          y          z      charge      atoms bonded(name)      atoms bonded(number)
+ ------  ----  ----   -------    -------    -------   ------   ------------------------ ------------------------
+    6    CL     CL      1.328     -2.328      0.949   -1.000                           
+
+ Total charge of this residue:    -1.000
+
+
+
+ analyze> end
+
+
+
+
+ task> end
+
+ Step cpu time    =             0.02 sec (    0.00 min)
+
+ total cpu time   =             0.02 sec (    0.00 min)
+
+ Total wall clock time =        0.02 sec (    0.00 min)
+
+ CPU utilization =            100.00%
+
+
+ =================================
+ Peak memory usage during the run:
+ VmPeak:	 2024652 kB
+
+ =================================
+
+ This job was running on machine/node: eigen, processor: 0
+
+ Molaris has completed this run successfully without any warning
+
+

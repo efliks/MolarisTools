@@ -18,30 +18,29 @@ _Key features:_
   * Parsing of 1D \& 2D PES scans
   * LRA calculations
 
+
 _Installation instructions:_
 
 MolarisTools is a stand-alone Python library and as such does not 
 need Molaris to be preinstalled. Nevertheless, a copy of Molaris can
 be obtained from the [Warshel Group](http://laetro.usc.edu/software.html).
 
-To install MolarisTools, first download and unpack the ZIP archive
-from this website. Prepare the package for installation:
+To install MolarisTools, clone the repository from GitHub (if you have
+git installed on your computer):
 
 ```
-python setup.py sdist
+git clone https://github.com/mfx9/MolarisTools.git
 ```
 
-In the next step, build and install the package:
+Or download the ZIP package from this website. In the next step, adjust
+your PYTHONPATH variable so it points to the location of MolarisTools, for
+example (in Bash):
 
 ```
-python setup.py build
-python setup.py install --prefix=${HOME}/local
+export PYTHONPATH=${HOME}/MolarisTools:${PYTHONPATH}
 ```
 
-The "prefix" argument is optional and indicates where MolarisTools 
-should be placed. I keep a "local" directory in my home 
-directory where all Python packages end up.
-
+Add the above line to your ~/.profile or ~/.bashrc file.
 
 MolarisTools are actively developed and new features are added 
 as they are needed. Major changes to the code can happen anytime.

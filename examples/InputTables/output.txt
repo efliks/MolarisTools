@@ -1,0 +1,21 @@
+        # . MCL1
+        evb_atm     1     -0.40    C0         -0.40    C0    #   -0.40    CT    C1    A
+        evb_atm     2      0.21    H0          0.21    H0    #    0.21    H4    H1    A
+        evb_atm     3      0.21    H0          0.21    H0    #    0.21    H4    H2    A
+        evb_atm     4      0.21    H0          0.21    H0    #    0.21    H4    H3    A
+        evb_atm     5     -0.23    CL         -0.23    CL    #   -0.23    CL    CL    A
+        evb_bnd   0     1     2    #   C1   H1
+        evb_bnd   0     1     3    #   C1   H2
+        evb_bnd   0     1     4    #   C1   H3
+        evb_bnd   0     1     5    #   C1   CL
+        # . CL-2
+        evb_atm     6     -1.00    CL         -1.00    CL    #   -1.00    CL    CL    A
+        # EVB atoms: 6, EVB bonds: 4
+            # . MCL1
+            # constraint_post     1    15.0  15.0  15.0     0.000     0.000     0.000   # C1
+            # constraint_post     2    15.0  15.0  15.0    -0.009     0.011     1.093   # H1
+            # constraint_post     3    15.0  15.0  15.0     1.033    -0.008    -0.359   # H2
+            # constraint_post     4    15.0  15.0  15.0    -0.523    -0.887    -0.365   # H3
+            # constraint_post     5    15.0  15.0  15.0    -0.833     1.479    -0.616   # CL
+            # . CL-2
+            # constraint_post     6    15.0  15.0  15.0     1.328    -2.328     0.949   # CL

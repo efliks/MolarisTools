@@ -1,15 +1,13 @@
 #-------------------------------------------------------------------------------
-# . File      : __init__.py
+# . File      : ReadAmino.py
 # . Program   : MolarisTools
 # . Copyright : USC, Mikolaj Feliks (2015-2017)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-"""A Python toolkit to facilitate working with Molaris-XG."""
+from MolarisTools.Library  import AminoLibrary
 
-from .  import Units
-from .  import Utilities
-from .  import Parser
-from .  import Library
-from .  import QMMM
-from .  import Scripts
-from .  import Other
+
+library = AminoLibrary (logging=True, verbose=True, unique=True, filename="amino98_tiny.lib")
+
+component = library["XPR"]
+component.Write (filename="component.lib", terminate=True)
