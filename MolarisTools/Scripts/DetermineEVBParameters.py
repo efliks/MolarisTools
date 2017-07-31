@@ -10,6 +10,8 @@ from MolarisTools.Units    import DEFAULT_EVB_LIB
 from MolarisTools.Parser   import MolarisInputFile, EVBDatFile
 from MolarisTools.Library  import EVBLibrary, EVBMorseAtom, EVBMorsePair
 
+_DEFAULT_BETA = 1.8
+
 
 def DetermineEVBParameters (filenameInput="heat_template.inp", filenameDat=os.path.join ("evb_heat_01", "evb.dat"), filenameEVBLibrary=DEFAULT_EVB_LIB, state=1, logging=True):
     """Get EVB parameters for a system.
