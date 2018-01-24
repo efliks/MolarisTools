@@ -1,0 +1,28 @@
+# . PDBFile> Found 2 residues
+# . PDBFile> Found 5 bonds
+# . ParmLib> Parsing file "/home/mikolaj/devel/MolarisTools/data/parm.lib"
+# . ParmLib> Read 180 bonds
+# . ParmLib> Read 398 angles
+# . ParmLib> Read 84 torsions
+# . ParmLib> Read 6 impropers
+# . ParmLib> Read 131 VDW and mass parameters
+# . ParmLib> Read 16 h-bonds
+# . AminoLib> Parsing file "/home/mikolaj/devel/MolarisTools/data/amino98_custom_small.lib"
+# . AminoLib> Found 153 components
+  MUR  MUT  MUP  VPR  WPR  XPR  YPR  V4F  W4F  X4F  Y4F  V4C  W4C  X4C
+  Y4C  V3F  W3F  X3F  Y3F  V3C  W3C  X3C  Y3C  V34  W34  X34  Y34  V3N
+  W3N  X3N  Y3N  V4Y  W4Y  X4Y  Y4Y  VCN  WCN  XCN  YCN  V4N  W4N  X4N
+  Y4N  MOH  PRS  PRX  PRP  PRE  MGS  MGC   NA  PMH  PMF  PMC  PMB  NMO
+  NHO  NHP  MD6  NMS  MGX  LIT  LTD  HYD  WAT  WAA  MDL  MLI  MLT  ETH
+  NMH  NMF  NMB  NMC  NHF  NHC  NFC  NHB  MLS  ZMH  ZMF  ZMB  ZMC  ZHF
+  ZHC  ZFC  ZHB  TMH  TMF  TMB  TMC  THF  THC  TFC  THB  RPA  RNO  RFL
+  RCY  RCL  MCL  MBR  MFL  CL-  BR-  CCL  CBR  SPA  TPA  FUL  PAR  FL4
+  CL4  FL3  CL3  E34  NO3  CN4  CNO  NO4  EMH  EMF  EMC  EMB  NYH  DPR
+  LPR  D4F  L4F  D4C  L4C  D3F  L3F  D3C  L3C  D34  L34  D3N  L3N  D4Y
+  L4Y  DCN  LCN  D4N  L4N  AMI  ATS  IMI  MOR  MOT  MOP  TRS  TPS
+MBR      1     C1     1   CT      25.993      1021.213
+MBR      1     H1     2   H4       3.783        57.094
+MBR      1     H2     3   H4       3.783        57.094
+MBR      1     H3     4   H4       3.783        57.094
+MBR      1     BR     5   BR       0.000         0.000
+CL-      2     CL     6   CL       2.501     15000.000
