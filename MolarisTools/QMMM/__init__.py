@@ -15,3 +15,4 @@ from QMCallerGaussian   import QMCallerGaussian
 from QMCallerORCA       import QMCallerORCA
 from QMCallerGAMESS     import QMCallerGAMESS
 from QMCallerQChem      import QMCallerQChem
+from QMCallerTeraChem   import QMCallerTeraChem

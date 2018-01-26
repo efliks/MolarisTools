@@ -6,6 +6,7 @@
 #-------------------------------------------------------------------------------
 # . Quantum
 from GaussianOutputFile  import GaussianOutputFile
+from TeraChemOutputFile  import TeraChemOutputFile
 from GAMESSOutputFile    import GAMESSOutputFile, GAMESSDatFile
 from ORCAOutputFile      import ORCAOutputFile, PCgradFile, EngradFile
 from QChemOutputFile     import QChemOutputFile, EfieldFile

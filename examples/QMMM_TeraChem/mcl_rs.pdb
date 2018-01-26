@@ -1,0 +1,14 @@
+ATOM      1  C1  MCL     1       0.000   0.000   0.000                  PRTA
+ATOM      2  H1  MCL     1      -0.009   0.011   1.093                  PRTA
+ATOM      3  H2  MCL     1       1.033  -0.008  -0.359                  PRTA
+ATOM      4  H3  MCL     1      -0.523  -0.887  -0.365                  PRTA
+ATOM      5  CL  MCL     1      -0.833   1.479  -0.616                  PRTA
+ATOM      6  CL  CL-     2       1.328  -2.328   0.949                  PRTA
+CONECT    1    5    4    3    2                                       
+CONECT    1                                                           
+CONECT    2    1                                                      
+CONECT    3    1                                                      
+CONECT    4    1                                                      
+CONECT    5    1                                                      
+TER
+END
