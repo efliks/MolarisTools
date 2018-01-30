@@ -14,6 +14,8 @@ from MolarisTools.QMMM  import QMCallerTeraChem
 
 
 callerTeraChem = QMCallerTeraChem (
+        # qmmm=True seems not available: forces on point charges 
+        # not calculated, use cl_elec in Molaris
         qmmm            =  False           ,
         archive         =  False           ,
         restart         =  True            ,

@@ -122,21 +122,17 @@ class QMCallerTeraChem (QMCaller):
         # . Parse the output file
         terachem = TeraChemOutputFile (filename=self.fileTeraChemOutput)
         self.Efinal = terachem.Efinal
-
         # . Include forces on QM atoms
         self.forces = terachem.forces
-
-        # . Include forces on point charges
-        # if (hasattr (terachem, "pointCharges")):
-        #     mmforces = []
-        #     for pc in terachem.pointCharges:
-        #         force = Force (
-        #             x   =   pc.ex   *   pc.charge   ,
-        #             y   =   pc.ey   *   pc.charge   ,
-        #             z   =   pc.ez   *   pc.charge   , )
-        #         mmforces.append (force)
-        #     self.mmforces = mmforces
-
+        # . Include forces on point charges (NOT AVAILABLE IN TERACHEM?)
+        if (self.qmmm):
+            if (hasattr (terachem, "pointCharges")):
+                mmforces = []
+                for pc in terachem.pointCharges:
+                    pass
+                self.mmforces = mmforces
+            else:
+                raise exceptions.StandardError ("QMMM=True, but pointcharge data is missing.")
         # . Include charges
         scheme = {
             CS_MULLIKEN     :   terachem.charges    if hasattr (terachem, "charges"   ) else []  ,

@@ -39,8 +39,8 @@ class TeraChemOutputFile (object):
                 elif line.startswith ("Total atoms:"):
                     tokens = TokenizeLine (line, converters=[None, None, int])
                     natoms = tokens[2]
-                    if (natoms != len (tempatoms)):
-                        pass
+                    # if (natoms != len (tempatoms)):
+                    #     pass
 
                 # ****** QM coordinates ******
                 # C        -0.0178447840         0.0103903440        -0.0015978260  
@@ -98,7 +98,7 @@ class TeraChemOutputFile (object):
                     self.forces = []
                     while True:
                         line = next (lines)
-                        if line.startswith ("----"):
+                        if (line.startswith ("----") or line.strip () == ""):
                             break
                         tokens = TokenizeLine (line, converters=[float, float, float])
                         (fx, fy, fz) = tokens
@@ -109,9 +109,9 @@ class TeraChemOutputFile (object):
             pass
         lines.close ()
 
-        if self.deep:
+        if (self.deep):
             # . Deep parsing (aka parse files in the scratch folder)
-            if (hasattr (self, "scratchFolder")):
+            if hasattr (self, "scratchFolder"):
 
                 # . Collect Mulliken charges
                 lines = open (os.path.join (self.scratchFolder, "charge_mull.xls"))
@@ -137,18 +137,18 @@ class TeraChemOutputFile (object):
                     lines.close ()
 
         # . Finalize after reading all files
-        if (not hasattr (self, "atoms")):
-            self.atoms = tempatoms
+        # if (not hasattr (self, "atoms")):
+        #     self.atoms = tempatoms
 
     @property
     def natoms (self):
-        if hasattr (self, "atoms"):
+        if (hasattr (self, "atoms")):
             return len (self.atoms)
         return 0
 
     @property
     def ncharges (self):
-        if hasattr (self, "pointCharges"):
+        if (hasattr (self, "pointCharges")):
             return len (self.pointCharges)
         return 0
 
