@@ -166,6 +166,8 @@ class QMCallerGaussian (QMCaller):
             CS_CHELPG       :   gaussian.espcharges if hasattr (gaussian, "espcharges") else []  ,
             CS_MERZKOLLMAN  :   gaussian.espcharges if hasattr (gaussian, "espcharges") else []  , }
         self.charges = scheme[self.chargeScheme]
+        # . Include timing information
+        self.jobtime = gaussian.jobtime
         # . Finish up
         self._Finalize ()
 

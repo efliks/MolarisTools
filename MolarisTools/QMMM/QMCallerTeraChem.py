@@ -138,6 +138,8 @@ class QMCallerTeraChem (QMCaller):
             CS_MULLIKEN     :   terachem.charges    if hasattr (terachem, "charges"   ) else []  ,
             CS_MERZKOLLMAN  :   terachem.espcharges if hasattr (terachem, "espcharges") else []  , }
         self.charges = scheme[self.chargeScheme]
+        # . Include timing information
+        self.jobtime = terachem.jobtime
         # . Finish up
         self._Finalize ()
 

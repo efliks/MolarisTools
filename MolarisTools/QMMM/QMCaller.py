@@ -119,7 +119,10 @@ class QMCaller (object):
             mdstep   = ""
             if hasattr (self.molaris, "mdstep"):
                 mdstep = " (MD step: %d)" % self.molaris.mdstep
-            openfile.write ("qm: %f%s\n" % (self.Efinal, mdstep))
+            jobtime  = ""
+            if hasattr (self, "jobtime"):
+                jobtime = " %f sec" % self.jobtime
+            openfile.write ("qm: %f%s%s\n" % (self.Efinal, mdstep, jobtime))
 
             if self.archive:
                 # . Write coordinates, forces and charges

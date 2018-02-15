@@ -329,11 +329,11 @@ class GaussianOutputFile (object):
                     self.atomsInput = atomsInput
 
 
-                # . Get timing information
+                # . Get job time in seconds
                 elif line.count ("Job cpu time"):
                     tokens = TokenizeLine (line, converters=[None, None, None, int, None, int, None, int, None, float, None])
                     days, hours, minutes, seconds = tokens[3], tokens[5], tokens[7], tokens[9]
-                    self.timings = {"days" : days, "hours" : hours, "minutes" : minutes, "seconds" : seconds}
+                    self.jobtime = (days * 24 * 3600) + (hours * 3600) + (minutes * 60) + seconds
                     # . Quit here, since composite jobs are not supported (?)
                     # break
 

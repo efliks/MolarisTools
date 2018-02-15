@@ -105,6 +105,11 @@ class TeraChemOutputFile (object):
                         force = Force (x=(fx * GRADIENT_TO_FORCE * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM), y=(fy * GRADIENT_TO_FORCE * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM), z=(fz * GRADIENT_TO_FORCE * HARTREE_BOHR_TO_KCAL_MOL_ANGSTROM))
                         self.forces.append (force)
 
+                # . Get job time in seconds
+                elif line.count ("Total processing time:"):
+                    tokens = TokenizeLine (line, converters=[None, None, None, float, None])
+                    self.jobtime = tokens[3]
+
         except exceptions.StopIteration:
             pass
         lines.close ()
