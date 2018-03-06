@@ -10,6 +10,14 @@ from  MolarisTools.Utilities  import TokenizeLine
 from  MolarisTools.Parser     import PDBFile, PDBResidue, PDBAtom, GaussianOutputFile
 from  MolarisTools.Library    import ParametersLibrary
 
+# . Optional modules, may not be installed.
+try:
+    import networkx, matplotlib.pyplot
+    _GRAPH = True
+except exceptions.ImportError:
+     # raise exceptions.StandardError ("Cannot import networkx nor matplotlib.")
+    _GRAPH = False
+
 
 AminoAtom  = collections.namedtuple ("Atom"  , "atomLabel  atomType  atomCharge")
 AminoGroup = collections.namedtuple ("Group" , "natoms  centralAtom  radius  labels  symbol")
@@ -1180,6 +1188,31 @@ class AminoComponent (object):
                 charge  = sum (charges)
                 prepare = "%%%d.%df" % (ndigits + 3, ndigits)
                 print ("# . %s> Changed charge of group %s from %s  to %s (correction: %s)" % (_MODULE_LABEL, group.symbol, prepare % chargeOld, prepare % charge, prepare % correct))
+
+
+    def WriteGraph (self, filename="", show=False):
+        """Write the topology of a component as a graph."""
+        if _GRAPH:
+            (labelsToSerials, serialsToLabels) = self.ConversionTables ()
+            graph = networkx.Graph ()
+    
+            nodes = []
+            for atom in self.atoms:
+                nodes.append (labelsToSerials[atom.atomLabel])
+            graph.add_nodes_from (nodes)
+    
+            edges = []
+            for (atoma, atomb) in self.bonds:
+                graph.add_edge (labelsToSerials[atoma], labelsToSerials[atomb])
+            graph = networkx.relabel_nodes (graph, serialsToLabels)
+            networkx.draw_graphviz (graph, with_labels=True)
+    
+            if (filename == ""):
+                filename = "topo_%s.png" % self.label
+            matplotlib.pyplot.savefig (filename)
+            if (show):
+                matplotlib.pyplot.show ()
+            matplotlib.pyplot.clf ()
 
 
 #===============================================================================
