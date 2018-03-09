@@ -4,7 +4,7 @@
 # . Copyright : USC, Mikolaj Feliks (2015-2017)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
-import collections, math
+import collections, math, os
 
 from MolarisTools.Utilities  import TokenizeLine, WriteData
 
@@ -43,7 +43,14 @@ class MolarisAtomsFile (object):
 
 
     def _LineToAtom (self, line, includeCharge=False):
-        tokens = TokenizeLine (line, converters=[None, float, float, float, float])
+        # P     4.068890911    1.177766760   16.194718196  157.867317447
+        # O     5.406419490    1.617535751   16.790930680  182.964771865
+        # ...
+        # 
+        # tokens = TokenizeLine (line, converters=[None, float, float, float, float])
+        # . Assume a column-based format, instead of open one
+        tokens = (line[:2], float (line[2:18]), float (line[18:32]), float (line[32:47]), float (line[47:62]))
+
         symbol = tokens[0]
         # . Replace selected atomic symbols (a workaround for a persisting bug in Molaris)
         if self.replaceSymbols:
@@ -157,4 +164,8 @@ class MolarisAtomsFile (object):
 #===============================================================================
 # . Main program
 #===============================================================================
-if __name__ == "__main__": pass
+if (__name__ == "__main__"):
+    # . Read in a test file
+    if (os.path.exists ("mol.in")):
+        molin = MolarisAtomsFile ()
+        molin.WriteQM ()
