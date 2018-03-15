@@ -19,7 +19,7 @@ import  exceptions, os
 
 from  MolarisTools.Utilities  import TokenizeLine
 from  MolarisTools.Units      import DEFAULT_AMINO_LIB
-from  MolarisTools.Library    import AminoComponent, AminoGroup, AminoAtom
+from  MolarisTools.Library    import AminoComponent, AminoGroup, AminoAtom, InternalCoordinate
 
 _MODULE_LABEL    = "AminoLib"
 _GROUP_START     = "A"
@@ -149,6 +149,7 @@ class AminoLibrary (object):
         bonds      = []
         group      = []
         groups     = []
+        internal   = []
         components = []
         try:
             while True:
@@ -171,7 +172,7 @@ class AminoLibrary (object):
                     if group:
                         groups.append (group)
                         # . Create a temporary component
-                        component = (componentLabel, componentCharge, groups, bonds)
+                        component = (componentLabel, componentCharge, groups, bonds, internal)
                         components.append (component)
                     # . Component begins
                     tokens    = TokenizeLine (line, converters=[None, None, float])
@@ -180,6 +181,7 @@ class AminoLibrary (object):
                     bonds     = []
                     group     = []
                     groups    = []
+                    internal  = []
                 elif line.startswith ("GROUP"):
                     if group:
                         groups.append (group)
@@ -208,17 +210,30 @@ class AminoLibrary (object):
                         if all (checks):
                             pair = (labela, labelb)
                             bonds.append (pair)
+                elif line.startswith ("IC"):
+                    #  IC -C   CA   *N   H     1.3551 126.4900  180.0000 115.4200  0.9996
+                    #  IC -C   N    CA   C     1.3551 126.4900  180.0000 114.4400  1.5390
+                    #  IC N    CA   C    +N    1.4592 114.4400  180.0000 116.8400  1.3558
+                    #  IC +N   CA   *C   O     1.3558 116.8400  180.0000 122.5200  1.2297
+                    #  IC CA   C    +N   +CA   1.5390 116.8400  180.0000 126.7700  1.4613
+                    #   (...)
+                    while (line.startswith ("IC")):
+                        tokens = TokenizeLine (line, converters=[None, None, None, None, None, float, float, float, float, float])
+                        (atoma, atomb, atomc, atomd) = tokens[1:5]
+                        ic = InternalCoordinate (a=atoma, b=atomb, c=atomc.replace ("*", ""), d=atomd, distance=tokens[5], angle=tokens[6], torsion=tokens[7], improper=(atomc[0] == "*"))
+                        internal.append (ic)
+                        line = self._GetCleanLine (data)
         except StopIteration:
             pass
         # . Finish up
         data.close ()
         if group:
             groups.append (group)
-            component = (componentLabel, componentCharge, groups, bonds)
+            component = (componentLabel, componentCharge, groups, bonds, internal)
             components.append (component)
         # . Set up actual amino components from temporary components
         aminoComponents = []
-        for componentSerial, (componentLabel, componentCharge, groups, bonds) in enumerate (components, 1):
+        for componentSerial, (componentLabel, componentCharge, groups, bonds, internalCoordinates) in enumerate (components, 1):
             # . Merge atoms
             aminoAtoms  = []
             for group in groups:
@@ -243,14 +258,15 @@ class AminoLibrary (object):
                 aminoGroups.append (aminoGroup)
             # . Create a component
             component = AminoComponent (
-                serial  =   componentSerial ,
-                label   =   componentLabel  ,
-                groups  =   aminoGroups     ,
-                atoms   =   aminoAtoms      ,
-                bonds   =   bonds           ,
-                connect =   ("",    "")     ,
-                logging =   True if (logging and verbose) else False ,
-                title   =   "Generated from CHARMM topology"  ,
+                serial   =  componentSerial     ,
+                label    =  componentLabel      ,
+                groups   =  aminoGroups         ,
+                atoms    =  aminoAtoms          ,
+                bonds    =  bonds               ,
+                internal =  internalCoordinates ,
+                connect  =  ("",    "")         ,
+                logging  =  True if (logging and verbose) else False ,
+                title    =  "Generated from CHARMM topology"  ,
                 )
             aminoComponents.append (component)
         self.components = aminoComponents

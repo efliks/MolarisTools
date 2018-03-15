@@ -19,8 +19,9 @@ except exceptions.ImportError:
     _GRAPH = False
 
 
-AminoAtom  = collections.namedtuple ("Atom"  , "atomLabel  atomType  atomCharge")
-AminoGroup = collections.namedtuple ("Group" , "natoms  centralAtom  radius  labels  symbol")
+AminoAtom          = collections.namedtuple ("Atom", "atomLabel  atomType  atomCharge")
+AminoGroup         = collections.namedtuple ("Group", "natoms  centralAtom  radius  labels  symbol")
+InternalCoordinate = collections.namedtuple ("InternalCoordinate", "a  b  c  d  distance  angle  torsion  improper")
 
 _MODULE_LABEL    = "AminoComponent"
 _DEFAULT_DIVIDER = "-" * 41
@@ -1213,6 +1214,18 @@ class AminoComponent (object):
             if (show):
                 matplotlib.pyplot.show ()
             matplotlib.pyplot.clf ()
+
+
+    def WriteInternalCoordinates (self, filename=""):
+        """Write internal coordinates to a file."""
+        if hasattr (self, "internal"):
+            if (filename == ""):
+                filename = "%s.ic" % self.label
+            output = open (filename, "w")
+            output.write ("%s  %d\n" % (self.label, self.natoms))
+            for (a, b, c, d, distance, angle, torsion, improper) in self.internal:
+                output.write ("%4s %4s %4s %4s   %7.2f   %8.1f   %8.1f     %s\n" % (a, b, c, d, distance, angle, torsion, ("1" if improper else "0")))
+            output.close ()
 
 
 #===============================================================================
