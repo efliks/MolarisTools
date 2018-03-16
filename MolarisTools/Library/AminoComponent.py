@@ -40,51 +40,54 @@ class AminoComponent (object):
     def __init__ (self, logging=True, **keywordArguments):
         """Constructor."""
         for (key, value) in keywordArguments.iteritems ():
-            if key != "logging":
+            if (key != "logging"):
                 setattr (self, key, value)
-        # . Print info
-        if logging: self.Info ()
+        if (logging):
+            self.Info ()
 
+    def __contains__ (self, label):
+        """Check if an atom is present in a component."""
+        for atom in self.atoms:
+            if (atom.atomLabel == label):
+                return True
+        return False
 
-    def Info (self):
-        """Print info."""
-        print ("Component: %d %s [%d atoms, %d bonds, %d groups, %-5.2f charge%s]" % (self.serial, self.name, self.natoms, self.nbonds, self.ngroups, self.charge, (", %s" % self.title if self.title != "" else "")))
-
+    def __getitem__ (self, label):
+        """Get an atom from a component."""
+        for atom in self.atoms:
+            if (atom.atomLabel == label):
+                return atom
+        raise exceptions.StandardError ("Atom %s not found." % label)
 
     @property
     def natoms (self):
         if hasattr (self, "atoms"):
             return len (self.atoms)
-        else:
-            return 0
+        return 0
 
     @property
     def nbonds (self):
         if hasattr (self, "bonds"):
             return len (self.bonds)
-        else:
-            return 0
+        return 0
 
     @property
     def nangles (self):
         if hasattr (self, "angles"):
             return len (self.angles)
-        else:
-            return 0
+        return 0
 
     @property
     def ntorsions (self):
         if hasattr (self, "torsions"):
             return len (self.torsions)
-        else:
-            return 0
+        return 0
 
     @property
     def ngroups (self):
         if hasattr (self, "groups"):
             return len (self.groups)
-        else:
-            return 0
+        return 0
 
     @property
     def charge (self):
@@ -93,8 +96,7 @@ class AminoComponent (object):
             for atom in self.atoms:
                 total += atom.atomCharge
             return total
-        else:
-            return 0.
+        return 0.
 
     @property
     def label (self):
@@ -105,6 +107,11 @@ class AminoComponent (object):
     @label.setter
     def label (self, new):
         self.name = new
+
+
+    def Info (self):
+        """Print info."""
+        print ("Component: %d %s [%d atoms, %d bonds, %d groups, %-5.2f charge%s]" % (self.serial, self.name, self.natoms, self.nbonds, self.ngroups, self.charge, (", %s" % self.title if self.title != "" else "")))
 
 
     def CalculateGroup (self, group):
@@ -1228,11 +1235,26 @@ class AminoComponent (object):
             output.close ()
 
 
+    def GenerateConnectivities (self):
+        """Generate a table of bonds for every atom."""
+        self.connectivity = {}
+        for atom in self.atoms:
+            table = []
+            for (labela, labelb) in self.bonds:
+                if (atom.atomLabel == labela):
+                    table.append (labelb)
+                elif (atom.atomLabel == labelb):
+                    table.append (labela)
+            self.connectivity[atom.atomLabel] = table
+
+
 #===============================================================================
 # . Helper functions
 #===============================================================================
 def MergeComponents (component, componentOther, serial=999, label="NEW", logging=True):
     """Merge two components into one."""
+
+    # TODO: Merge internal coordinates, if they are present.
     labels = []
     for atom in component.atoms:
         labels.append (atom.atomLabel)
