@@ -219,8 +219,8 @@ class AminoLibrary (object):
                     #   (...)
                     while (line.startswith ("IC")):
                         tokens = TokenizeLine (line, converters=[None, None, None, None, None, float, float, float, float, float])
-                        (atoma, atomb, atomc, atomd) = tokens[1:5]
-                        ic = InternalCoordinate (a=atoma, b=atomb, c=atomc.replace ("*", ""), d=atomd, distance=tokens[5], angle=tokens[6], torsion=tokens[7], improper=(atomc[0] == "*"))
+                        (a, b, c, d) = tokens[1:5]
+                        ic = InternalCoordinate (i=a, j=b, k=c.replace ("*", ""), l=d, Rij=tokens[5], Tijk=tokens[6], Pijkl=tokens[7], Tjkl=tokens[8], Rkl=tokens[9], improper=(c[0] == "*"))
                         internal.append (ic)
                         line = self._GetCleanLine (data)
         except StopIteration:
