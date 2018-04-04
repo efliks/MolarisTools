@@ -85,6 +85,12 @@ class MolarisOutputFile (object):
             return total
         return 0
 
+    @property
+    def isOK (self):
+        if hasattr (self, "_fileOK"):
+            return self._fileOK
+        return False
+
 
     def _Parse (self, logging=False):
         # . fepSteps are the FEP steps (usually 11), each consisting of many MD steps (usually 500)
@@ -93,13 +99,17 @@ class MolarisOutputFile (object):
         currentMDStep = None
         residues      = []
         lines         = open (self.filename)
+        _fileOK       = False
         try:
             while True:
                 line = lines.next ()
 
+                if line.startswith ("  NORMAL TERMINATION OF MOLARIS") or line.startswith (" Molaris has completed this run successfully without any warning"):
+                    self._fileOK = True
+
                 #  Energies for the system at step          0:
                 #  ------------------------------------------------------------------------
-                if line.startswith (" Energies for the system at step"):
+                elif line.startswith (" Energies for the system at step"):
                     currentMDStep = MDStep ()
                     while True:
                         line = lines.next ()
