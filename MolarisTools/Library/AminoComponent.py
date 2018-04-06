@@ -21,7 +21,7 @@ except exceptions.ImportError:
 
 AminoAtom          = collections.namedtuple ("Atom", "atomLabel  atomType  atomCharge")
 AminoGroup         = collections.namedtuple ("Group", "natoms  centralAtom  radius  labels  symbol")
-InternalCoordinate = collections.namedtuple ("InternalCoordinate", "i  j  k  l  Rij  Tijk  Pijkl  Tjkl  Rkl  improper")
+InternalCoordinate = collections.namedtuple ("InternalCoordinate", "i  j  k  l  distanceLeft  angleLeft  torsion  angleRight  distanceRight  improper")
 
 _MODULE_LABEL    = "AminoComponent"
 _DEFAULT_DIVIDER = "-" * 41
@@ -1230,8 +1230,8 @@ class AminoComponent (object):
                 filename = "%s.ic" % self.label
             output = open (filename, "w")
             output.write ("%s  %d\n" % (self.label, self.natoms))
-            for (i, j, k, l, Rij, Tijk, Pijkl, Tjkl, Rkl, improper) in self.internal:
-                output.write ("%4s %4s %4s %4s   %7.2f   %8.1f   %8.1f   %8.1f   %7.2f     %s\n" % (i, j, k, l, Rij, Tijk, Pijkl, Tjkl, Rkl, ("1" if improper else "0")))
+            for (i, j, k, l, distanceLeft, angleLeft, torsion, angleRight, distanceRight, improper) in self.internal:
+                output.write ("%4s %4s %4s %4s   %7.2f   %8.1f   %8.1f   %8.1f   %7.2f     %s\n" % (i, j, k, l, distanceLeft, angleLeft, torsion, angleRight, distanceRight, ("1" if improper else "0")))
             output.close ()
 
 

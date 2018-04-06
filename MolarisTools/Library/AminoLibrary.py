@@ -220,7 +220,7 @@ class AminoLibrary (object):
                     while (line.startswith ("IC")):
                         tokens = TokenizeLine (line, converters=[None, None, None, None, None, float, float, float, float, float])
                         (a, b, c, d) = tokens[1:5]
-                        ic = InternalCoordinate (i=a, j=b, k=c.replace ("*", ""), l=d, Rij=tokens[5], Tijk=tokens[6], Pijkl=tokens[7], Tjkl=tokens[8], Rkl=tokens[9], improper=(c[0] == "*"))
+                        ic = InternalCoordinate (i=a, j=b, k=c.replace ("*", ""), l=d, distanceLeft=tokens[5], angleLeft=tokens[6], torsion=tokens[7], angleRight=tokens[8], distanceRight=tokens[9], improper=(c[0] == "*"))
                         internal.append (ic)
                         line = self._GetCleanLine (data)
         except StopIteration:
