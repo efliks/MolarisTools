@@ -456,73 +456,73 @@ class AminoComponent (object):
 
     def GenerateAngles (self, logging=True):
         """Automatically generate a list of angles."""
-        angles = []
-        # . Outer loop
-        for i, (bonda, bondb) in enumerate (self.bonds):
-            # . Inner loop
-            for j, (othera, otherb) in enumerate (self.bonds):
-                if i != j:
-                    angle = None
-                    #   (a, b)
-                    #      (c, d)
-                    if   bondb == othera:
-                        angle = (bonda, bondb, otherb)
-                    #      (a, b)
-                    #   (c, d)
-                    elif bonda == otherb:
-                        angle = (othera, bonda, bondb)
-                    #   (a, b)
-                    #      (d, c)
-                    elif bondb == otherb:
-                        angle = (bonda, bondb, othera)
-                    #      (a, b)
-                    #   (d, c)
-                    elif bonda == othera:
-                        angle = (otherb, bonda, bondb)
-                    if angle:
-                        (a, b, c) = angle
-                        elgna = (c, b, a)
-                        if (angle not in angles) and (elgna not in angles):
-                            angles.append (angle)
-        self.angles = angles
-        if logging:
-            print ("# . %s> Generated %d angles" % (_MODULE_LABEL, self.nangles))
+        if not hasattr (self, "angles"):
+            self.angles = []
+            # . Outer loop
+            for i, (bonda, bondb) in enumerate (self.bonds):
+                # . Inner loop
+                for j, (othera, otherb) in enumerate (self.bonds):
+                    if i != j:
+                        angle = None
+                        #   (a, b)
+                        #      (c, d)
+                        if   bondb == othera:
+                            angle = (bonda, bondb, otherb)
+                        #      (a, b)
+                        #   (c, d)
+                        elif bonda == otherb:
+                            angle = (othera, bonda, bondb)
+                        #   (a, b)
+                        #      (d, c)
+                        elif bondb == otherb:
+                            angle = (bonda, bondb, othera)
+                        #      (a, b)
+                        #   (d, c)
+                        elif bonda == othera:
+                            angle = (otherb, bonda, bondb)
+                        if angle:
+                            (a, b, c) = angle
+                            elgna = (c, b, a)
+                            if (angle not in self.angles) and (elgna not in self.angles):
+                                self.angles.append (angle)
+            if logging:
+                print ("# . %s> Generated %d angles" % (_MODULE_LABEL, self.nangles))
 
 
     def GenerateTorsions (self, logging=True):
         """Automatically generate a list of torsions (=dihedral angles)."""
-        if hasattr (self, "angles"):
-            torsions = []
-            # . Outer loop
-            for i, (anglea, angleb, anglec) in enumerate (self.angles):
-                # . Inner loop
-                for j, (otherd, othere, otherf) in enumerate (self.angles):
-                    if i != j:
-                        torsion = None
-                        #   (a, b, c)
-                        #      (d, e, f)
-                        if   (angleb == otherd) and (anglec == othere):
-                            torsion = (anglea, angleb, anglec, otherf)
-                        #      (a, b, c)
-                        #   (d, e, f)
-                        elif (anglea == othere) and (angleb == otherf):
-                            torsion = (otherd, anglea, angleb, anglec)
-                        #   (a, b, c)
-                        #      (f, e, d)
-                        elif (angleb == otherf) and (anglec == othere):
-                            torsion = (anglea, angleb, anglec, otherd)
-                        #      (a, b, c)
-                        #   (f, e, d)
-                        elif (anglea == othere) and (angleb == otherd):
-                            torsion = (otherf, anglea, angleb, anglec)
-                        if torsion:
-                            (a, b, c, d) = torsion
-                            noisrot = (d, c, b, a)
-                            if (torsion not in torsions) and (noisrot not in torsions):
-                                torsions.append (torsion)
-            self.torsions = torsions
-        if logging:
-            print ("# . %s> Generated %d torsions" % (_MODULE_LABEL, self.ntorsions))
+        if not hasattr (self, "torsions"):
+            if hasattr (self, "angles"):
+                self.torsions = []
+                # . Outer loop
+                for i, (anglea, angleb, anglec) in enumerate (self.angles):
+                    # . Inner loop
+                    for j, (otherd, othere, otherf) in enumerate (self.angles):
+                        if i != j:
+                            torsion = None
+                            #   (a, b, c)
+                            #      (d, e, f)
+                            if   (angleb == otherd) and (anglec == othere):
+                                torsion = (anglea, angleb, anglec, otherf)
+                            #      (a, b, c)
+                            #   (d, e, f)
+                            elif (anglea == othere) and (angleb == otherf):
+                                torsion = (otherd, anglea, angleb, anglec)
+                            #   (a, b, c)
+                            #      (f, e, d)
+                            elif (angleb == otherf) and (anglec == othere):
+                                torsion = (anglea, angleb, anglec, otherd)
+                            #      (a, b, c)
+                            #   (f, e, d)
+                            elif (anglea == othere) and (angleb == otherd):
+                                torsion = (otherf, anglea, angleb, anglec)
+                            if torsion:
+                                (a, b, c, d) = torsion
+                                noisrot = (d, c, b, a)
+                                if (torsion not in self.torsions) and (noisrot not in self.torsions):
+                                    self.torsions.append (torsion)
+            if logging:
+                print ("# . %s> Generated %d torsions" % (_MODULE_LABEL, self.ntorsions))
 
 
     def _BondsToTypes (self):
@@ -1237,15 +1237,16 @@ class AminoComponent (object):
 
     def GenerateConnectivities (self):
         """Generate a table of bonds for every atom."""
-        self.connectivity = {}
-        for atom in self.atoms:
-            table = []
-            for (labela, labelb) in self.bonds:
-                if (atom.atomLabel == labela):
-                    table.append (labelb)
-                elif (atom.atomLabel == labelb):
-                    table.append (labela)
-            self.connectivity[atom.atomLabel] = table
+        if not hasattr (self, "connectivity"):
+            self.connectivity = {}
+            for atom in self.atoms:
+                table = []
+                for (labela, labelb) in self.bonds:
+                    if (atom.atomLabel == labela):
+                        table.append (labelb)
+                    elif (atom.atomLabel == labelb):
+                        table.append (labela)
+                self.connectivity[atom.atomLabel] = table
 
 
 #===============================================================================
