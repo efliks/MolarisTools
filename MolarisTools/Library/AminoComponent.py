@@ -25,7 +25,7 @@ InternalCoordinate = collections.namedtuple ("InternalCoordinate", "i  j  k  l  
 
 _MODULE_LABEL    = "AminoComponent"
 _DEFAULT_DIVIDER = "-" * 41
-_ATOMIC_SYMBOLS  = ("MG", "CL", "BR", )
+_ATOMIC_SYMBOLS  = ("MG", "CL", "BR", "NA", )
 _LINK_ATOM       = 1.09
 
 _DEFAULT_GAUSSIAN_PATH  =  os.path.join (os.environ["HOME"], "local", "opt", "g03", "g03")
@@ -716,7 +716,17 @@ class AminoComponent (object):
             fo.close ()
 
 
-    def CalculateCharges (self, pdbResidue, ncpu=1, memory=1, charge=None, multiplicity=1, method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, cosmo=False, dielectric=_DEFAULT_DIELECTRIC, optimize=False, optimizeList=None, pathGaussian=_DEFAULT_GAUSSIAN_PATH, workdir="", scratch="", dryRun=False, resetGroups=True, logging=True):
+    def CalculateCharges (self, 
+                          pdbResidue, 
+                          ncpu=1, memory=1, 
+                          charge=None, multiplicity=1, 
+                          method=_DEFAULT_METHOD, scheme=_DEFAULT_SCHEME, 
+                          cosmo=False, dielectric=_DEFAULT_DIELECTRIC, 
+                          optimize=False, optimizeList=None, 
+                          pathGaussian=_DEFAULT_GAUSSIAN_PATH, workdir="", scratch="", 
+                          dryRun=False, 
+                          resetGroups=True, 
+                          logging=True):
         """Calculate quantum chemical charges in Gaussian."""
     
         # . Do some initial checks
