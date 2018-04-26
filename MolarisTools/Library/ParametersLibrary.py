@@ -28,16 +28,45 @@ class ParametersLibrary (object):
         self.filename = filename
         self._Parse (logging=logging)
 
+    @property
+    def nhbonds (self):
+        if hasattr (self, "nhbonds"):
+            return len (self.hbonds)
+        return 0
+
+    @property
+    def nbonds (self):
+        if hasattr (self, "nbonds"):
+            return len (self.bonds)
+        return 0
+
+    @property
+    def nangles (self):
+        if hasattr (self, "nangles"):
+            return len (self.angles)
+        return 0
+
+    @property
+    def ntorsions (self):
+        if hasattr (self, "ntorsions"):
+            return len (self.torsions)
+        return 0
+
+    @property
+    def nimpropers (self):
+        if hasattr (self, "nimpropers"):
+            return len (self.impropers)
+        return 0
+
+    @property
+    def nnonbonded (self):
+        if hasattr (self, "nnonbonded"):
+            return len (self.nonbonded)
+        return 0
 
     @property
     def nparameters (self):
-        npar = 0
-        labels = ("hbonds", "bonds", "angles", "torsions", "impropers", "vdws", )
-        for label in labels:
-            if hasattr (self, label):
-                data = eval ("self.%s" % label)
-                npar += len (data)
-        return npar
+        return (self.nhbonds + self.nbonds + self.nangles + self.ntorsions + self.nimpropers + self.nnonbonded)
 
     def __len__ (self):
         return self.nparameters
