@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 # . File      : ParametersLibrary.py
 # . Program   : MolarisTools
-# . Copyright : USC, Mikolaj Feliks (2015-2017)
+# . Copyright : USC, Mikolaj Feliks (2015-2018)
 # . License   : GNU GPL v3.0       (http://www.gnu.org/licenses/gpl-3.0.en.html)
 #-------------------------------------------------------------------------------
 import  collections, os
@@ -59,20 +59,20 @@ class ParametersLibrary (object):
                         if line.count ("H-BOND"):
                             tokens   = TokenizeLine (line, converters=[int, ])
                             nhbonds  = tokens[0]
-                            hbonds   = []
+                            self.hbonds = {}
                             for i in range (nhbonds):
                                 line   = next (lines)
                                 tokens = TokenizeLine (line, converters=[None, None, float, float])
-                                typea, typeb, a, b = tokens
-                                bond   = HBond (
+                                (typea, typeb, a, b) = tokens
+                                bond = HBond (
                                     typea   =   typea   ,
                                     typeb   =   typeb   ,
                                     a       =   a       ,
                                     b       =   b       , )
-                                hbonds.append (bond)
+                                key = "%s-%s" % (typea, typeb)
+                                self.hbonds[key] = bond
                             if logging:
                                 print ("# . %s> Read %d h-bonds" % (_MODULE_LABEL, nhbonds))
-                            self.hbonds = hbonds
 
 
                         # . Read bond parameters
@@ -83,20 +83,20 @@ class ParametersLibrary (object):
                         else:
                             tokens  = TokenizeLine (line, converters=[int, ])
                             nbonds  = tokens[0]
-                            bonds   = []
+                            self.bonds = {}
                             for i in range (nbonds):
                                 line   = next (lines)
                                 tokens = TokenizeLine (line, converters=[None, None, float, float])
-                                typea, typeb, k, r0 = tokens
-                                bond   = Bond (
+                                (typea, typeb, k, r0) = tokens
+                                bond = Bond (
                                     typea   =   typea   ,
                                     typeb   =   typeb   ,
                                     k       =   k       ,
                                     r0      =   r0      , )
-                                bonds.append (bond)
+                                key = "%s-%s" % (typea, typeb)
+                                self.bonds[key] = bond
                             if logging:
                                 print ("# . %s> Read %d bonds" % (_MODULE_LABEL, nbonds))
-                            self.bonds = bonds
 
 
                 # . Read angle parameters
@@ -107,21 +107,21 @@ class ParametersLibrary (object):
                 elif line.count ("ANGLE PARAMETERS"):
                     tokens  = TokenizeLine (line, converters=[int, ])
                     nangles = tokens[0]
-                    angles  = []
+                    self.angles = {}
                     for i in range (nangles):
                         line   = next (lines)
                         tokens = TokenizeLine (line, converters=[None, None, None, float, float])
-                        typea, typeb, typec, k, r0 = tokens
-                        angle  = Angle (
+                        (typea, typeb, typec, k, r0) = tokens
+                        angle = Angle (
                             typea   =   typea   ,
                             typeb   =   typeb   ,
                             typec   =   typec   ,
                             k       =   k       ,
                             r0      =   r0      , )
-                        angles.append (angle)
+                        key = "%s-%s-%s" % (typea, typeb, typec)
+                        self.angles[key] = angle
                     if logging:
                         print ("# . %s> Read %d angles" % (_MODULE_LABEL, nangles))
-                    self.angles = angles
 
 
                 # . Read torsion parameters
@@ -132,23 +132,23 @@ class ParametersLibrary (object):
                 elif line.count ("TORSION PARAMETERS"):
                     tokens    = TokenizeLine (line, converters=[int, ])
                     ntorsions = tokens[0]
-                    torsions  = []
+                    self.torsions = {}
                     for i in range (ntorsions):
                         line        = next (lines)
                         tokens      = TokenizeLine (line, converters=[None, None, float, float, float])
-                        typeb, typec, k, periodicity, phase = tokens
+                        (typeb, typec, k, periodicity, phase) = tokens
                         # . For some reason, periodicity is written as a float number in the parm.lib file
                         periodicity = int (periodicity)
-                        torsion     = Torsion (
+                        torsion = Torsion (
                             typeb       =   typeb        ,
                             typec       =   typec        ,
                             k           =   k            ,
                             periodicity =   periodicity  ,
                             phase       =   phase        , )
-                        torsions.append (torsion)
+                        key = "%s-%s" % (typeb, typec)
+                        self.torsions[key] = torsion
                     if logging:
                         print ("# . %s> Read %d torsions" % (_MODULE_LABEL, ntorsions))
-                    self.torsions = torsions
 
 
                 # . Read improper torsion parameters
@@ -159,18 +159,17 @@ class ParametersLibrary (object):
                 elif line.count ("I-TORS PARAMETERS"):
                     tokens     = TokenizeLine (line, converters=[int, ])
                     nimpropers = tokens[0]
-                    impropers  = []
+                    self.impropers = {}
                     for i in range (nimpropers):
                         line     = next (lines)
                         tokens   = TokenizeLine (line, converters=[None, float])
-                        atomType, k = tokens
+                        (atomType, k) = tokens
                         improper = Improper (
                             atomType = atomType  ,
                             k        = k         , )
-                        impropers.append (improper)
+                        self.impropers[atomType] = improper
                     if logging:
                         print ("# . %s> Read %d impropers" % (_MODULE_LABEL, nimpropers))
-                    self.impropers = impropers
 
 
                 # . Read van der Waals and mass paramters
@@ -179,22 +178,21 @@ class ParametersLibrary (object):
                 #   C8 01956.000  032.000  012.000
                 #   (...)
                 elif line.count ("VDW AND MASS PARAMETERS"):
-                    tokens  = TokenizeLine (line, converters=[int, ])
-                    nparams = tokens[0]
-                    vdws    = []
+                    tokens   = TokenizeLine (line, converters=[int, ])
+                    nparams  = tokens[0]
+                    self.nonbonded = {}
                     for i in range (nparams):
                         line    = next (lines)
                         tokens  = TokenizeLine (line, converters=[None, float, float, float])
-                        atomType, repulsive, attractive, mass = tokens
+                        (atomType, repulsive, attractive, mass) = tokens
                         vdw = VanDerWaals (
                             atomType   = atomType    ,
                             repulsive  = repulsive   ,
                             attractive = attractive  ,
                             mass       = mass        , )
-                        vdws.append (vdw)
+                        self.nonbonded[atomType] = vdw
                     if logging:
                         print ("# . %s> Read %d VDW and mass parameters" % (_MODULE_LABEL, nparams))
-                    self.vdws = vdws
         except StopIteration:
             pass
         # . Close the file
@@ -202,35 +200,38 @@ class ParametersLibrary (object):
 
 
     def GetVDW (self, atomType):
-        if hasattr (self, "vdws"):
-            for vdw in self.vdws:
-                if vdw.atomType == atomType:
-                    return vdw
-        return None
+        if hasattr (self, "nonbonded"):
+            if (self.nonbonded.has_key (atomType)): return self.nonbonded[atomType]
 
+            generalType = "%s*" % atomType[0]
+            if (self.nonbonded.has_key (generalType)): return self.nonbonded[generalType]
+        return None
 
     def GetBond (self, typea, typeb):
         if hasattr (self, "bonds"):
-            for bond in self.bonds:
-                if ((bond.typea == typea) and (bond.typeb == typeb)) or ((bond.typea == typeb) and (bond.typeb == typea)):
-                    return bond
-        return None
+            key = "%s-%s" % (typea, typeb)
+            if (self.bonds.has_key (key)): return self.bonds[key]
 
+            yek = "%s-%s" % (typeb, typea)
+            if (self.bonds.has_key (yek)): return self.bonds[yek]
+        return None
 
     def GetAngle (self, typea, typeb, typec):
         if hasattr (self, "angles"):
-            for angle in self.angles:
-                if (angle.typeb == typeb):
-                    if ((angle.typea == typea) and (angle.typec == typec)) or ((angle.typea == typec) and (angle.typec == typea)):
-                        return angle
-        return None
+            key = "%s-%s-%s" % (typea, typeb, typec)
+            if (self.angles.has_key (key)): return self.angles[key]
 
+            yek = "%s-%s-%s" % (typec, typeb, typea)
+            if (self.angles.has_key (yek)): return self.angles[yek]
+        return None
 
     def GetTorsion (self, typeb, typec):
         if hasattr (self, "torsions"):
-            for torsion in self.torsions:
-                if ((torsion.typeb == typeb) and (torsion.typec == typec)) or ((torsion.typeb == typec) and (torsion.typec == typeb)):
-                    return torsion
+            key = "%s-%s" % (typeb, typec)
+            if (self.torsions.has_key (key)): return self.torsions[key]
+
+            yek = "%s-%s" % (typec, typeb)
+            if (self.torsions.has_key (yek)): return self.torsions[yek]
         return None
 
 
