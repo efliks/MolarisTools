@@ -1163,6 +1163,44 @@ class AminoComponent (object):
         self.groups = [newGroup, ]
 
 
+    @staticmethod
+    def _FindAtomBonds (bonds, label):
+        element = label[0]
+        if (bonds.has_key (element)): return bonds[element]
+
+        element = label[:2]
+        if (bonds.has_key (element)): return bonds[element]
+
+        return None
+
+    def CorrectAtomTypes (self, logging=True):
+        """Try to automatically determine atoms types based on connectivity."""
+        atomsToBonds = {"C" : {3 : "C3", 4 : "C4"}, 
+                        "H" : {1 : "H1", },
+                        "S" : {2 : "S2", },
+                        "N" : {3 : "N3", 4 : "N4", },
+                        "O" : {1 : "O1", 2 : "O2", }, }
+        newatoms = []
+        for atom in self.atoms:
+            newType = atom.atomType
+            bonds = self._FindAtomBonds (atomsToBonds, atom.atomLabel)
+            fail = True if (bonds == None) else False
+            if (not fail):
+                nbonds = 0
+                for (labela, labelb) in self.bonds:
+                    if (labela == atom.atomLabel) or (labelb == atom.atomLabel):
+                        nbonds += 1
+                if (bonds.has_key (nbonds)):
+                    newType = bonds[nbonds]
+                else:
+                    fail = True
+            if (fail):
+                if (logging):
+                   print ("# . %s> Cannot automatically generate type for atom %s, leaving as it is." % (_MODULE_LABEL, atom.atomLabel))
+            newatoms.append (AminoAtom (atomLabel=atom.atomLabel, atomType=newType, atomCharge=atom.atomCharge))
+        self.atoms = newatoms
+
+
     def CorrectGroupCharges (self, force={}, ndigits=2, logging=True):
         """Correct the net charge of each group so it becomes integral.
 
