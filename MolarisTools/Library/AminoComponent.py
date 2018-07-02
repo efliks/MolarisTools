@@ -1164,7 +1164,14 @@ class AminoComponent (object):
 
 
     @staticmethod
-    def _FindAtomBonds (bonds, label):
+    def _FindAtomBonds (label):
+        bonds = {
+              "C" : {3 : "C3", 4 : "C4"},
+              "S" : {2 : "S2", },
+              "N" : {2 : "N2", 3 : "N3", 4 : "N4", },
+              "O" : {1 : "O1", 2 : "O2", },
+              "P" : {4 : "P", }, 
+                }
         element = label[0]
         if (bonds.has_key (element)): return bonds[element]
 
@@ -1175,28 +1182,42 @@ class AminoComponent (object):
 
     def CorrectAtomTypes (self, logging=True):
         """Try to automatically determine atoms types based on connectivity."""
-        atomsToBonds = {"C" : {3 : "C3", 4 : "C4"}, 
-                        "H" : {1 : "H1", },
-                        "S" : {2 : "S2", },
-                        "N" : {3 : "N3", 4 : "N4", },
-                        "O" : {1 : "O1", 2 : "O2", }, }
         newatoms = []
         for atom in self.atoms:
             newType = atom.atomType
-            bonds = self._FindAtomBonds (atomsToBonds, atom.atomLabel)
-            fail = True if (bonds == None) else False
-            if (not fail):
-                nbonds = 0
+
+            if (atom.atomLabel[0] == "H"):
+                # . Atom is a hydrogen
+                # . Hydrogens bound to carbon atoms are of type H1, otherwise H2
+                parent = ""
                 for (labela, labelb) in self.bonds:
-                    if (labela == atom.atomLabel) or (labelb == atom.atomLabel):
-                        nbonds += 1
-                if (bonds.has_key (nbonds)):
-                    newType = bonds[nbonds]
+                    if (labela == atom.atomLabel):
+                        parent = labelb
+                        break
+                    elif (labelb == atom.atomLabel):
+                        parent = labela
+                        break
+                if (parent[0] == "C") and (parent[:2] != "CL"):
+                    newType = "H1"
                 else:
-                    fail = True
-            if (fail):
-                if (logging):
-                   print ("# . %s> Cannot automatically generate type for atom %s, leaving as it is." % (_MODULE_LABEL, atom.atomLabel))
+                    newType = "H2"
+            else:
+                # . Atom is a heavy atom
+                bonds = self._FindAtomBonds (atom.atomLabel)
+                fail = True if (bonds == None) else False
+                if (not fail):
+                    nbonds = 0
+                    for (labela, labelb) in self.bonds:
+                        if (labela == atom.atomLabel) or (labelb == atom.atomLabel):
+                            nbonds += 1
+                    if (bonds.has_key (nbonds)):
+                        newType = bonds[nbonds]
+                    else:
+                        fail = True
+                if (fail):
+                    if (logging):
+                       print ("# . %s> Cannot automatically generate type for atom %s, leaving as it is." % (_MODULE_LABEL, atom.atomLabel))
+
             newatoms.append (AminoAtom (atomLabel=atom.atomLabel, atomType=newType, atomCharge=atom.atomCharge))
         self.atoms = newatoms
 
