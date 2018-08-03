@@ -2,7 +2,6 @@
 A Python toolkit to facilitate working with Molaris-XG.
 
 Author: Mikolaj Feliks \<<mikolaj.feliks@gmail.com>\><br>
-Released as open source software under the GNU GPL v3.0 license (see COPYING).
 
 
 _Key features:_
