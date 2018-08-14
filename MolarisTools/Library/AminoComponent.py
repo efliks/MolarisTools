@@ -399,6 +399,82 @@ class AminoComponent (object):
         self.groups = newGroups
 
 
+    def _FindAtomsGroupLabel (self, label):
+        for group in self.groups:
+            for otherLabel in group.labels:
+                if (otherLabel == label):
+                    return group.symbol
+        return None
+
+    def AddAtom (self, label, atype, charge=0.0, group="", connections=(), ):
+        """Add a new atom to a component.
+
+        Connections is a list of labels of atoms that the new atom connects to."""
+        # . Check if all connections exist
+        for otherLabel in connections:
+            if (otherLabel not in self):
+                raise exceptions.StandardError ("Atom %s is missing in component %s" % (otherLabel, self.label))
+
+        # . Insert the new atom after its first connecting atom in the list of atoms
+        atom = AminoAtom (
+            atomLabel   =   label  ,
+            atomType    =   atype  ,
+            atomCharge  =   charge , )
+        if (not connections):
+            self.atoms.append (atom)
+        else:
+            precede = connections[0]
+            newAtoms = []
+            for otherAtom in self.atoms:
+                newAtoms.append (otherAtom)
+                if (otherAtom.atomLabel == precede):
+                    newAtoms.append (atom)
+            self.atoms = newAtoms
+
+        # . Update the list of bonds
+        for otherLabel in connections:
+            pair = (label, otherLabel)
+            self.bonds.append (pair)
+
+        # . Update groups
+        found = False
+        newGroups = []
+        groupSymbol = group
+        if (groupSymbol == ""):
+            if (connections):
+                # . Use the same group as for the preceding atom
+                precedingLabel = connections[0]
+                groupSymbol = self._FindAtomsGroupLabel (precedingLabel)
+                print ("# . %s> Automatically adding atom %s to group %s" % (_MODULE_LABEL, label, groupSymbol))
+            else:
+                # . TODO Create a new group 
+                pass
+        for group in self.groups:
+            if (group.symbol == groupSymbol):
+                newLabels = []
+                if (not connections):
+                    newLabels = group.labels[:]
+                    newLabels.append (label)
+                else:
+                    precede = connections[0]
+                    for atomLabel in group.labels:
+                        newLabels.append (atomLabel)
+                        if (atomLabel == precede):
+                            newLabels.append (label)
+                newGroup = AminoGroup (
+                    natoms      =   (group.natoms + 1) ,
+                    centralAtom =   group.centralAtom  ,
+                    radius      =   group.radius       ,
+                    labels      =   newLabels          ,
+                    symbol      =   group.symbol       , )
+                found = True
+                group = newGroup
+            newGroups.append (group)
+        if (not found):
+            raise exceptions.StandardError ("Group %s not found in component %s" % (group, self.label))
+        self.groups = newGroups
+
+
     # . Convert atom types Enzymix -> CHARMM
     _DEFAULT_CONVERT_TYPE = {
         "P4"    :   "P2"    ,
