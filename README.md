@@ -1,8 +1,7 @@
 # MolarisTools
 A Python toolkit to facilitate working with Molaris-XG.
 
-Author: Mikolaj Feliks <mikolaj [dot] feliks [at] gmail [dot] com><br>
-Released as open source software under the GNU GPL v3.0 license (see COPYING).
+Author: Mikolaj Feliks \<<mikolaj.feliks@gmail.com>\><br>
 
 
 _Key features:_
@@ -25,7 +24,7 @@ MolarisTools is a stand-alone Python library and as such does not
 need Molaris to be preinstalled. Nevertheless, a copy of Molaris can
 be obtained from the [Warshel Group](http://laetro.usc.edu/software.html).
 
-To install MolarisTools, clone the repository from GitHub (if you have
+To install MolarisTools, clone the repository from GitHub (assuming that you have 
 git installed on your computer):
 
 ```
@@ -33,7 +32,7 @@ git clone https://github.com/mfx9/MolarisTools.git
 ```
 
 Or download and unpack the ZIP package from this website. In the next
-step, adjust your PYTHONPATH variable so it points to the location
+step, adjust the PYTHONPATH variable so it points to the location
 of MolarisTools, for example (in Bash):
 
 ```
