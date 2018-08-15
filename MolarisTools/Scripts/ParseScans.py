@@ -9,7 +9,7 @@ import os, math, glob
 from MolarisTools.Parser  import MolarisOutputFile
 
 
-def ParsePESScan (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTotalRelative="total_e_rel.dat", patternChanges="changes_", logging=True):
+def ParsePESScan (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTotalRelative="total_e_rel.dat", patternChanges="changes_", baselineIndex=-1, maximumIndex=-1, logging=True):
     """Parse a potential energy surface scan."""
     steps = []
     files = glob.glob ("%s*.out" % pattern)
@@ -31,18 +31,30 @@ def ParsePESScan (pattern="evb_scan_", filenameTotal="total_e.dat", filenameTota
         for step in steps:
             ntotal += len (step)
         print ("Found %d total steps in %d files" % (ntotal, len (files)))
-    base  = steps[0][-1]
-    m, n  = (0, 0)
-    baseRel, topRel = (base, base)
-    for (i, step) in enumerate (steps, 1):
-        if step[-1] < baseRel:
-            (baseRel, m) = (step[-1], i)
-        if step[-1] > topRel:
-            (topRel,  n) = (step[-1], i)
+
+    m, n  = (-1, -1)
+    first = steps[0][-1]
+    if (maximumIndex > -1):
+        topRel = steps[maximumIndex][-1]
+    else:
+        topRel = first
+        for (i, step) in enumerate (steps, 1):
+            if (step[-1] > topRel):
+                (topRel, n) = (step[-1], i)
+    if (baselineIndex > -1):
+        baseRel = steps[baselineIndex][-1]
+    else:
+        baseRel = first
+        for (i, step) in enumerate (steps, 1):
+            if (step[-1] < baseRel):
+                (baseRel, m) = (step[-1], i)
     barrier = topRel - baseRel
-    if logging:
-        print ("Found a barrier between points (%d, %d) of %.1f kcal/mol" % (m, n, barrier))
-    for (filename, subtract) in ((filenameTotal, base), (filenameTotalRelative, baseRel)):
+
+    if (m > -1 and n > -1):
+        if logging:
+            print ("Found a barrier between points (%d, %d) of %.1f kcal/mol" % (m, n, barrier))
+
+    for (filename, subtract) in ((filenameTotal, first), (filenameTotalRelative, baseRel)):
         fo   = open (filename, "w")
         for (i, step) in enumerate (steps, 1):
             last = step[-1]
