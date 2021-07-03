@@ -1,7 +1,11 @@
+:warning: **IMPORTANT NOTE** :warning:
+
+**This is a legacy library that is only compatible with Python 2.
+Is is kept here solely for historical reasons.**
+
+
 # MolarisTools
 A Python toolkit to facilitate working with Molaris-XG.
-
-Author: Mikolaj Feliks \<<mikolaj.feliks@gmail.com>\><br>
 
 
 _Key features:_
