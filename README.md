@@ -1,7 +1,7 @@
 :warning: **IMPORTANT NOTE** :warning:
 
 **This is a legacy library that is only compatible with Python 2.
-Is is kept here solely for historical reasons.**
+It is kept here solely for historical reasons.**
 
 
 # MolarisTools
@@ -44,7 +44,3 @@ export PYTHONPATH=${HOME}/MolarisTools:${PYTHONPATH}
 ```
 
 Add the above line to your ~/.profile or ~/.bashrc file.
-
-MolarisTools are actively developed and new features are added 
-as they are needed. Major changes to the code can happen anytime.
-Bugs are inevitable - please report if you have found one.
