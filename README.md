@@ -26,13 +26,13 @@ _Installation instructions:_
 
 MolarisTools is a stand-alone Python library and as such does not 
 need Molaris to be preinstalled. Nevertheless, a copy of Molaris can
-be obtained from the [Warshel Group](http://laetro.usc.edu/software.html).
+be obtained from the [Warshel Group](https://laetro.usc.edu/molaris.html).
 
 To install MolarisTools, clone the repository from GitHub (assuming that you have 
 git installed on your computer):
 
 ```
-git clone https://github.com/mfx9/MolarisTools.git
+git clone https://github.com/efliks/MolarisTools.git
 ```
 
 Or download and unpack the ZIP package from this website. In the next
